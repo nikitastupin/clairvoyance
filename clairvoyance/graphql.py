@@ -113,6 +113,8 @@ class Schema:
             doc = f"query {{ {doc} }}"
         elif path[0] == self._schema["mutationType"]["name"]:
             doc = f"mutation {{ {doc} }}"
+        elif path[0] == self._schema["subscriptionType"]["name"]:
+            doc = f"subscription {{ {doc} }}"
         else:
             raise Exception("Unknown operation type")
 

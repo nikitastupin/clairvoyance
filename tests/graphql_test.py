@@ -38,5 +38,12 @@ class TestSchema(unittest.TestCase):
         exception_msg = str(cm.exception)
         self.assertEqual(exception_msg, "Unknown operation type")
 
+    def test_convert_path_to_document_handling_subscription(self):
+        path = ["Subscription"]
+        want = "subscription { FUZZ }"
+        got = self.schema.convert_path_to_document(path)
+        self.assertEqual(got, want)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,7 +8,9 @@
             "queryType": {
                 "name": "Query"
             },
-            "subscriptionType": null,
+            "subscriptionType": {
+                "name": "Subscription"
+            },
             "types": [
                 {
                     "description": null,
