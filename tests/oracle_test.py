@@ -1,6 +1,7 @@
+import time
 import logging
 import unittest
-from unittest.mock import patch
+import subprocess
 
 from clairvoyance import graphql
 from clairvoyance import oracle
@@ -212,33 +213,22 @@ class TestGraphql(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class MockResponse:
-    def __init__(self, json_data):
-        self.json_data = json_data
-
-    def json(self):
-        return self.json_data
-
-
 class TestProbeTypename(unittest.TestCase):
-    def mocked_requests_post(*args, **kwargs):
-        return MockResponse(
-            {
-                "errors": [
-                    {
-                        "message": 'Cannot query field "imwrongfield" on type "Mutation".',
-                        "locations": [{"line": 1, "column": 12}],
-                        "extensions": {"code": "GRAPHQL_VALIDATION_FAILED"},
-                    }
-                ]
-            }
-        )
+    @classmethod
+    def setUpClass(cls):
+        cls._unstable = subprocess.Popen(["python3", "tests/server/graphql.py"])
+        time.sleep(1)
 
-    @patch("requests.post", side_effect=mocked_requests_post)
-    def test_probe_typename(self, mock_requests_post):
-        typename = oracle.probe_typename("123", graphql.Config())
+    @classmethod
+    def tearDownClass(cls):
+        cls._unstable.terminate()
+        cls._unstable.wait()
+
+    def test_probe_typename(self):
+        config = graphql.Config()
+        config.url = "http://localhost:8001"
+        typename = oracle.probe_typename("123", config)
         self.assertEqual(typename, "Mutation")
-        assert mock_requests_post.called
 
 
 if __name__ == "__main__":
