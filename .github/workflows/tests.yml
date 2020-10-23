@@ -2,10 +2,18 @@ name: Tests
 
 on:
   push:
+    paths: 
+      - 'clairvoyance/**'
+      - 'tests/**'
+      - '.github/workflows/*'
     branches:
       - main
       - master
   pull_request:
+    paths:
+      - 'clairvoyance/**'
+      - 'tests/**'
+      - '.github/workflows/*'
     branches:
       - main
       - master
