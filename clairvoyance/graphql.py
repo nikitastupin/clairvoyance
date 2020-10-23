@@ -32,7 +32,7 @@ def post(url, data=None, json=None, **kwargs):
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
-    response = session.post(url, data=None, json=None, **kwargs)
+    response = session.post(url, data=data, json=json, **kwargs)
 
     return response
 
