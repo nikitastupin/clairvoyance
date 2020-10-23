@@ -27,3 +27,5 @@ To run unit tests:
 $ cd clairvoyance
 $ python3 -m unittest tests/*_test.py
 ```
+
+Documentation located at [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page.
