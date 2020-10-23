@@ -1,0 +1,1362 @@
+{
+    "data": {
+        "__schema": {
+            "directives": [],
+            "mutationType": {
+                "name": "Mutation"
+            },
+            "queryType": {
+                "name": "Query"
+            },
+            "subscriptionType": null,
+            "types": [
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Query",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [
+                                {
+                                    "defaultValue": null,
+                                    "description": null,
+                                    "name": "filter",
+                                    "type": {
+                                        "kind": "OBJECT",
+                                        "name": "MobileDevicesFilter",
+                                        "ofType": null
+                                    }
+                                }
+                            ],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "mobileDevices",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "OBJECT",
+                                        "name": "MobileDevice",
+                                        "ofType": null
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "homeMembership",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "HomeMembership",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "devices",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "Devices",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "energyServices",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "EnergyServices",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "unassigned",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "Devices",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "user",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "User",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "homes",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "OBJECT",
+                                        "name": "Home",
+                                        "ofType": null
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Mutation",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "possibleTypes": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "INPUT_OBJECT",
+                    "name": "MobileDevicesFilter",
+                    "possibleTypes": null,
+                    "fields": null,
+                    "inputFields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ]
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "MobileDevice",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "locationTracking",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "LocationTrackingState",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "id",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "ID",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "wifiTrackingRegistration",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "WifiTrackingRegistration",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "locationPermission",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "LocationPermissionState",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "name",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeMembership",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Devices",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "EnergyServices",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "User",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "chronosSettings",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "ChronosSettings",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "email",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "featureFlags",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "firstName",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "iceServers",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "IceServer",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "lastName",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "homeSettings",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeSettings",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "isMfaEnabled",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "Boolean",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "id",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "ID",
+                                    "ofType": null
+                                }
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Home",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "capabilities",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "OBJECT",
+                                        "name": "HomeCapability",
+                                        "ofType": null
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "monitoring",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeMonitoring",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "homeId",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "id",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "ID",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [
+                                {
+                                    "defaultValue": null,
+                                    "description": null,
+                                    "name": "filter",
+                                    "type": {
+                                        "kind": "OBJECT",
+                                        "name": "EntitlementsFilter",
+                                        "ofType": null
+                                    }
+                                }
+                            ],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "entitlements",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "Entitlements",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "devices",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "Devices",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "permissions",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "LIST",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "NON_NULL",
+                                        "name": null,
+                                        "ofType": {
+                                            "kind": "OBJECT",
+                                            "name": "Permission",
+                                            "ofType": null
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "members",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeMember",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "role",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "MemberRole",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "autopilotSettings",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "AutopilotSettings",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "address",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeAddress",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "siren",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "Siren",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "paymentSubscriptions",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "PaymentSubscriptionsForHome",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "securityEvents",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeSecurityEvent",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "features",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "LIST",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "NON_NULL",
+                                        "name": null,
+                                        "ofType": {
+                                            "kind": "OBJECT",
+                                            "name": "HomeFeature",
+                                            "ofType": null
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "utility",
+                            "type": {
+                                "kind": "OBJECT",
+                                "name": "HomeUtilityInformation",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "isMfaRequired",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "Boolean",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "armedState",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "OBJECT",
+                                    "name": "HomeArmedState",
+                                    "ofType": null
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "name",
+                            "type": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "SCALAR",
+                                    "name": "String",
+                                    "ofType": null
+                                }
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "ChronosSettings",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "IceServer",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "credential",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "serverUris",
+                            "type": {
+                                "kind": "LIST",
+                                "name": null,
+                                "ofType": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "SCALAR",
+                                        "name": "String",
+                                        "ofType": null
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "username",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeSettings",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Boolean",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "ID",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeCapability",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeMonitoring",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "INPUT_OBJECT",
+                    "name": "EntitlementsFilter",
+                    "possibleTypes": null,
+                    "fields": null,
+                    "inputFields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ]
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Entitlements",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Permission",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeMember",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "MemberRole",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "AutopilotSettings",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeAddress",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "Siren",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "PaymentSubscriptionsForHome",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeSecurityEvent",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeFeature",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeUtilityInformation",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "HomeArmedState",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "LocationTrackingState",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "WifiTrackingRegistration",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                },
+                {
+                    "description": null,
+                    "enumValues": null,
+                    "interfaces": [],
+                    "kind": "OBJECT",
+                    "name": "LocationPermissionState",
+                    "possibleTypes": null,
+                    "fields": [
+                        {
+                            "args": [],
+                            "deprecationReason": null,
+                            "description": null,
+                            "isDeprecated": false,
+                            "name": "dummy",
+                            "type": {
+                                "kind": "SCALAR",
+                                "name": "String",
+                                "ofType": null
+                            }
+                        }
+                    ],
+                    "inputFields": null
+                }
+            ]
+        }
+    }
+}

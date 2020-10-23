@@ -1,0 +1,246 @@
+import logging
+import unittest
+from unittest.mock import patch
+
+from clairvoyance import graphql
+from clairvoyance import oracle
+
+
+class TestGetValidFields(unittest.TestCase):
+    def test_multiple_suggestions(self):
+        want = {
+            "setNameForHome",
+            "setNameForCamera",
+            "setAddressForHome",
+            "setNameForHomeSensor",
+            "setArmedStateForHome",
+        }
+        got = oracle.get_valid_fields(
+            'Cannot query field "NameForHome" on type "Mutation". Did you mean "setNameForHome", "setNameForCamera", "setAddressForHome", "setNameForHomeSensor", or "setArmedStateForHome"?'
+        )
+        self.assertEqual(got, want)
+
+        want_2 = {"homeId", "name", "role"}
+        got_2 = oracle.get_valid_fields(
+            'Cannot query field "home" on type "Home". Did you mean "homeId", "name", or "role"?'
+        )
+        self.assertEqual(got_2, want_2)
+
+    def test_single_suggestion(self):
+        want = {"homes"}
+        got = oracle.get_valid_fields(
+            'Cannot query field "home" on type "Query". Did you mean "homes"?'
+        )
+        self.assertEqual(got, want)
+
+    def test_valid_field(self):
+        want = {"address"}
+        got = oracle.get_valid_fields(
+            'Field "address" of type "HomeAddress" must have a selection of subfields. Did you mean "address { ... }"?'
+        )
+        self.assertEqual(got, want)
+
+    def test_or_suggestion(self):
+        want = {"devices", "unassigned"}
+        got = oracle.get_valid_fields(
+            'Cannot query field "designer" on type "Query". Did you mean "devices" or "unassigned"?'
+        )
+        self.assertEqual(got, want)
+
+
+class TestGetValidArgs(unittest.TestCase):
+    def test_single_suggestion(self):
+        want = {"input"}
+        got = oracle.get_valid_args(
+            'Unknown argument "inpu" on field "setNameForHome" of type "Mutation". Did you mean "input"?'
+        )
+        self.assertEqual(got, want)
+
+    def test_double_suggestion(self):
+        want = {"after", "last"}
+        got = oracle.get_valid_args(
+            'Unknown argument "fasten" on field "filmConnection" of type "Vehicle". Did you mean "after" or "last"?'
+        )
+        self.assertEqual(got, want)
+
+
+class TestGetValidInputFields(unittest.TestCase):
+    def test_single_suggestion(self):
+        want = {"name"}
+        got = oracle.get_valid_input_fields(
+            "Field SetNameForHomeInput.name of required type String! was not provided."
+        )
+        self.assertEqual(got, want)
+
+
+class TestGetTypeRef(unittest.TestCase):
+    def test_non_nullable_object(self):
+        want = graphql.TypeRef(
+            name="SetArmedStateForHomeInput",
+            kind="INPUT_OBJECT",
+            is_list=False,
+            is_list_item_nullable=False,
+            is_nullable=False,
+        )
+        got = oracle.get_typeref(
+            'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
+            "InputValue",
+        )
+        self.assertEqual(got, want)
+
+    def test_inputfield_object_non_nullable(self):
+        want = graphql.TypeRef(
+            name="SetArmedStateForHomeInput",
+            kind="INPUT_OBJECT",
+            is_list=False,
+            is_list_item_nullable=False,
+            is_nullable=False,
+        )
+        got = oracle.get_typeref(
+            "Expected type SetArmedStateForHomeInput!, found 7.", "InputValue"
+        )
+        self.assertEqual(got, want)
+
+    def test_object_field(self):
+        want = graphql.TypeRef(
+            name="SetArmedStateForHomePayload",
+            kind="OBJECT",
+            is_list=False,
+            is_list_item_nullable=False,
+            is_nullable=True,
+        )
+        got = oracle.get_typeref(
+            'Field "setArmedStateForHome" of type "SetArmedStateForHomePayload" must have a selection of subfields. Did you mean "setArmedStateForHome { ... }"?',
+            "Field",
+        )
+        self.assertEqual(got, want)
+
+    def test_via_wrong_field(self):
+        want = graphql.TypeRef(
+            name="Boolean",
+            kind="SCALAR",
+            is_list=False,
+            is_list_item_nullable=False,
+            is_nullable=False,
+        )
+        got = oracle.get_typeref(
+            'Field "isMfaEnabled" must not have a selection since type "Boolean!" has no subfields.',
+            "Field",
+        )
+        self.assertEqual(got, want)
+
+    def test_field_regex_3(self):
+        want = graphql.TypeRef(
+            name="HomeSettings",
+            kind="OBJECT",
+            is_list=False,
+            is_list_item_nullable=False,
+            is_nullable=True,
+        )
+        got = oracle.get_typeref(
+            'Cannot query field "imwrongfield" on type "HomeSettings".', "Field"
+        )
+        self.assertEqual(got, want)
+
+    def test_skip_error_message(self):
+        want = None
+        with self.assertLogs() as cm:
+            got = oracle.get_typeref(
+                'Field "species" of type "Species" must have a selection of subfields. Did you mean "species { ... }"?',
+                "InputValue",
+            )
+            # https://stackoverflow.com/a/61381576
+            logging.warning("Dummy warning")
+        self.assertEqual(want, got)
+        self.assertCountEqual(["WARNING:root:Dummy warning"], cm.output)
+
+
+class TestTypeRef(unittest.TestCase):
+    def test_to_json(self):
+        name = "TestObject"
+        kind = "OBJECT"
+
+        want = {
+            "kind": "NON_NULL",
+            "name": None,
+            "ofType": {
+                "kind": "LIST",
+                "name": None,
+                "ofType": {
+                    "kind": "NON_NULL",
+                    "name": None,
+                    "ofType": {"kind": kind, "name": name, "ofType": None},
+                },
+            },
+        }
+        got = graphql.TypeRef(
+            name=name,
+            kind=kind,
+            is_list=True,
+            is_list_item_nullable=False,
+            is_nullable=False,
+        ).to_json()
+        self.assertEqual(got, want)
+
+
+class TestGraphql(unittest.TestCase):
+    def test_field_or_arg_type_from_json(self):
+        name = "TestObject"
+        kind = "OBJECT"
+        want = graphql.TypeRef(
+            name=name,
+            kind=kind,
+            is_list=True,
+            is_list_item_nullable=False,
+            is_nullable=False,
+        )
+        got = graphql.field_or_arg_type_from_json(
+            {
+                "kind": "NON_NULL",
+                "name": None,
+                "ofType": {
+                    "kind": "LIST",
+                    "name": None,
+                    "ofType": {
+                        "kind": "NON_NULL",
+                        "name": None,
+                        "ofType": {"kind": kind, "name": name, "ofType": None},
+                    },
+                },
+            }
+        )
+        self.assertEqual(got, want)
+
+
+class MockResponse:
+    def __init__(self, json_data):
+        self.json_data = json_data
+
+    def json(self):
+        return self.json_data
+
+
+def mocked_requests_post(*args, **kwargs):
+    return MockResponse(
+        {
+            "errors": [
+                {
+                    "message": 'Cannot query field "imwrongfield" on type "Mutation".',
+                    "locations": [{"line": 1, "column": 12}],
+                    "extensions": {"code": "GRAPHQL_VALIDATION_FAILED"},
+                }
+            ]
+        }
+    )
+
+
+class TestProbeTypename(unittest.TestCase):
+    @patch("requests.post", side_effect=mocked_requests_post)
+    def test_probe_typename(self, mock_requests_post):
+        typename = oracle.probe_typename("123", graphql.Config())
+        self.assertEqual(typename, "Mutation")
+        assert mock_requests_post.called
+
+
+if __name__ == "__main__":
+    unittest.main()

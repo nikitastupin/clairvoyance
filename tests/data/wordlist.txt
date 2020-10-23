@@ -1,0 +1,4 @@
+setNameFor
+input
+home
+devic
