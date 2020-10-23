@@ -1,9 +1,40 @@
+import urllib3
+import requests
+
 import json
 import logging
 from typing import List
 from typing import Dict
 from typing import Any
 from typing import Set
+
+
+def post(url, data=None, json=None, **kwargs):
+    session = requests.Session()
+
+    retries = urllib3.util.Retry(
+        status=5,
+        method_whitelist={
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PUT",
+            "TRACE",
+            "POST",
+        },
+        status_forcelist=range(500, 600),
+        backoff_factor=2,
+    )
+
+    adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    response = session.post(url, data=None, json=None, **kwargs)
+
+    return response
 
 
 class Schema:
