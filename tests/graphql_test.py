@@ -1,6 +1,8 @@
 import unittest
 import logging
 import json
+import time
+import subprocess
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -30,7 +32,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(got, want)
 
     def test_raise_exception_on_unknown_operation_type(self):
-        input = ['UnknownType']
+        input = ["UnknownType"]
 
         with self.assertRaises(Exception) as cm:
             self.schema.convert_path_to_document(input)
@@ -43,6 +45,22 @@ class TestSchema(unittest.TestCase):
         want = "subscription { FUZZ }"
         got = self.schema.convert_path_to_document(path)
         self.assertEqual(got, want)
+
+
+class TestPost(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._unstable = subprocess.Popen(["python3", "tests/server/unstable.py"])
+        time.sleep(1)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._unstable.terminate()
+        cls._unstable.wait()
+
+    def test_retries_on_500(self):
+        response = graphql.post("http://localhost:8000")
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == "__main__":
