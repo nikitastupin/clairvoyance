@@ -29,6 +29,14 @@ class TestSchema(unittest.TestCase):
         got = self.schema.convert_path_to_document(path)
         self.assertEqual(got, want)
 
+    def test_raise_exception_on_unknown_operation_type(self):
+        input = ['UnknownType']
+
+        with self.assertRaises(Exception) as cm:
+            self.schema.convert_path_to_document(input)
+
+        exception_msg = str(cm.exception)
+        self.assertEqual(exception_msg, "Unknown operation type")
 
 if __name__ == "__main__":
     unittest.main()
