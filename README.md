@@ -21,7 +21,7 @@ $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt h
 
 ## Development
 
-To run tests:
+To run unit tests:
 
 ```
 $ cd clairvoyance
