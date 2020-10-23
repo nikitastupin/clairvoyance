@@ -220,21 +220,20 @@ class MockResponse:
         return self.json_data
 
 
-def mocked_requests_post(*args, **kwargs):
-    return MockResponse(
-        {
-            "errors": [
-                {
-                    "message": 'Cannot query field "imwrongfield" on type "Mutation".',
-                    "locations": [{"line": 1, "column": 12}],
-                    "extensions": {"code": "GRAPHQL_VALIDATION_FAILED"},
-                }
-            ]
-        }
-    )
-
-
 class TestProbeTypename(unittest.TestCase):
+    def mocked_requests_post(*args, **kwargs):
+        return MockResponse(
+            {
+                "errors": [
+                    {
+                        "message": 'Cannot query field "imwrongfield" on type "Mutation".',
+                        "locations": [{"line": 1, "column": 12}],
+                        "extensions": {"code": "GRAPHQL_VALIDATION_FAILED"},
+                    }
+                ]
+            }
+        )
+
     @patch("requests.post", side_effect=mocked_requests_post)
     def test_probe_typename(self, mock_requests_post):
         typename = oracle.probe_typename("123", graphql.Config())
