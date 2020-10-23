@@ -156,7 +156,7 @@ class Config:
     def __init__(self):
         self.url = ""
         self.headers = dict()
-        self.bucket_size = 2048
+        self.bucket_size = 4096
 
 
 class TypeRef:
