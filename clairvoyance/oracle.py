@@ -69,7 +69,7 @@ def probe_valid_fields(
 
         document = input_document.replace("FUZZ", " ".join(bucket))
 
-        response = requests.post(
+        response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
         )
         errors = response.json()["errors"]
@@ -109,7 +109,7 @@ def probe_valid_args(
         "FUZZ", f"{field}({', '.join([w + ': 7' for w in wordlist])})"
     )
 
-    response = requests.post(
+    response = graphql.post(
         config.url, headers=config.headers, json={"query": document}
     )
     errors = response.json()["errors"]
@@ -209,7 +209,7 @@ def probe_input_fields(
 
     document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
 
-    response = requests.post(
+    response = graphql.post(
         config.url, headers=config.headers, json={"query": document}
     )
     errors = response.json()["errors"]
@@ -296,7 +296,7 @@ def probe_typeref(
     documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
     for document in documents:
-        response = requests.post(
+        response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
         )
         errors = response.json().get("errors", [])
@@ -341,7 +341,7 @@ def probe_typename(input_document: str, config: graphql.Config) -> str:
     wrong_field = "imwrongfield"
     document = input_document.replace("FUZZ", wrong_field)
 
-    response = requests.post(
+    response = graphql.post(
         config.url, headers=config.headers, json={"query": document}
     )
     errors = response.json()["errors"]
@@ -384,7 +384,7 @@ def fetch_root_typenames(config: graphql.Config) -> Dict[str, Optional[str]]:
     }
 
     for name, document in documents.items():
-        response = requests.post(
+        response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
         )
         data = response.json().get("data", {})
