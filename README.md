@@ -28,6 +28,4 @@ In case of question or issue with clairvoyance please refer to [wiki](https://gi
 
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
-Please refer to [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page for more information.
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change. For more information about tests, internal project structure and so on refer to [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page.
