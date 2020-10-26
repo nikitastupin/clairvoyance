@@ -34,19 +34,20 @@ def parse_args():
         help=f"Start with this document (default {defaults['document']})",
     )
     parser.add_argument(
-        "-w",
-        "--wordlist",
-        metavar="<file>",
-        type=argparse.FileType("r"),
-        help="This wordlist will be used for all brute force effots (fields, arguments and so on)",
-    )
-    parser.add_argument(
         "-H",
         "--header",
         metavar="<header>",
         dest="headers",
         action="append",
         default=[],
+    )
+    parser.add_argument(
+        "-w",
+        "--wordlist",
+        metavar="<file>",
+        required=True,
+        type=argparse.FileType("r"),
+        help="This wordlist will be used for all brute force effots (fields, arguments and so on)",
     )
     parser.add_argument("url")
 
