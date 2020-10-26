@@ -8,12 +8,8 @@ Clairvoyance allows us to get GraphQL API schema when introspection is disabled.
 
 ```
 $ git clone https://github.com/nikitastupin/clairvoyance.git
+$ cd clairvoyance
 $ pip3 install -r requirements.txt
-```
-
-```
-$ git clone https://github.com/nikitastupin/clairvoyance.git
-$ pipenv install -r requirements.txt
 ```
 
 ## Usage
