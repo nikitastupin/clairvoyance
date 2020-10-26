@@ -4,6 +4,18 @@ Some GraphQL APIs have disabled introspection. For example, [Apollo Server disab
 
 Clairvoyance allows us to get GraphQL API schema when introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
 
+## Installation
+
+```
+$ git clone https://github.com/nikitastupin/clairvoyance.git
+$ pip3 install -r requirements.txt
+```
+
+```
+$ git clone https://github.com/nikitastupin/clairvoyance.git
+$ pipenv install -r requirements.txt
+```
+
 ## Usage
 
 ```
