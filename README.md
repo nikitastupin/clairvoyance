@@ -22,11 +22,6 @@ $ python3 -m clairvoyance --help
 $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
-## Supported GraphQL libraries
-
-* [apollo-server](https://github.com/apollographql/apollo-server)
-* [graphql-js](https://github.com/graphql/graphql-js)
-
 ## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
