@@ -27,13 +27,8 @@ $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt h
 * [apollo-server](https://github.com/apollographql/apollo-server)
 * [graphql-js](https://github.com/graphql/graphql-js)
 
-## Development
+## Contributing
 
-To run unit tests:
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-```
-$ cd clairvoyance
-$ python3 -m unittest tests/*_test.py
-```
-
-Documentation located at [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page.
+Please refer to [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page for more information.
