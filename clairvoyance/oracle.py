@@ -435,8 +435,12 @@ def clairvoyance(
                 field.args.append(arg)
                 schema.add_type(arg.type.name, "INPUT_OBJECT")
 
-                #if arg.type.kind == "INPUT_OBJECT":
-                #   object_names = probe_input_object probing of input_object_logic
+                if arg.type.kind == "INPUT_OBJECT":
+                    input_object_names = probe_input_object(field.name, arg.name, wordlist, config)
+                    logging.debug(f"{typename}.{field.name}.{args.name}.input_object = {input_object_names}")
+                    for input_object_name in input_object_names:
+                        inpobj = graphql.InputObject(name=input_object_name)
+                        #continue to fill input_object 
         else:
             logging.debug(
                 f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
