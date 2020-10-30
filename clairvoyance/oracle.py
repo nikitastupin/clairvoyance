@@ -187,7 +187,7 @@ def get_valid_args(error_message: str) -> Set[str]:
     return valid_args
 
 
-def get_valid_input_fields(error_message: str) -> Set:
+def get_valid_input_objects(error_message: str) -> Set:
     valid_fields = set()
 
     single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
@@ -202,10 +202,10 @@ def get_valid_input_fields(error_message: str) -> Set:
     return valid_fields
 
 
-def probe_input_fields(
+def probe_input_objects(
     field: str, argument: str, wordlist: Set, config: graphql.Config
 ) -> Set[str]:
-    valid_input_fields = set(wordlist)
+    valid_input_objects = set(wordlist)
 
     document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
 
@@ -223,12 +223,12 @@ def probe_input_fields(
             error_message,
         )
         if match:
-            valid_input_fields.discard(match.group("invalid_field"))
+            valid_input_objects.discard(match.group("invalid_field"))
 
         # Second obtain field suggestions from error message
-        valid_input_fields |= get_valid_input_fields(error_message)
+        valid_input_objects |= get_valid_input_objects(error_message)
 
-    return valid_input_fields
+    return valid_input_objects
 
 
 def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
@@ -434,6 +434,9 @@ def clairvoyance(
 
                 field.args.append(arg)
                 schema.add_type(arg.type.name, "INPUT_OBJECT")
+
+                #if arg.type.kind == "INPUT_OBJECT":
+                #   object_names = probe_input_object probing of input_object_logic
         else:
             logging.debug(
                 f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
