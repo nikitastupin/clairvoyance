@@ -14,16 +14,16 @@ from clairvoyance import graphql
 def get_valid_fields(error_message: str) -> Set:
     valid_fields = set()
 
-    multiple_suggestions_re = 'Cannot query field "([A-Za-z]+)" on type "[a-zA-Z]+". Did you mean (?P<multi>("[A-Za-z]+", )+)(or "(?P<last>[A-Za-z]+)")?\?'
-    or_suggestion_re = 'Cannot query field "[a-zA-Z]+" on type "[a-zA-Z]+". Did you mean "(?P<one>[a-zA-Z]+)" or "(?P<two>[a-zA-Z]+)"\?'
-    single_suggestion_re = 'Cannot query field "([A-Za-z]+)" on type "[a-zA-Z]+". Did you mean "(?P<field>[A-Za-z]+)"\?'
-    invalid_field_re = 'Cannot query field "[a-zA-Z]+" on type "[a-zA-Z]+".'
+    multiple_suggestions_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean (?P<multi>("[_A-Za-z][_0-9A-Za-z]*", )+)(or "(?P<last>[_A-Za-z][_0-9A-Za-z]*)")?\?'
+    or_suggestion_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<one>[_A-Za-z][_0-9A-Za-z]*)" or "(?P<two>[_A-Za-z][_0-9A-Za-z]*)"\?'
+    single_suggestion_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<field>[_A-Za-z][_0-9A-Za-z]*)"\?'
+    invalid_field_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*".'
     # TODO: this regex here more than one time, make it shared?
     valid_field_regexes = [
-        'Field "(?P<field>[a-zA-Z]+)" of type "(?P<typeref>[a-zA-Z\[\]!]+)" must have a selection of subfields. Did you mean "[a-zA-Z]+ \{ ... \}"\?',
+        'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
     ]
 
-    no_fields_regex = 'Field "[a-zA-Z]+" must not have a selection since type "[a-zA-Z\[\]!]+" has no subfields.'
+    no_fields_regex = 'Field "[_A-Za-z][_0-9A-Za-z]*" must not have a selection since type "[0-9a-zA-Z\[\]!]+" has no subfields.'
 
     if re.fullmatch(no_fields_regex, error_message):
         return valid_fields
@@ -88,7 +88,7 @@ def probe_valid_fields(
 
             # First remove field if it produced an "Cannot query field" error
             match = re.search(
-                'Cannot query field "(?P<invalid_field>[a-zA-Z]+)"',
+                'Cannot query field "(?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)"',
                 error_message,
             )
             if match:
@@ -125,7 +125,7 @@ def probe_valid_args(
 
         # First remove arg if it produced an "Unknown argument" error
         match = re.search(
-            'Unknown argument "(?P<invalid_arg>[a-zA-Z]+)" on field "[a-zA-Z]+"',
+            'Unknown argument "(?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)" on field "[_A-Za-z][_0-9A-Za-z]*"',
             error_message,
         )
         if match:
@@ -153,17 +153,17 @@ def get_valid_args(error_message: str) -> Set[str]:
     valid_args = set()
 
     skip_regexes = [
-        'Unknown argument "[a-zA-Z]+" on field "[a-zA-Z]+" of type "[a-zA-Z]+".',
-        'Field "[a-zA-Z]+" of type "[a-zA-Z\[\]!]+" must have a selection of subfields. Did you mean "[a-zA-Z]+ \{ ... \}"\?',
-        'Field "[a-zA-Z]+" argument "[a-zA-Z]+" of type "[a-zA-Z\[\]!]+" is required, but it was not provided.',
+        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
+        'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
+        'Field "[_A-Za-z][_0-9A-Za-z]*" argument "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
     ]
 
     single_suggestion_regexes = [
-        'Unknown argument "[a-zA-Z]+" on field "[a-zA-Z]+" of type "[a-zA-Z]+". Did you mean "(?P<arg>[a-zA-Z]+)"\?'
+        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_0-9a-zA-Z\[\]!]*". Did you mean "(?P<arg>[_0-9a-zA-Z\[\]!]*)"\?'
     ]
 
     double_suggestion_regexes = [
-        'Unknown argument "[a-zA-Z]+" on field "[a-zA-Z]+" of type "[a-zA-Z\[\]!]+". Did you mean "(?P<first>[a-zA-Z]+)" or "(?P<second>[a-zA-Z]+)"\?'
+        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*". Did you mean "(?P<first>[_0-9a-zA-Z\[\]!]*)" or "(?P<second>[_0-9a-zA-Z\[\]!]*)"\?'
     ]
 
     for regex in skip_regexes:
@@ -190,7 +190,7 @@ def get_valid_args(error_message: str) -> Set[str]:
 def get_valid_input_fields(error_message: str) -> Set:
     valid_fields = set()
 
-    single_suggestion_re = "Field [a-zA-Z]+.(?P<field>[a-zA-Z]+) of required type [a-zA-Z\[\]!]+ was not provided."
+    single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
 
     if re.fullmatch(single_suggestion_re, error_message):
         match = re.fullmatch(single_suggestion_re, error_message)
@@ -219,7 +219,7 @@ def probe_input_fields(
 
         # First remove field if it produced an error
         match = re.search(
-            'Field "(?P<invalid_field>[a-zA-Z]+)" is not defined by type [a-zA-Z]+.',
+            'Field "(?P<invalid_field>[_0-9a-zA-Z\[\]!]*)" is not defined by type [_0-9a-zA-Z\[\]!]*.',
             error_message,
         )
         if match:
@@ -235,16 +235,16 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     typeref = None
 
     field_regexes = [
-        'Field "[a-zA-Z]+" of type "(?P<typeref>[a-zA-Z\[\]!]+)" must have a selection of subfields. Did you mean "[a-zA-Z]+ \{ ... \}"\?',
-        'Field "[a-zA-Z]+" must not have a selection since type "(?P<typeref>[a-zA-Z\[\]!]+)" has no subfields.',
-        'Cannot query field "[a-zA-Z]+" on type "(?P<typeref>[a-zA-Z\[\]!]+)".',
+        'Field "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_0-9a-zA-Z\[\]!]* \{ ... \}"\?',
+        'Field "[_0-9a-zA-Z\[\]!]*" must not have a selection since type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" has no subfields.',
+        'Cannot query field "[_0-9a-zA-Z\[\]!]*" on type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)".',
     ]
     arg_regexes = [
-        'Field "[a-zA-Z]+" argument "[a-zA-Z]+" of type "(?P<typeref>[a-zA-Z\[\]!]+)" is required, but it was not provided.',
-        "Expected type (?P<typeref>[a-zA-Z\[\]!]+), found .+\.",
+        'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
+        "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
     ]
     arg_skip_regexes = [
-        'Field "[a-zA-Z]+" of type "[a-zA-Z\[\]!]+" must have a selection of subfields\. Did you mean "[a-zA-Z]+ \{ \.\.\. \}"\?'
+        'Field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" must have a selection of subfields\. Did you mean "[_0-9a-zA-Z\[\]!]* \{ \.\.\. \}"\?'
     ]
 
     match = None
@@ -347,8 +347,8 @@ def probe_typename(input_document: str, config: graphql.Config) -> str:
     errors = response.json()["errors"]
 
     wrong_field_regexes = [
-        f'Cannot query field "{wrong_field}" on type "(?P<typename>[a-zA-Z]+)".',
-        f'Field "[a-zA-Z]+" must not have a selection since type "(?P<typename>[a-zA-Z\[\]!]+)" has no subfields.',
+        f'Cannot query field "{wrong_field}" on type "(?P<typename>[_0-9a-zA-Z\[\]!]*)".',
+        f'Field "[_0-9a-zA-Z\[\]!]*" must not have a selection since type "(?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" has no subfields.',
     ]
 
     match = None
