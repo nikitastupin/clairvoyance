@@ -188,52 +188,17 @@ class TypeRef:
     def __str__(self):
         return str(self.__dict__)
 
-    def to_json(self):
-        j = {}
+    def to_json(self) -> Dict[str, Any]:
+        j = {"kind": self.kind, "name": self.name, "ofType": None}
 
-        if not self.is_list and not self.is_list_item_nullable and not self.is_nullable:
-            return {
-                "kind": "NON_NULL",
-                "name": None,
-                "ofType": {"kind": self.kind, "name": self.name, "ofType": None},
-            }
-        elif self.non_null and self.list and self.non_null_item:
-            j = {
-                "kind": "NON_NULL",
-                "name": None,
-                "ofType": {
-                    "kind": "LIST",
-                    "name": None,
-                    "ofType": {
-                        "kind": "NON_NULL",
-                        "name": None,
-                        "ofType": {
-                            "kind": self.kind,
-                            "name": self.name,
-                            "ofType": None,
-                        },
-                    },
-                },
-            }
-        elif not self.is_list and not self.is_list_item_nullable and self.is_nullable:
-            return {"kind": self.kind, "name": self.name, "ofType": None}
-        elif self.is_list:
-            j = {
-                "kind": "LIST",
-                "name": None,
-            }
-            if self.is_list_item_nullable and self.is_nullable:
-                j["ofType"] = {"kind": self.kind, "name": self.name, "ofType": None}
-            elif not self.is_list_item_nullable and self.is_nullable:
-                j["ofType"] = {
-                    "kind": "NON_NULL",
-                    "name": None,
-                    "ofType": {"kind": self.kind, "name": self.name, "ofType": None},
-                }
-            else:
-                raise Exception("Not implemented")
-        else:
-            raise Exception("Not implemented")
+        if self.non_null_item:
+            j = {"kind": "NON_NULL", "name": None, "ofType": j}
+
+        if self.list:
+            j = {"kind": "LIST", "name": None, "ofType": j}
+
+        if self.non_null:
+            j = {"kind": "NON_NULL", "name": None, "ofType": j}
 
         return j
 
