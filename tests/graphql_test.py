@@ -63,5 +63,30 @@ class TestPost(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+class TestToJson(unittest.TestCase):
+    def test_typeref_to_json(self):
+        want = {
+            "name": None,
+            "kind": "NON_NULL",
+            "ofType": {
+                "name": None,
+                "kind": "LIST",
+                "ofType": {"name": "String", "kind": "SCALAR", "ofType": None},
+            },
+        }
+
+        typeref = graphql.TypeRef(
+            name="String",
+            kind="SCALAR",
+            is_list=True,
+            is_list_item_nullable=True,
+            is_nullable=False,
+        )
+        got = typeref.to_json()
+
+        # https://github.com/nikitastupin/clairvoyance/issues/9
+        self.assertEqual(got, want)
+
+
 if __name__ == "__main__":
     unittest.main()
