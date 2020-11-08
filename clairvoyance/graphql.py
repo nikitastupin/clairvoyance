@@ -167,12 +167,14 @@ class TypeRef:
         is_list: bool = False,
         is_list_item_nullable: bool = False,
         is_nullable: bool = True,
+        is_input_object: bool = False
     ):
         self.name = name
         self.kind = kind
         self.is_list = is_list
         self.is_list_item_nullable = is_list_item_nullable
         self.is_nullable = is_nullable
+        self.is_input_object = is_input_object
         self.non_null = not self.is_nullable
         self.list = self.is_list
         self.non_null_item = not self.is_list_item_nullable
@@ -188,52 +190,20 @@ class TypeRef:
     def __str__(self):
         return str(self.__dict__)
 
-    def to_json(self):
-        j = {}
+    def to_json(self) -> Dict[str, Any]:
+        j = {"kind": self.kind, "name": self.name, "ofType": None}
 
-        if not self.is_list and not self.is_list_item_nullable and not self.is_nullable:
-            return {
-                "kind": "NON_NULL",
-                "name": None,
-                "ofType": {"kind": self.kind, "name": self.name, "ofType": None},
-            }
-        elif self.non_null and self.list and self.non_null_item:
-            j = {
-                "kind": "NON_NULL",
-                "name": None,
-                "ofType": {
-                    "kind": "LIST",
-                    "name": None,
-                    "ofType": {
-                        "kind": "NON_NULL",
-                        "name": None,
-                        "ofType": {
-                            "kind": self.kind,
-                            "name": self.name,
-                            "ofType": None,
-                        },
-                    },
-                },
-            }
-        elif not self.is_list and not self.is_list_item_nullable and self.is_nullable:
-            return {"kind": self.kind, "name": self.name, "ofType": None}
-        elif self.is_list:
-            j = {
-                "kind": "LIST",
-                "name": None,
-            }
-            if self.is_list_item_nullable and self.is_nullable:
-                j["ofType"] = {"kind": self.kind, "name": self.name, "ofType": None}
-            elif not self.is_list_item_nullable and self.is_nullable:
-                j["ofType"] = {
-                    "kind": "NON_NULL",
-                    "name": None,
-                    "ofType": {"kind": self.kind, "name": self.name, "ofType": None},
-                }
-            else:
-                raise Exception("Not implemented")
-        else:
-            raise Exception("Not implemented")
+        if self.non_null_item:
+            j = {"kind": "NON_NULL", "name": None, "ofType": j}
+
+        if self.list:
+            j = {"kind": "LIST", "name": None, "ofType": j}
+
+        if self.non_null:
+            j = {"kind": "NON_NULL", "name": None, "ofType": j}
+
+        if self.is_input_object:
+            j = {"kind": "INPUT_OBJECT", "name": None, "ofType": self.ofType}
 
         return j
 
@@ -242,6 +212,7 @@ class InputValue:
     def __init__(self, name: str = "", typ: TypeRef = None):
         self.name = name
         self.type = typ or TypeRef()
+        self.defaultValue = none
 
     def __str__(self):
         return f'{{ "name": {self.name}, "type": {str(self.type)} }}'
@@ -258,6 +229,15 @@ class InputValue:
     def from_json(cls, jso: Dict[str, Any]) -> "InputValue":
         name = jso["name"]
         typ = field_or_arg_type_from_json(jso["type"])
+
+        input_fields = []
+
+        for input_field in jso["input_fields"]:
+            input_fields.append(Field.from_json(input_field))
+
+        return cls(name=name, typ=typ)
+
+        
 
         return cls(name=name, typ=typ)
 
@@ -280,6 +260,11 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
             typ = TypeRef(
                 name=actual_type["name"], kind=actual_type["kind"], is_list=True
             )
+        elif jso["kind"] == "INPUT_OBJECT":
+            typ = TypeRef(
+                name=actual_type["name"],
+                kind=actual_type["kind"],
+                is_input_object=True)
         else:
             raise Exception(f"Unexpected type.kind: {jso['kind']}")
     elif not jso["ofType"]["ofType"]["ofType"]:
