@@ -316,7 +316,7 @@ class Type:
         # dirty hack
         if not self.fields:
             field_typeref = TypeRef(name="String", kind="SCALAR")
-            dummy = Field("Dummy", field_typeref)
+            dummy = Field("dummy", field_typeref)
             self.fields.append(dummy)
 
         output = {
