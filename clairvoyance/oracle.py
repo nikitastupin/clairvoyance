@@ -276,15 +276,15 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         else:
             kind = "OBJECT"
         is_list = True if "[" and "]" in tk else False
-        is_list_item_nullable = False if not is_list or "!]" in tk else True
-        is_nullable = False if tk.endswith("!") else True
+        non_null_item = False if not is_list or "!]" in tk else True
+        non_null = True if tk.endswith("!") else False
 
         typeref = graphql.TypeRef(
             name=name,
             kind=kind,
             is_list=is_list,
-            is_list_item_nullable=is_list_item_nullable,
-            is_nullable=is_nullable,
+            non_null_item=non_null_item,
+            non_null=non_null,
         )
     else:
         logging.warning(f"Unknown error message: '{error_message}'")
@@ -420,17 +420,19 @@ def clairvoyance(
     logging.debug(f"{typename}.fields = {valid_mutation_fields}")
 
     for field_name in valid_mutation_fields:
-        field = graphql.Field(name=field_name)
-        field.type = probe_field_type(field.name, config, input_document)
+        typeref = probe_field_type(field_name, config, input_document)
+        field = graphql.Field(field_name, typeref)
+        
 
         if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
             arg_names = probe_args(field.name, wordlist, config, input_document)
             logging.debug(f"{typename}.{field_name}.args = {arg_names}")
             for arg_name in arg_names:
-                arg = graphql.InputValue(name=arg_name)
-                arg.type = probe_arg_typeref(
-                    field.name, arg.name, config, input_document
+                arg_typeref = probe_arg_typeref(
+                    field.name, arg_name, config, input_document
                 )
+                arg = graphql.InputValue(arg_name, arg_typeref)
+                
 
                 field.args.append(arg)
                 schema.add_type(arg.type.name, "INPUT_OBJECT")
