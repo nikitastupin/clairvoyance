@@ -127,7 +127,7 @@ def probe_valid_args(
 
         # First remove arg if it produced an "Unknown argument" error
         match = re.search(
-            'Unknown argument "(?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)" on field "[_A-Za-z][_0-9A-Za-z]*"',
+            'Unknown argument "(?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)" on field "[_A-Za-z][_0-9A-Za-z.]*"',
             error_message,
         )
         if match:
@@ -158,6 +158,7 @@ def get_valid_args(error_message: str) -> Set[str]:
         'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
         'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
         'Field "[_A-Za-z][_0-9A-Za-z]*" argument "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
+        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z.]*"\.',
     ]
 
     single_suggestion_regexes = [
@@ -297,6 +298,8 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
 def probe_typeref(
     documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
+    typeref = None
+
     for document in documents:
         response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
@@ -308,8 +311,8 @@ def probe_typeref(
             if typeref:
                 return typeref
 
-    if not typref:
-        raise Exception(f"Unable to get TypeRef for '{input_document}'")
+    if not typeref:
+        raise Exception(f"Unable to get TypeRef for {documents}")
 
     return None
 
