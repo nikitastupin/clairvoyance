@@ -206,7 +206,7 @@ class TypeRef:
 class InputValue:
     def __init__(self, name: str, typ: TypeRef):
         self.name = name
-        self.type = typ 
+        self.type = typ
 
     def __str__(self):
         return f'{{ "name": {self.name}, "type": {str(self.type)} }}'
@@ -251,7 +251,7 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
         actual_type = jso["ofType"]["ofType"]
 
         if jso["kind"] == "NON_NULL":
-            pass
+            typ = TypeRef(actual_type["name"], actual_type["kind"], True, False, True)
         elif jso["kind"] == "LIST":
             typ = TypeRef(
                 name=actual_type["name"],
@@ -277,11 +277,12 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
 
 
 class Field:
-    def __init__(
-        self, name: str, typ: TypeRef, args: List[InputValue] = None
-    ):
+    def __init__(self, name: str, typeref: TypeRef, args: List[InputValue] = None):
+        if not typeref:
+            raise Exception(f"Can't create {name} Field from {typeref} TypeRef.")
+
         self.name = name
-        self.type = typ
+        self.type = typeref
         self.args = args or []
 
     def to_json(self):
@@ -303,7 +304,7 @@ class Field:
         for a in jso["args"]:
             args.append(InputValue.from_json(a))
 
-        return cls(name=name, typ=typ, args=args)
+        return cls(name, typ, args)
 
 
 class Type:
