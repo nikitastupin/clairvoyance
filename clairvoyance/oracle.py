@@ -276,7 +276,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         else:
             kind = "OBJECT"
         is_list = True if "[" and "]" in tk else False
-        non_null_item = False if not is_list or "!]" in tk else True
+        non_null_item = True if is_list or "!]" in tk else False
         non_null = True if tk.endswith("!") else False
 
         typeref = graphql.TypeRef(
