@@ -76,11 +76,7 @@ class TestToJson(unittest.TestCase):
         }
 
         typeref = graphql.TypeRef(
-            name="String",
-            kind="SCALAR",
-            is_list=True,
-            is_list_item_nullable=True,
-            is_nullable=False,
+            "String", "SCALAR", is_list=True, non_null_item=False, non_null=True
         )
         got = typeref.to_json()
 
