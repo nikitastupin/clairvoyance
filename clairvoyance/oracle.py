@@ -17,7 +17,9 @@ def get_valid_fields(error_message: str) -> Set:
     multiple_suggestions_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean (?P<multi>("[_A-Za-z][_0-9A-Za-z]*", )+)(or "(?P<last>[_A-Za-z][_0-9A-Za-z]*)")?\?'
     or_suggestion_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<one>[_A-Za-z][_0-9A-Za-z]*)" or "(?P<two>[_A-Za-z][_0-9A-Za-z]*)"\?'
     single_suggestion_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<field>[_A-Za-z][_0-9A-Za-z]*)"\?'
-    invalid_field_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*".'
+    invalid_field_re = (
+        'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*".'
+    )
     # TODO: this regex here more than one time, make it shared?
     valid_field_regexes = [
         'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
@@ -276,7 +278,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         else:
             kind = "OBJECT"
         is_list = True if "[" and "]" in tk else False
-        non_null_item = True if is_list or "!]" in tk else False
+        non_null_item = True if is_list and "!]" in tk else False
         non_null = True if tk.endswith("!") else False
 
         typeref = graphql.TypeRef(
@@ -422,7 +424,6 @@ def clairvoyance(
     for field_name in valid_mutation_fields:
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
-        
 
         if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
             arg_names = probe_args(field.name, wordlist, config, input_document)
@@ -432,7 +433,6 @@ def clairvoyance(
                     field.name, arg_name, config, input_document
                 )
                 arg = graphql.InputValue(arg_name, arg_typeref)
-                
 
                 field.args.append(arg)
                 schema.add_type(arg.type.name, "INPUT_OBJECT")
