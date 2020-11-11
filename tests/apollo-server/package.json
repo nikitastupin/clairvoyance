@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "apollo-server": "^2.19.0"
+  }
+}
