@@ -335,6 +335,7 @@ def probe_arg_typeref(
     documents = [
         input_document.replace("FUZZ", f"{field}({arg}: 7)"),
         input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
+        input_document.replace("FUZZ", f"{field}({arg[:-1]}: 7)"),
     ]
 
     typeref = probe_typeref(documents, "InputValue", config)
