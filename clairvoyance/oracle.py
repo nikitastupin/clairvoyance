@@ -334,9 +334,9 @@ def probe_arg_typeref(
     field: str, arg: str, config: graphql.Config, input_document: str
 ) -> graphql.TypeRef:
     documents = [
-        input_document.replace("FUZZ", f"{field}({arg}: 7)"),
-        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
         input_document.replace("FUZZ", f"{field}({arg[:-1]}: 7)"),
+        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
+        input_document.replace("FUZZ", f"{field}({arg}: 7)"),
     ]
 
     typeref = probe_typeref(documents, "InputValue", config)
