@@ -79,8 +79,8 @@ class TestToJson(unittest.TestCase):
             name="String",
             kind="SCALAR",
             is_list=True,
-            is_list_item_nullable=True,
-            is_nullable=False,
+            non_null_item=False,
+            non_null=True,
         )
         got = typeref.to_json()
 
