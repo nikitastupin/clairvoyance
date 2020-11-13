@@ -482,7 +482,7 @@ def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]
     for error_message in errors:
         # Frist remove entity if it produced an error
         match = re.search(
-            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*\.',
+            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*"\.',
             error_message,
         )
         if match:
