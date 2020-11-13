@@ -84,11 +84,20 @@ if __name__ == "__main__":
 
     input_document = args.document if args.document else None
 
+    mode = "OBJECT"  # OBJECT or INPUT_OBJECT
     ignore = {"Int", "Float", "String", "Boolean", "ID"}
     while True:
-        schema = oracle.clairvoyance(
-            wordlist, config, input_schema=input_schema, input_document=input_document
-        )
+        if mode == "OBJECT":
+            schema = oracle.clairvoyance(
+                wordlist,
+                config,
+                input_schema=input_schema,
+                input_document=input_document,
+            )
+        elif mode == "INPUT_OBJECT":
+            pass
+        else:
+            raise Exception(f"Unknown mode {mode}")
 
         if args.output:
             with open(args.output, "w") as f:
@@ -99,8 +108,22 @@ if __name__ == "__main__":
         input_schema = json.loads(schema)
         s = graphql.Schema(schema=input_schema)
         next = s.get_type_without_fields(ignore)
-        ignore.add(next)
+
         if next:
-            input_document = s.convert_path_to_document(s.get_path_from_root(next))
+            if next.kind == "OBJECT":
+                mode = "OBJECT"
+            elif next.kind == "INPUT_OBJECT":
+                mode = "INPUT_OBJECT"
+            else:
+                raise Exception(f"Don't have mode for {next.kind} kind")
+
+            if mode == "OBJECT":
+                next = next.name
+                ignore.add(next)
+                input_document = s.convert_path_to_document(s.get_path_from_root(next))
+            elif mode == "INPUT_OBJECT":
+                pass
+            else:
+                raise Exception(f"Unknown mode {mode}")
         else:
             break

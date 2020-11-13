@@ -22,7 +22,7 @@ class TestSchema(unittest.TestCase):
 
     def test_get_type_without_fields(self):
         want = "Mutation"
-        got = self.schema.get_type_without_fields()
+        got = self.schema.get_type_without_fields(set()).name
         self.assertEqual(got, want)
 
     def test_convert_path_to_document(self):

@@ -449,3 +449,13 @@ def clairvoyance(
         schema.add_type(field.type.name, "OBJECT")
 
     return schema.to_json()
+
+
+# clairvoyance() for INPUT_OBJECT
+def clairvoyance_io(
+    wordlist: List[str],
+    config: graphql.Config,
+    input_schema: Dict[str, Any] = None,
+    input_document: str = None,
+) -> Dict[str, Any]:
+    pass

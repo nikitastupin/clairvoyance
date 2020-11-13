@@ -126,12 +126,12 @@ class Schema:
 
         return path_from_root
 
-    def get_type_without_fields(self, ignore: Set[str] = []) -> str:
+    def get_type_without_fields(self, ignore: Set[str]) -> "Type":
         for t in self.types.values():
-            if not t.fields and t.name not in ignore and t.kind != "INPUT_OBJECT":
-                return t.name
+            if not t.fields and t.name not in ignore:
+                return t
 
-        return ""
+        return None
 
     def convert_path_to_document(self, path: List[str]) -> str:
         logging.debug(f"Entered convert_path_to_document({path})")
