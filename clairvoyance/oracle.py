@@ -245,6 +245,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     arg_regexes = [
         'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
         "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
+        "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*) cannot represent .+",
     ]
     arg_skip_regexes = [
         'Field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" must have a selection of subfields\. Did you mean "[_0-9a-zA-Z\[\]!]* \{ \.\.\. \}"\?'
@@ -451,6 +452,18 @@ def clairvoyance(
     return schema.to_json()
 
 
+def probe_input_value_typeref(
+    input_value: str, input_document: str, config: graphql.Config
+) -> graphql.TypeRef:
+    documents = [
+        input_document.replace("FUZZ", f"{input_value}: 7"),
+        input_document.replace("FUZZ", f"{input_value}: {{}}"),
+    ]
+
+    typeref = probe_typeref(documents, "InputValue", config)
+    return typeref
+
+
 def probe_input_values(
     wordlist: Set, input_document: str, config: graphql.Config
 ) -> List[str]:
@@ -500,12 +513,19 @@ def clairvoyance_io(
     config: graphql.Config,
     input_schema: Dict[str, Any],
     input_document: str,
+    name: str,
 ) -> Dict[str, Any]:
     schema = graphql.Schema(schema=input_schema)
 
     errors = probe_input_values(wordlist, input_document, config)
     input_values = obtain_valid_input_values(wordlist, errors)
-    logging.warning(f"AAA {input_values}")
-    # for each InputValue obtain it's TypeRef
+
+    for input_value in input_values:
+        typeref = probe_input_value_typeref(input_value, input_document, config)
+        logging.info(
+            f"{input_value}.TypeRef.kind = {typeref.kind}\t{input_value}.TypeRef.name = {typeref.name}"
+        )
+
+        schema.types[name].fields.append(graphql.Field(input_value, typeref))
 
     return schema.to_json()

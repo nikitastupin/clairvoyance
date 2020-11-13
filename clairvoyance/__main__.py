@@ -100,6 +100,7 @@ if __name__ == "__main__":
                 config,
                 input_schema=input_schema,
                 input_document=input_document,
+                name=next,
             )
         else:
             raise Exception(f"Unknown mode {mode}")
