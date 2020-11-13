@@ -95,7 +95,12 @@ if __name__ == "__main__":
                 input_document=input_document,
             )
         elif mode == "INPUT_OBJECT":
-            pass
+            schema = oracle.clairvoyance_io(
+                wordlist,
+                config,
+                input_schema=input_schema,
+                input_document=input_document,
+            )
         else:
             raise Exception(f"Unknown mode {mode}")
 
@@ -117,12 +122,14 @@ if __name__ == "__main__":
             else:
                 raise Exception(f"Don't have mode for {next.kind} kind")
 
+            next = next.name
+            ignore.add(next)
+
             if mode == "OBJECT":
-                next = next.name
-                ignore.add(next)
                 input_document = s.convert_path_to_document(s.get_path_from_root(next))
             elif mode == "INPUT_OBJECT":
-                pass
+                fpath, apath = s.get_path_from_root_ex(next)
+                input_document = s.convert_path_to_document_ex(fpath, apath)
             else:
                 raise Exception(f"Unknown mode {mode}")
         else:

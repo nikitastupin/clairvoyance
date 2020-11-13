@@ -451,11 +451,60 @@ def clairvoyance(
     return schema.to_json()
 
 
+def probe_input_values(
+    wordlist: Set, input_document: str, config: graphql.Config
+) -> List[str]:
+    errors = []
+
+    for input_document in input_documents:
+        for i in range(0, len(wordlist), config.bucket_size):
+            bucket = wordlist[i : i + config.bucket_size]
+
+            document = input_document.replace(
+                "FUZZ", ", ".join([w + ": 7" for w in wordlist])
+            )
+
+            response = graphql.post(
+                config.url, headers=config.headers, json={"query": document}
+            )
+
+            errors += [e["message"] for e in response.json()["errors"]]
+
+    return errors
+
+
+def grep_valid_input_values(error_message: str) -> Set[str]:
+    return get_valid_input_fields(error_message)
+
+
+def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]:
+    valid_input_values = wordlist.copy()
+
+    for error_message in errors:
+        # Frist remove entity if it produced an error
+        match = re.search(
+            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*\.',
+            error_message,
+        )
+        if match:
+            valid_input_values.discard(match.group("field"))
+
+        # Second obtain suggestions from error message
+        valid_input_values |= grep_valid_input_values(error_message)
+
+    return valid_input_values
+
+
 # clairvoyance() for INPUT_OBJECT
 def clairvoyance_io(
     wordlist: List[str],
     config: graphql.Config,
-    input_schema: Dict[str, Any] = None,
-    input_document: str = None,
+    input_schema: Dict[str, Any],
+    input_document: str,
 ) -> Dict[str, Any]:
-    pass
+    schema = graphql.Schema(schema=input_schema)
+
+    errors = probe_input_values(wordlist, input_document, config)
+    input_values = obtain_valid_input_values(wordlist, errors)
+    logging.warning(input_values)
+    # for each InputValue obtain it's TypeRef
