@@ -2,7 +2,7 @@ name: Tests
 
 on:
   push:
-    paths: 
+    paths:
       - 'clairvoyance/**'
       - 'tests/**'
       - '.github/workflows/*'
@@ -54,13 +54,23 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Clone SWAPI and install dependencies
+    - name: Install deps and run server
       run: |
-        cd /tmp
-        git clone https://github.com/graphql/swapi-graphql.git
-        cd swapi-graphql
-        git checkout 8e9329077630000d66b53c031b3d3e6cc4f9052a
+        cd tests/apollo-server
         npm install
+        node src/index.js &
+    - name: Wait for server
+      run: |
+        echo "SERVER=http://localhost:4000" > $GITHUB_ENV
+
+        for i in {0..9}; do
+          echo "Sleep for 1 second ..."
+          sleep 1
+          if curl -s -o /dev/null "$SERVER"; then
+            echo "$SERVER returned HTTP response!"
+            break
+          fi
+        done
     - name: Test with pytest
       run: |
         python -m unittest tests/system.py
