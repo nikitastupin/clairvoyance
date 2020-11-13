@@ -79,13 +79,32 @@ class TestToJson(unittest.TestCase):
             name="String",
             kind="SCALAR",
             is_list=True,
-            is_list_item_nullable=True,
-            is_nullable=False,
+            non_null_item=False,
+            non_null=True,
         )
         got = typeref.to_json()
 
         # https://github.com/nikitastupin/clairvoyance/issues/9
         self.assertEqual(got, want)
+
+
+class TestFromJson(unittest.TestCase):
+    def test_typeref_from_json(self):
+        want = graphql.TypeRef("Launch", "OBJECT", True, False, True)
+
+        typeref = {
+            "kind": "NON_NULL",
+            "name": None,
+            "ofType": {
+                "kind": "LIST",
+                "name": None,
+                "ofType": {"kind": "OBJECT", "name": "Launch", "ofType": None},
+            },
+        }
+
+        got = graphql.field_or_arg_type_from_json(typeref)
+
+        self.assertEqual(got.to_json(), want.to_json())
 
 
 if __name__ == "__main__":

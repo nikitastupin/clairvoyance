@@ -162,20 +162,20 @@ class Config:
 class TypeRef:
     def __init__(
         self,
-        name: str = "",
-        kind: str = "",
+        name: str,
+        kind: str,
         is_list: bool = False,
-        is_list_item_nullable: bool = False,
-        is_nullable: bool = True,
+        non_null_item: bool = False,
+        non_null: bool = False,
     ):
+        if not is_list and non_null_item:
+            raise Exception("elements can't be NON_NULL if TypeRef is not LIST")
         self.name = name
         self.kind = kind
         self.is_list = is_list
-        self.is_list_item_nullable = is_list_item_nullable
-        self.is_nullable = is_nullable
-        self.non_null = not self.is_nullable
+        self.non_null = non_null
         self.list = self.is_list
-        self.non_null_item = not self.is_list_item_nullable
+        self.non_null_item = non_null_item
 
     def __eq__(self, other):
         if isinstance(other, TypeRef):
@@ -204,9 +204,9 @@ class TypeRef:
 
 
 class InputValue:
-    def __init__(self, name: str = "", typ: TypeRef = None):
+    def __init__(self, name: str, typ: TypeRef):
         self.name = name
-        self.type = typ or TypeRef()
+        self.type = typ
 
     def __str__(self):
         return f'{{ "name": {self.name}, "type": {str(self.type)} }}'
@@ -239,7 +239,7 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
             typ = TypeRef(
                 name=actual_type["name"],
                 kind=actual_type["kind"],
-                is_nullable=False,
+                non_null=True,
             )
         elif jso["kind"] == "LIST":
             typ = TypeRef(
@@ -251,13 +251,13 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
         actual_type = jso["ofType"]["ofType"]
 
         if jso["kind"] == "NON_NULL":
-            pass
+            typ = TypeRef(actual_type["name"], actual_type["kind"], True, False, True)
         elif jso["kind"] == "LIST":
             typ = TypeRef(
                 name=actual_type["name"],
                 kind=actual_type["kind"],
                 is_list=True,
-                is_list_item_nullable=False,
+                non_null_item=True,
             )
         else:
             raise Exception(f"Unexpected type.kind: {jso['kind']}")
@@ -267,8 +267,8 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
             name=actual_type["name"],
             kind=actual_type["kind"],
             is_list=True,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=True,
+            non_null=True,
         )
     else:
         raise Exception("Invalid field or arg (too many 'ofType')")
@@ -277,11 +277,12 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
 
 
 class Field:
-    def __init__(
-        self, name: str = "", typ: TypeRef = None, args: List[InputValue] = None
-    ):
+    def __init__(self, name: str, typeref: TypeRef, args: List[InputValue] = None):
+        if not typeref:
+            raise Exception(f"Can't create {name} Field from {typeref} TypeRef.")
+
         self.name = name
-        self.type = typ or TypeRef()
+        self.type = typeref
         self.args = args or []
 
     def to_json(self):
@@ -303,7 +304,7 @@ class Field:
         for a in jso["args"]:
             args.append(InputValue.from_json(a))
 
-        return cls(name=name, typ=typ, args=args)
+        return cls(name, typ, args)
 
 
 class Type:
@@ -315,8 +316,8 @@ class Type:
     def to_json(self):
         # dirty hack
         if not self.fields:
-            dummy = Field("dummy")
-            dummy.type = TypeRef(name="String", kind="SCALAR")
+            field_typeref = TypeRef(name="String", kind="SCALAR")
+            dummy = Field("dummy", field_typeref)
             self.fields.append(dummy)
 
         output = {
