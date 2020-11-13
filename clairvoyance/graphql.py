@@ -7,6 +7,7 @@ from typing import List
 from typing import Dict
 from typing import Any
 from typing import Set
+from typing import Tuple
 
 
 def post(url, data=None, json=None, **kwargs):
@@ -126,6 +127,61 @@ class Schema:
 
         return path_from_root
 
+    @property
+    def roots(self) -> List[str]:
+        roots = [
+            self._schema["queryType"]["name"] if self._schema["queryType"] else "",
+            self._schema["mutationType"]["name"]
+            if self._schema["mutationType"]
+            else "",
+            self._schema["subscriptionType"]["name"]
+            if self._schema["subscriptionType"]
+            else "",
+        ]
+        roots = [r for r in roots if r]
+
+        if not roots:
+            raise Exception("No root types")
+
+        return roots
+
+    def get_path_from_root_ex(self, name: str) -> Tuple[List[str], List[str]]:
+        logging.debug(f"Entered get_path_from_root_ex({name})")
+
+        fpath = None  # field path
+        apath = None  # argument path
+
+        if name not in self.types:
+            raise Exception(f"Type '{name}' not in schema!")
+
+        kind = self.types[name].kind
+
+        if kind == "OBJECT":
+            fpath = self.get_path_from_root(name)
+        elif kind == "INPUT_OBJECT":
+            cur = name
+            roots = self.roots
+
+            while cur not in roots:
+                for t in self.types.values():
+
+                    if t.kind == "OBJECT":
+                        for f in t.fields:
+                            for a in f.args:
+                                if a.type.name == cur:
+                                    apath.insert(0, a.name)
+                                    fpath = self.get_path_from_root(f.type.name)
+                                    cur = roots[0]  # to break from outer loop
+                                    break
+                    elif t.kind == "INPUT_OBJECT":
+                        raise Exception(f"Handling for kind {t.kind} not implemented")
+                    else:
+                        raise Exception(f"Handling for kind {t.kind} not implemented")
+        else:
+            raise Exception(f"Handling of {kind} not implemented")
+
+        return fpath, apath
+
     def get_type_without_fields(self, ignore: Set[str]) -> "Type":
         for t in self.types.values():
             if not t.fields and t.name not in ignore:
@@ -150,6 +206,13 @@ class Schema:
             raise Exception("Unknown operation type")
 
         return doc
+
+    # fpath - field path
+    # apath - argument path
+    # def convert_path_to_document_ex(self, fpath: List[str], apath: List[str]) -> str:
+    #     logging.debug(f"Entered convert_path_to_document_ex({fpath}, {apath})")
+    #
+    #
 
 
 class Config:
