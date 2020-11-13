@@ -209,10 +209,39 @@ class Schema:
 
     # fpath - field path
     # apath - argument path
-    # def convert_path_to_document_ex(self, fpath: List[str], apath: List[str]) -> str:
-    #     logging.debug(f"Entered convert_path_to_document_ex({fpath}, {apath})")
-    #
-    #
+    def convert_path_to_document_ex(self, fpath: List[str], apath: List[str]) -> str:
+        logging.debug(f"Entered convert_path_to_document_ex({fpath}, {apath})")
+
+        if len(fpath) < 2:
+            raise Exception(f"len(fpath) is {len(fpath)} but must be at least 2")
+
+        doc = None
+
+        if fpath and apath:
+            args = "FUZZ"
+
+            while apath:
+                args = f"{apath.pop()}: {{ {args} }}"
+
+            doc = f"{fpath.pop()} ({args})"
+
+            while len(fpath) > 1:
+                doc = f"{fpath.pop()} {{ {doc} }}"
+
+            if path[0] == self._schema["queryType"]["name"]:
+                doc = f"query {{ {doc} }}"
+            elif path[0] == self._schema["mutationType"]["name"]:
+                doc = f"mutation {{ {doc} }}"
+            elif path[0] == self._schema["subscriptionType"]["name"]:
+                doc = f"subscription {{ {doc} }}"
+            else:
+                raise Exception(f"Unknown operation type {path[0]}")
+        elif fpath and not apath:
+            doc = self.convert_path_to_document(fpath)
+        else:
+            raise Exception("Not implemented")
+
+        return doc
 
 
 class Config:
