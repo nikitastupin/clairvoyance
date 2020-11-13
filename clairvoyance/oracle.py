@@ -17,7 +17,9 @@ def get_valid_fields(error_message: str) -> Set:
     multiple_suggestions_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean (?P<multi>("[_A-Za-z][_0-9A-Za-z]*", )+)(or "(?P<last>[_A-Za-z][_0-9A-Za-z]*)")?\?'
     or_suggestion_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<one>[_A-Za-z][_0-9A-Za-z]*)" or "(?P<two>[_A-Za-z][_0-9A-Za-z]*)"\?'
     single_suggestion_re = 'Cannot query field "([_A-Za-z][_0-9A-Za-z]*)" on type "[_A-Za-z][_0-9A-Za-z]*". Did you mean "(?P<field>[_A-Za-z][_0-9A-Za-z]*)"\?'
-    invalid_field_re = 'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*".'
+    invalid_field_re = (
+        'Cannot query field "[_A-Za-z][_0-9A-Za-z]*" on type "[_A-Za-z][_0-9A-Za-z]*".'
+    )
     # TODO: this regex here more than one time, make it shared?
     valid_field_regexes = [
         'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
@@ -125,7 +127,7 @@ def probe_valid_args(
 
         # First remove arg if it produced an "Unknown argument" error
         match = re.search(
-            'Unknown argument "(?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)" on field "[_A-Za-z][_0-9A-Za-z]*"',
+            'Unknown argument "(?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)" on field "[_A-Za-z][_0-9A-Za-z.]*"',
             error_message,
         )
         if match:
@@ -156,6 +158,7 @@ def get_valid_args(error_message: str) -> Set[str]:
         'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
         'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
         'Field "[_A-Za-z][_0-9A-Za-z]*" argument "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
+        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z.]*"\.',
     ]
 
     single_suggestion_regexes = [
@@ -276,7 +279,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         else:
             kind = "OBJECT"
         is_list = True if "[" and "]" in tk else False
-        non_null_item = True if is_list or "!]" in tk else False
+        non_null_item = True if is_list and "!]" in tk else False
         non_null = True if tk.endswith("!") else False
 
         typeref = graphql.TypeRef(
@@ -295,6 +298,8 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
 def probe_typeref(
     documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
+    typeref = None
+
     for document in documents:
         response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
@@ -306,8 +311,8 @@ def probe_typeref(
             if typeref:
                 return typeref
 
-    if not typref:
-        raise Exception(f"Unable to get TypeRef for '{input_document}'")
+    if not typeref:
+        raise Exception(f"Unable to get TypeRef for {documents}")
 
     return None
 
@@ -422,7 +427,6 @@ def clairvoyance(
     for field_name in valid_mutation_fields:
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
-        
 
         if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
             arg_names = probe_args(field.name, wordlist, config, input_document)
@@ -432,7 +436,6 @@ def clairvoyance(
                     field.name, arg_name, config, input_document
                 )
                 arg = graphql.InputValue(arg_name, arg_typeref)
-                
 
                 field.args.append(arg)
                 schema.add_type(arg.type.name, "INPUT_OBJECT")

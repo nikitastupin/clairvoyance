@@ -88,5 +88,24 @@ class TestToJson(unittest.TestCase):
         self.assertEqual(got, want)
 
 
+class TestFromJson(unittest.TestCase):
+    def test_typeref_from_json(self):
+        want = graphql.TypeRef("Launch", "OBJECT", True, False, True)
+
+        typeref = {
+            "kind": "NON_NULL",
+            "name": None,
+            "ofType": {
+                "kind": "LIST",
+                "name": None,
+                "ofType": {"kind": "OBJECT", "name": "Launch", "ofType": None},
+            },
+        }
+
+        got = graphql.field_or_arg_type_from_json(typeref)
+
+        self.assertEqual(got.to_json(), want.to_json())
+
+
 if __name__ == "__main__":
     unittest.main()
