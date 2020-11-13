@@ -80,8 +80,8 @@ class TestGetTypeRef(unittest.TestCase):
             name="SetArmedStateForHomeInput",
             kind="INPUT_OBJECT",
             is_list=False,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=False,
+            non_null=True,
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
@@ -94,8 +94,8 @@ class TestGetTypeRef(unittest.TestCase):
             name="SetArmedStateForHomeInput",
             kind="INPUT_OBJECT",
             is_list=False,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=False,
+            non_null=True,
         )
         got = oracle.get_typeref(
             "Expected type SetArmedStateForHomeInput!, found 7.", "InputValue"
@@ -107,8 +107,8 @@ class TestGetTypeRef(unittest.TestCase):
             name="SetArmedStateForHomePayload",
             kind="OBJECT",
             is_list=False,
-            is_list_item_nullable=False,
-            is_nullable=True,
+            non_null_item=False,
+            non_null=False,
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" of type "SetArmedStateForHomePayload" must have a selection of subfields. Did you mean "setArmedStateForHome { ... }"?',
@@ -121,8 +121,8 @@ class TestGetTypeRef(unittest.TestCase):
             name="Boolean",
             kind="SCALAR",
             is_list=False,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=False,
+            non_null=True,
         )
         got = oracle.get_typeref(
             'Field "isMfaEnabled" must not have a selection since type "Boolean!" has no subfields.',
@@ -135,8 +135,8 @@ class TestGetTypeRef(unittest.TestCase):
             name="HomeSettings",
             kind="OBJECT",
             is_list=False,
-            is_list_item_nullable=False,
-            is_nullable=True,
+            non_null_item=False,
+            non_null=False,
         )
         got = oracle.get_typeref(
             'Cannot query field "imwrongfield" on type "HomeSettings".', "Field"
@@ -178,8 +178,8 @@ class TestTypeRef(unittest.TestCase):
             name=name,
             kind=kind,
             is_list=True,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=True,
+            non_null=True,
         ).to_json()
         self.assertEqual(got, want)
 
@@ -192,8 +192,8 @@ class TestGraphql(unittest.TestCase):
             name=name,
             kind=kind,
             is_list=True,
-            is_list_item_nullable=False,
-            is_nullable=False,
+            non_null_item=True,
+            non_null=True,
         )
         got = graphql.field_or_arg_type_from_json(
             {
