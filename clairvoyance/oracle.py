@@ -157,12 +157,12 @@ def get_valid_args(error_message: str) -> Set[str]:
     skip_regexes = [
         'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
         'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
-        'Field "[_A-Za-z][_0-9A-Za-z]*" argument "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
         'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z.]*"\.',
     ]
 
     single_suggestion_regexes = [
-        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_0-9a-zA-Z\[\]!]*". Did you mean "(?P<arg>[_0-9a-zA-Z\[\]!]*)"\?'
+        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_0-9a-zA-Z\[\]!]*". Did you mean "(?P<arg>[_0-9a-zA-Z\[\]!]*)"\?',
+        'Field "[_A-Za-z][_0-9A-Za-z]*" argument "(?P<arg>[_A-Za-z][_0-9A-Za-z]*)" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
     ]
 
     double_suggestion_regexes = [
@@ -429,21 +429,21 @@ def clairvoyance(
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
 
-        if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
-            arg_names = probe_args(field.name, wordlist, config, input_document)
-            logging.debug(f"{typename}.{field_name}.args = {arg_names}")
-            for arg_name in arg_names:
-                arg_typeref = probe_arg_typeref(
-                    field.name, arg_name, config, input_document
-                )
-                arg = graphql.InputValue(arg_name, arg_typeref)
-
-                field.args.append(arg)
-                schema.add_type(arg.type.name, "INPUT_OBJECT")
-        else:
-            logging.debug(
-                f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
+        # if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
+        arg_names = probe_args(field.name, wordlist, config, input_document)
+        logging.debug(f"{typename}.{field_name}.args = {arg_names}")
+        for arg_name in arg_names:
+            arg_typeref = probe_arg_typeref(
+                field.name, arg_name, config, input_document
             )
+            arg = graphql.InputValue(arg_name, arg_typeref)
+
+            field.args.append(arg)
+            schema.add_type(arg.type.name, "INPUT_OBJECT")
+        # else:
+        #     logging.debug(
+        #         f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
+        #     )
 
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, "OBJECT")
@@ -456,19 +456,18 @@ def probe_input_values(
 ) -> List[str]:
     errors = []
 
-    for input_document in input_documents:
-        for i in range(0, len(wordlist), config.bucket_size):
-            bucket = wordlist[i : i + config.bucket_size]
+    for i in range(0, len(wordlist), config.bucket_size):
+        bucket = wordlist[i : i + config.bucket_size]
 
-            document = input_document.replace(
-                "FUZZ", ", ".join([w + ": 7" for w in wordlist])
-            )
+        document = input_document.replace(
+            "FUZZ", ", ".join([w + ": 7" for w in wordlist])
+        )
 
-            response = graphql.post(
-                config.url, headers=config.headers, json={"query": document}
-            )
+        response = graphql.post(
+            config.url, headers=config.headers, json={"query": document}
+        )
 
-            errors += [e["message"] for e in response.json()["errors"]]
+        errors += [e["message"] for e in response.json()["errors"]]
 
     return errors
 
@@ -478,7 +477,7 @@ def grep_valid_input_values(error_message: str) -> Set[str]:
 
 
 def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]:
-    valid_input_values = wordlist.copy()
+    valid_input_values = set(wordlist.copy())
 
     for error_message in errors:
         # Frist remove entity if it produced an error
@@ -506,5 +505,7 @@ def clairvoyance_io(
 
     errors = probe_input_values(wordlist, input_document, config)
     input_values = obtain_valid_input_values(wordlist, errors)
-    logging.warning(input_values)
+    logging.warning(f"AAA {input_values}")
     # for each InputValue obtain it's TypeRef
+
+    return schema.to_json()

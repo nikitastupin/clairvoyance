@@ -161,6 +161,7 @@ class Schema:
         elif kind == "INPUT_OBJECT":
             cur = name
             roots = self.roots
+            apath = []
 
             while cur not in roots:
                 for t in self.types.values():
@@ -174,9 +175,11 @@ class Schema:
                                     cur = roots[0]  # to break from outer loop
                                     break
                     elif t.kind == "INPUT_OBJECT":
-                        raise Exception(f"Handling for kind {t.kind} not implemented")
+                        pass
+                        # raise Exception(f"Handling for kind {t.kind} not implemented")
                     else:
-                        raise Exception(f"Handling for kind {t.kind} not implemented")
+                        pass
+                        # raise Exception(f"Handling for kind {t.kind} not implemented")
         else:
             raise Exception(f"Handling of {kind} not implemented")
 
@@ -228,14 +231,14 @@ class Schema:
             while len(fpath) > 1:
                 doc = f"{fpath.pop()} {{ {doc} }}"
 
-            if path[0] == self._schema["queryType"]["name"]:
+            if fpath[0] == self._schema["queryType"]["name"]:
                 doc = f"query {{ {doc} }}"
-            elif path[0] == self._schema["mutationType"]["name"]:
+            elif fpath[0] == self._schema["mutationType"]["name"]:
                 doc = f"mutation {{ {doc} }}"
-            elif path[0] == self._schema["subscriptionType"]["name"]:
+            elif fpath[0] == self._schema["subscriptionType"]["name"]:
                 doc = f"subscription {{ {doc} }}"
             else:
-                raise Exception(f"Unknown operation type {path[0]}")
+                raise Exception(f"Unknown operation type {fpath[0]}")
         elif fpath and not apath:
             doc = self.convert_path_to_document(fpath)
         else:
