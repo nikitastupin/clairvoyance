@@ -183,9 +183,9 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     ]
 
     ret = set()
-    no_match = True
     regexes = None
     skip_regexes = SKIP_REGEXES
+    is_unknown_error_message = True
 
     if context == "Field":
         regexes = FREGEXES
@@ -204,7 +204,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         for r in regexes:
             match = re.fullmatch(r, error_message)
             if match:
-                no_match = False
+                is_unknown_error_message = False
                 if "typeref" in match.groupdict():
                     ret.add(match.group("typeref"))
                 break
@@ -212,7 +212,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         for r in regexes:
             match = re.fullmatch(r, error_message)
             if match:
-                no_match = False
+                is_unknown_error_message = False
                 if "arg" in match.groupdict():
                     ret.add(match.group("arg"))
                 elif (
@@ -224,7 +224,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     else:
         raise Exception(f"Unknown what: {what}")
 
-    if no_match:
+    if is_unknown_error_message:
         logging.warning(f"Unknown error ({context}, {what}): {error_message}")
 
     return ret
