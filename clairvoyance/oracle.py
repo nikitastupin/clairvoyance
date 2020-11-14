@@ -168,6 +168,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         f'Field "{NAME}" of type "(?P<typeref>{TYPEREF})" must have a selection of subfields\. Did you mean "{NAME} {{ \.\.\. }}"\?',
         f'Field "{NAME}" must not have a selection since type "(?P<typeref>{TYPEREF})" has no subfields\.',
         f'Cannot query field "{NAME}" on type "(?P<typeref>{TYPEREF})"\.',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
     ]
 
     IVREGEXES = [
@@ -176,8 +177,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         f"(?P<typeref>{TYPEREF}) cannot represent .+",
         f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
         f'Field "{NAME}\.{NAME}" of required type "(?P<typeref>{TYPEREF})" was not provided\.',
-        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
-        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "(?P<arg>{NAME})"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<arg>{NAME})"\?',
         f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\. Did you mean "(?P<arg>{NAME})"\?',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<first_arg>{NAME})" or "(?P<second_arg>{NAME})"\?',
     ]
