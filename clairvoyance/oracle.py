@@ -175,7 +175,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         f'Field "{NAME}" argument "(?P<arg>{NAME})" of type "(?P<typeref>{TYPEREF})" is required, but it was not provided\.',
         f"Expected type (?P<typeref>{TYPEREF}), found .+\.",
         f"(?P<typeref>{TYPEREF}) cannot represent .+",
-        f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
+        f"Field {NAME}\.(?P<arg>{NAME}) of required type (?P<typeref>{TYPEREF}) was not provided\.",
         f'Field "{NAME}\.{NAME}" of required type "(?P<typeref>{TYPEREF})" was not provided\.',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<arg>{NAME})"\?',
         f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\. Did you mean "(?P<arg>{NAME})"\?',
