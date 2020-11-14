@@ -152,42 +152,7 @@ def probe_args(
 
 
 def get_valid_args(error_message: str) -> Set[str]:
-    valid_args = set()
-
-    skip_regexes = [
-        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
-        'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
-        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z.]*"\.',
-    ]
-
-    single_suggestion_regexes = [
-        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_0-9a-zA-Z\[\]!]*". Did you mean "(?P<arg>[_0-9a-zA-Z\[\]!]*)"\?',
-        'Field "[_A-Za-z][_0-9A-Za-z]*" argument "(?P<arg>[_A-Za-z][_0-9A-Za-z]*)" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
-    ]
-
-    double_suggestion_regexes = [
-        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*". Did you mean "(?P<first>[_0-9a-zA-Z\[\]!]*)" or "(?P<second>[_0-9a-zA-Z\[\]!]*)"\?'
-    ]
-
-    for regex in skip_regexes:
-        if re.fullmatch(regex, error_message):
-            return set()
-
-    for regex in single_suggestion_regexes:
-        if re.fullmatch(regex, error_message):
-            match = re.fullmatch(regex, error_message)
-            valid_args.add(match.group("arg"))
-
-    for regex in double_suggestion_regexes:
-        match = re.fullmatch(regex, error_message)
-        if match:
-            valid_args.add(match.group("first"))
-            valid_args.add(match.group("second"))
-
-    if not valid_args:
-        logging.warning(f"Unknown error message: {error_message}")
-
-    return valid_args
+    return grep(error_message, "InputValue", "name")
 
 
 def get_valid_input_fields(error_message: str) -> Set:
