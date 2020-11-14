@@ -155,21 +155,6 @@ def get_valid_args(error_message: str) -> Set[str]:
     return grep(error_message, "InputValue", "name")
 
 
-def get_valid_input_fields(error_message: str) -> Set:
-    valid_fields = set()
-
-    single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
-
-    if re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
-        if match.group("field"):
-            valid_fields.add(match.group("field"))
-        else:
-            logging.warning(f"Unknown error message: '{error_message}'")
-
-    return valid_fields
-
-
 def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     NAME = "[_A-Za-z][_0-9A-Za-z]*"
     TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
@@ -467,7 +452,7 @@ def probe_input_values(
 
 
 def grep_valid_input_values(error_message: str) -> Set[str]:
-    return get_valid_input_fields(error_message)
+    return grep(error_message, "InputValue", "name")
 
 
 def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]:
