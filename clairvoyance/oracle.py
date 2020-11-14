@@ -205,35 +205,6 @@ def get_valid_input_fields(error_message: str) -> Set:
     return valid_fields
 
 
-def probe_input_fields(
-    field: str, argument: str, wordlist: Set, config: graphql.Config
-) -> Set[str]:
-    valid_input_fields = set(wordlist)
-
-    document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
-
-    response = graphql.post(
-        config.url, headers=config.headers, json={"query": document}
-    )
-    errors = response.json()["errors"]
-
-    for error in errors:
-        error_message = error["message"]
-
-        # First remove field if it produced an error
-        match = re.search(
-            'Field "(?P<invalid_field>[_0-9a-zA-Z\[\]!]*)" is not defined by type [_0-9a-zA-Z\[\]!]*.',
-            error_message,
-        )
-        if match:
-            valid_input_fields.discard(match.group("invalid_field"))
-
-        # Second obtain field suggestions from error message
-        valid_input_fields |= get_valid_input_fields(error_message)
-
-    return valid_input_fields
-
-
 def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     typeref = None
 
