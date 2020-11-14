@@ -236,23 +236,31 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     match = grep(error_message, context, "typeref")
 
     if match:
-        tk = match.pop()
+        if len(match) != 1:
+            raise Exception(f"grep for TypeRef returned {match} matches")
 
-        name = tk.replace("!", "").replace("[", "").replace("]", "")
-        kind = ""
-        if name.endswith("Input"):
-            kind = "INPUT_OBJECT"
-        elif name in ["Int", "Float", "String", "Boolean", "ID"]:
+        typeref_string = match.pop()
+
+        name = typeref_string.replace("!", "").replace("[", "").replace("]", "")
+        kind = None
+
+        if name in ["Int", "Float", "String", "Boolean", "ID"]:
             kind = "SCALAR"
         else:
-            kind = "OBJECT"
-        is_list = True if "[" and "]" in tk else False
-        non_null_item = True if is_list and "!]" in tk else False
-        non_null = True if tk.endswith("!") else False
+            if context == "Field":
+                kind = "OBJECT"
+            elif context == "InputValue":
+                kind = "INPUT_OBJECT"
+            else:
+                raise Exception(f"Unexpected context: {context}")
+
+        is_list = True if "[" and "]" in typeref_string else False
+        non_null_item = True if "!]" in typeref_string else False
+        non_null = True if typeref_string.endswith("!") else False
 
         typeref = graphql.TypeRef(
-            name=name,
-            kind=kind,
+            name,
+            kind,
             is_list=is_list,
             non_null_item=non_null_item,
             non_null=non_null,
@@ -404,7 +412,7 @@ def clairvoyance(
             arg = graphql.InputValue(arg_name, arg_typeref)
 
             field.args.append(arg)
-            schema.add_type(arg.type.name, "INPUT_OBJECT")
+            schema.add_type(arg.type.name, arg.type.kind)
 
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, "OBJECT")
