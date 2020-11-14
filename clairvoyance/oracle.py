@@ -387,7 +387,6 @@ def clairvoyance(
         schema = graphql.Schema(schema=input_schema)
 
     typename = probe_typename(input_document, config)
-    logging.debug(f"__typename = {typename}")
 
     valid_mutation_fields = probe_valid_fields(wordlist, config, input_document)
     logging.debug(f"{typename}.fields = {valid_mutation_fields}")
@@ -396,7 +395,6 @@ def clairvoyance(
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
 
-        # if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
         arg_names = probe_args(field.name, wordlist, config, input_document)
         logging.debug(f"{typename}.{field_name}.args = {arg_names}")
         for arg_name in arg_names:
@@ -406,11 +404,7 @@ def clairvoyance(
             arg = graphql.InputValue(arg_name, arg_typeref)
 
             field.args.append(arg)
-            schema.add_type(arg.type.name, "INPUT_OBJECT")
-        # else:
-        #     logging.debug(
-        #         f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
-        #     )
+            schema.add_type(arg.type.name, arg.type.kind)
 
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, "OBJECT")
