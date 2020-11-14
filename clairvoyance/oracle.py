@@ -174,6 +174,8 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     NAME = "[_A-Za-z][_0-9A-Za-z]*"
     TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
 
+    SKIP_REGEXES = [f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\.']
+
     FREGEXES = [
         f'Field "{NAME}" of type "(?P<typeref>{TYPEREF})" must have a selection of subfields\. Did you mean "{NAME} {{ \.\.\. }}"\?',
         f'Field "{NAME}" must not have a selection since type "(?P<typeref>{TYPEREF})" has no subfields\.',
@@ -187,20 +189,21 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "(?P<arg>{NAME})"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\. Did you mean "(?P<arg>{NAME})"\?',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<first_arg>{NAME})" or "(?P<second_arg>{NAME})"\?',
     ]
 
     ret = set()
-    match = None
+    no_match = True
     regexes = None
-    skip_regexes = None
+    skip_regexes = SKIP_REGEXES
 
     if context == "Field":
         regexes = FREGEXES
-        skip_regexes = IVREGEXES
+        skip_regexes += IVREGEXES
     elif context == "InputValue":
         regexes = IVREGEXES
-        skip_regexes = FREGEXES
+        skip_regexes += FREGEXES
     else:
         raise Exception(f"Unknown context: {context}")
 
@@ -212,12 +215,15 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         for r in regexes:
             match = re.fullmatch(r, error_message)
             if match:
-                ret.add(match.group("typeref"))
+                no_match = False
+                if "typeref" in match.groupdict():
+                    ret.add(match.group("typeref"))
                 break
     elif what == "name":
         for r in regexes:
             match = re.fullmatch(r, error_message)
             if match:
+                no_match = False
                 if "arg" in match.groupdict():
                     ret.add(match.group("arg"))
                 elif (
@@ -229,7 +235,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     else:
         raise Exception(f"Unknown what: {what}")
 
-    if not match:
+    if no_match:
         logging.warning(f"Unknown error ({context}, {what}): {error_message}")
 
     return ret
