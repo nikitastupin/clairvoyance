@@ -205,43 +205,62 @@ def get_valid_input_fields(error_message: str) -> Set:
     return valid_fields
 
 
-def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
-    typeref = None
+def grep(error_message: str, context: str, what: str) -> Optional[str]:
+    if what not in ["typeref"]:
+        raise Exception(f"Unknown what: {what}")
 
-    field_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_0-9a-zA-Z\[\]!]* \{ ... \}"\?',
-        'Field "[_0-9a-zA-Z\[\]!]*" must not have a selection since type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" has no subfields.',
-        'Cannot query field "[_0-9a-zA-Z\[\]!]*" on type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)".',
+    NAME = "[_A-Za-z][_0-9A-Za-z]*"
+    TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
+
+    FREGEXES = [
+        f'Field "{NAME}" of type "(?P<typeref>{TYPEREF})" must have a selection of subfields\. Did you mean "{NAME} {{ \.\.\. }}"\?',
+        f'Field "{NAME}" must not have a selection since type "(?P<typeref>{TYPEREF})" has no subfields\.',
+        f'Cannot query field "{NAME}" on type "(?P<typeref>{TYPEREF})"\.',
     ]
-    arg_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
-        "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
-        "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*) cannot represent .+",
-        "Field [_A-Za-z][_0-9A-Za-z]*\.[_A-Za-z][_0-9A-Za-z]* of required type (?P<typeref>[_A-Za-z\[][a-zA-Z\]!]*) was not provided\.",
-    ]
-    arg_skip_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" must have a selection of subfields\. Did you mean "[_0-9a-zA-Z\[\]!]* \{ \.\.\. \}"\?'
+
+    IVREGEXES = [
+        f'Field "{NAME}" argument "{NAME}" of type "(?P<typeref>{TYPEREF})" is required, but it was not provided\.',
+        f"Expected type (?P<typeref>{TYPEREF}), found .+\.",
+        f"(?P<typeref>{TYPEREF}) cannot represent .+",
+        f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
     ]
 
     match = None
+    regexes = None
+    skip_regexes = None
 
     if context == "Field":
-        for regex in field_regexes:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
+        regexes = FREGEXES
+        skip_regexes = IVREGEXES
     elif context == "InputValue":
-        for regex in arg_skip_regexes:
-            if re.fullmatch(regex, error_message):
-                return None
+        regexes = IVREGEXES
+        skip_regexes = FREGEXES
+    else:
+        raise Exception(f"Unknown context: {context}")
 
-        for regex in arg_regexes:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
+    for r in skip_regexes:
+        if re.fullmatch(r, error_message):
+            return None
+
+    for r in regexes:
+        match = re.fullmatch(r, error_message)
+        if match:
+            break
+
+    if not match:
+        logging.warning(f"Unknown error ({context}, {what}): {error_message}")
+
+    return match.group("typeref")
+
+
+def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
+    typeref = None
+
+    match = grep(error_message, context, "typeref")
 
     if match:
-        tk = match.group("typeref")
+        tk = match
 
         name = tk.replace("!", "").replace("[", "").replace("]", "")
         kind = ""
@@ -262,8 +281,6 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
             non_null_item=non_null_item,
             non_null=non_null,
         )
-    else:
-        logging.warning(f"Unknown error message: '{error_message}'")
 
     return typeref
 
