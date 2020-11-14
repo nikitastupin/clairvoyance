@@ -171,7 +171,8 @@ class Schema:
                             for a in f.args:
                                 if a.type.name == cur:
                                     apath.insert(0, a.name)
-                                    fpath = self.get_path_from_root(f.type.name)
+                                    fpath = self.get_path_from_root(t.name)
+                                    fpath.append(f.name)
                                     cur = roots[0]  # to break from outer loop
                                     break
                     elif t.kind == "INPUT_OBJECT":

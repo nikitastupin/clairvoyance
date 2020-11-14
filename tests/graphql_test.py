@@ -15,6 +15,10 @@ class TestSchema(unittest.TestCase):
             schema_json = json.load(f)
             self.schema = graphql.Schema(schema=schema_json)
 
+        with open("tests/data/schema.1.json", "r") as f:
+            schema_json = json.load(f)
+            self.schema_1 = graphql.Schema(schema=schema_json)
+
     def test_get_path_from_root(self):
         want = ["Query", "homes", "paymentSubscriptions"]
         got = self.schema.get_path_from_root("PaymentSubscriptionsForHome")
@@ -44,6 +48,11 @@ class TestSchema(unittest.TestCase):
         path = ["Subscription"]
         want = "subscription { FUZZ }"
         got = self.schema.convert_path_to_document(path)
+        self.assertEqual(got, want)
+
+    def test_get_path_from_root_ex(self):
+        want = (["Mutation", "updateHomeName"], ["input"])
+        got = self.schema_1.get_path_from_root_ex("UpdateHomeNameInput")
         self.assertEqual(got, want)
 
 
