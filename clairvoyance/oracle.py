@@ -271,22 +271,23 @@ def probe_typeref(
     documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
     typeref = None
+    errors = []
 
     for document in documents:
         response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
         )
-        errors = response.json().get("errors", [])
+        errors += response.json().get("errors", [])
 
-        for error in errors:
-            typeref = get_typeref(error["message"], context)
-            if typeref:
-                return typeref
+    for error in errors:
+        typeref = get_typeref(error["message"], context)
+        if typeref:
+            break
 
     if not typeref:
         raise Exception(f"Unable to get TypeRef for {documents}")
 
-    return None
+    return typeref
 
 
 def probe_field_type(
