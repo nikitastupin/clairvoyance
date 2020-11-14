@@ -231,5 +231,16 @@ class TestProbeTypename(unittest.TestCase):
         self.assertEqual(typename, "Mutation")
 
 
+class TestGrepTypeRef(unittest.TestCase):
+    def test_input_value_signle_suggestion(self):
+        want = "Query"
+        got = oracle.grep(
+            'Unknown argument "i" on field "homes" of type "Query". Did you mean "id"?',
+            "InputValue",
+            "typeref",
+        )
+        self.assertEqual(got, want)
+
+
 if __name__ == "__main__":
     unittest.main()

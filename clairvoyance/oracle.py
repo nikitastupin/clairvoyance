@@ -224,8 +224,10 @@ def grep(error_message: str, context: str, what: str) -> Optional[str]:
         f"(?P<typeref>{TYPEREF}) cannot represent .+",
         f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "{NAME}"\?',
     ]
 
+    typeref = None
     match = None
     regexes = None
     skip_regexes = None
@@ -248,10 +250,12 @@ def grep(error_message: str, context: str, what: str) -> Optional[str]:
         if match:
             break
 
-    if not match:
+    if match:
+        typeref = match.group("typeref")
+    else:
         logging.warning(f"Unknown error ({context}, {what}): {error_message}")
 
-    return match.group("typeref")
+    return typeref
 
 
 def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
