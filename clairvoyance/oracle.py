@@ -404,7 +404,7 @@ def clairvoyance(
             arg = graphql.InputValue(arg_name, arg_typeref)
 
             field.args.append(arg)
-            schema.add_type(arg.type.name, arg.type.kind)
+            schema.add_type(arg.type.name, "INPUT_OBJECT")
 
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, "OBJECT")
