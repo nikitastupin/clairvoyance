@@ -65,15 +65,6 @@ class TestGetValidArgs(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class TestGetValidInputFields(unittest.TestCase):
-    def test_single_suggestion(self):
-        want = {"name"}
-        got = oracle.get_valid_input_fields(
-            "Field SetNameForHomeInput.name of required type String! was not provided."
-        )
-        self.assertEqual(got, want)
-
-
 class TestGetTypeRef(unittest.TestCase):
     def test_non_nullable_object(self):
         want = graphql.TypeRef(
