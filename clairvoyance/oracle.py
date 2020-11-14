@@ -205,10 +205,7 @@ def get_valid_input_fields(error_message: str) -> Set:
     return valid_fields
 
 
-def grep(error_message: str, context: str, what: str) -> Optional[str]:
-    if what not in ["typeref"]:
-        raise Exception(f"Unknown what: {what}")
-
+def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     NAME = "[_A-Za-z][_0-9A-Za-z]*"
     TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
 
@@ -219,15 +216,16 @@ def grep(error_message: str, context: str, what: str) -> Optional[str]:
     ]
 
     IVREGEXES = [
-        f'Field "{NAME}" argument "{NAME}" of type "(?P<typeref>{TYPEREF})" is required, but it was not provided\.',
+        f'Field "{NAME}" argument "(?P<arg>{NAME})" of type "(?P<typeref>{TYPEREF})" is required, but it was not provided\.',
         f"Expected type (?P<typeref>{TYPEREF}), found .+\.",
         f"(?P<typeref>{TYPEREF}) cannot represent .+",
         f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
-        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "{NAME}"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "(?P<arg>{NAME})"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<first_arg>{NAME})" or "(?P<second_arg>{NAME})"\?',
     ]
 
-    typeref = None
+    ret = set()
     match = None
     regexes = None
     skip_regexes = None
@@ -243,19 +241,33 @@ def grep(error_message: str, context: str, what: str) -> Optional[str]:
 
     for r in skip_regexes:
         if re.fullmatch(r, error_message):
-            return None
+            return set()
 
-    for r in regexes:
-        match = re.fullmatch(r, error_message)
-        if match:
-            break
-
-    if match:
-        typeref = match.group("typeref")
+    if what == "typeref":
+        for r in regexes:
+            match = re.fullmatch(r, error_message)
+            if match:
+                ret.add(match.group("typeref"))
+                break
+    elif what == "name":
+        for r in regexes:
+            match = re.fullmatch(r, error_message)
+            if match:
+                if "arg" in match.groupdict():
+                    ret.add(match.group("arg"))
+                elif (
+                    "first_arg" in match.groupdict()
+                    and "second_arg" in match.groupdict()
+                ):
+                    ret.add(match.group("first_arg"))
+                    ret.add(match.group("second_arg"))
     else:
+        raise Exception(f"Unknown what: {what}")
+
+    if not match:
         logging.warning(f"Unknown error ({context}, {what}): {error_message}")
 
-    return typeref
+    return ret
 
 
 def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
@@ -264,7 +276,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     match = grep(error_message, context, "typeref")
 
     if match:
-        tk = match
+        tk = match.pop()
 
         name = tk.replace("!", "").replace("[", "").replace("]", "")
         kind = ""
