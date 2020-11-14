@@ -387,11 +387,11 @@ def clairvoyance(
         schema = graphql.Schema(schema=input_schema)
 
     typename = probe_typename(input_document, config)
+    field_names = probe_valid_fields(wordlist, config, input_document)
 
-    valid_mutation_fields = probe_valid_fields(wordlist, config, input_document)
-    logging.debug(f"{typename}.fields = {valid_mutation_fields}")
+    logging.debug(f"{typename}.fields = {field_names}")
 
-    for field_name in valid_mutation_fields:
+    for field_name in field_names:
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
 
