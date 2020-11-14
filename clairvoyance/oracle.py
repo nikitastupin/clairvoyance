@@ -174,7 +174,10 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
     NAME = "[_A-Za-z][_0-9A-Za-z]*"
     TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
 
-    SKIP_REGEXES = [f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\.']
+    SKIP_REGEXES = [
+        f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\.',
+        f"Cannot return null for non-nullable field {NAME}\.{NAME}\.",
+    ]
 
     FREGEXES = [
         f'Field "{NAME}" of type "(?P<typeref>{TYPEREF})" must have a selection of subfields\. Did you mean "{NAME} {{ \.\.\. }}"\?',
@@ -187,6 +190,7 @@ def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
         f"Expected type (?P<typeref>{TYPEREF}), found .+\.",
         f"(?P<typeref>{TYPEREF}) cannot represent .+",
         f"Field {NAME}\.{NAME} of required type (?P<typeref>{TYPEREF}) was not provided\.",
+        f'Field "{NAME}\.{NAME}" of required type "(?P<typeref>{TYPEREF})" was not provided\.',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
         f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\. Did you mean "(?P<arg>{NAME})"\?',
         f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\. Did you mean "(?P<arg>{NAME})"\?',
