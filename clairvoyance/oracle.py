@@ -217,6 +217,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
         "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
         "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*) cannot represent .+",
+        "Field [_A-Za-z][_0-9A-Za-z]*\.[_A-Za-z][_0-9A-Za-z]* of required type (?P<typeref>[_A-Za-z\[][a-zA-Z\]!]*) was not provided\.",
     ]
     arg_skip_regexes = [
         'Field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" must have a selection of subfields\. Did you mean "[_0-9a-zA-Z\[\]!]* \{ \.\.\. \}"\?'
@@ -467,7 +468,7 @@ def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]
     for error_message in errors:
         # Frist remove entity if it produced an error
         match = re.search(
-            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*"\.',
+            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type "?[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*"?\.',
             error_message,
         )
         if match:
