@@ -27,7 +27,7 @@ $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt h
 There are at least two approaches:
 
 - Use general English words (e.g. [google-10000-english](https://github.com/first20hours/google-10000-english)).
-- Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is `[_A-Za-z][_0-9A-Za-z]*` ([Names section of GraphQL specification](http://spec.graphql.org/June2018/#sec-Names)).
+- Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is [`[_A-Za-z][_0-9A-Za-z]*`](http://spec.graphql.org/June2018/#sec-Names).
 
 ## Support
 
