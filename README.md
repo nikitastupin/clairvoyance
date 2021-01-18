@@ -22,6 +22,13 @@ $ python3 -m clairvoyance --help
 $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
+### Which wordlist should I use?
+
+There are at least two approaches:
+
+- Use general English words (e.g. [google-10000-english](https://github.com/first20hours/google-10000-english)).
+- Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is `[_A-Za-z][_0-9A-Za-z]*` ([Names section of GraphQL specification](http://spec.graphql.org/June2018/#sec-Names)).
+
 ## Support
 
 In case of question or issue with clairvoyance please refer to [wiki](https://github.com/nikitastupin/clairvoyance/wiki) or [issues](https://github.com/nikitastupin/clairvoyance/issues). If this doesn't solve your problem feel free to open a [new issue](https://github.com/nikitastupin/clairvoyance/issues/new).
