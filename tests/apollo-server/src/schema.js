@@ -25,13 +25,13 @@ type User {
 
 type Mission {
   name: String
-  missionPatch(size: PatchSize): String
+#  missionPatch(size: PatchSize): String
 }
 
-enum PatchSize {
-  SMALL
-  LARGE
-}
+#enum PatchSize {
+#  SMALL
+#  LARGE
+#}
 
 type Query {
   launches: [Launch]!
@@ -42,13 +42,18 @@ type Query {
 type Mutation {
   bookTrips(launchIds: [ID]!): TripUpdateResponse!
   cancelTrip(launchId: ID!): TripUpdateResponse!
-  login(email: String): String # login token
+  login(input: Credentials!): String # login token
 }
 
 type TripUpdateResponse {
   success: Boolean!
   message: String
   launches: [Launch]
+}
+
+input Credentials {
+  email: String!
+  password: String!
 }
 `;
 

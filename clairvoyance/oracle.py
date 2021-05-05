@@ -152,145 +152,119 @@ def probe_args(
 
 
 def get_valid_args(error_message: str) -> Set[str]:
-    valid_args = set()
+    return grep(error_message, "InputValue", "name")
 
-    skip_regexes = [
-        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z][_0-9A-Za-z]*".',
-        'Field "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][a-zA-Z\[\]!]*" must have a selection of subfields. Did you mean "[_A-Za-z][_0-9A-Za-z]* \{ ... \}"\?',
-        'Field "[_A-Za-z][_0-9A-Za-z]*" argument "[_A-Za-z][_0-9A-Za-z]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" is required, but it was not provided.',
-        'Unknown argument "[_A-Za-z][_0-9A-Za-z]*" on field "[_A-Za-z][_0-9A-Za-z.]*"\.',
+
+def grep(error_message: str, context: str, what: str) -> Optional[Set[str]]:
+    NAME = "[_A-Za-z][_0-9A-Za-z]*"
+    TYPEREF = "\[?[_A-Za-z][_0-9A-Za-z]*!?\]?!?"
+
+    SKIP_REGEXES = [
+        f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\.',
+        f"Cannot return null for non-nullable field {NAME}\.{NAME}\.",
     ]
 
-    single_suggestion_regexes = [
-        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_0-9a-zA-Z\[\]!]*". Did you mean "(?P<arg>[_0-9a-zA-Z\[\]!]*)"\?'
+    FREGEXES = [
+        f'Field "{NAME}" of type "(?P<typeref>{TYPEREF})" must have a selection of subfields\. Did you mean "{NAME} {{ \.\.\. }}"\?',
+        f'Field "{NAME}" must not have a selection since type "(?P<typeref>{TYPEREF})" has no subfields\.',
+        f'Cannot query field "{NAME}" on type "(?P<typeref>{TYPEREF})"\.',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "(?P<typeref>{TYPEREF})"\.',
     ]
 
-    double_suggestion_regexes = [
-        'Unknown argument "[_0-9a-zA-Z\[\]!]*" on field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*". Did you mean "(?P<first>[_0-9a-zA-Z\[\]!]*)" or "(?P<second>[_0-9a-zA-Z\[\]!]*)"\?'
+    IVREGEXES = [
+        f'Field "{NAME}" argument "(?P<arg>{NAME})" of type "(?P<typeref>{TYPEREF})" is required, but it was not provided\.',
+        f"Expected type (?P<typeref>{TYPEREF}), found .+\.",
+        f"(?P<typeref>{TYPEREF}) cannot represent .+",
+        f"Field {NAME}\.(?P<arg>{NAME}) of required type (?P<typeref>{TYPEREF}) was not provided\.",
+        f'Field "{NAME}\.{NAME}" of required type "(?P<typeref>{TYPEREF})" was not provided\.',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<arg>{NAME})"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}\.{NAME}"\. Did you mean "(?P<arg>{NAME})"\?',
+        f'Unknown argument "{NAME}" on field "{NAME}" of type "{TYPEREF}"\. Did you mean "(?P<first_arg>{NAME})" or "(?P<second_arg>{NAME})"\?',
     ]
 
-    for regex in skip_regexes:
-        if re.fullmatch(regex, error_message):
+    ret = set()
+    regexes = None
+    skip_regexes = SKIP_REGEXES
+    is_unknown_error_message = True
+
+    if context == "Field":
+        regexes = FREGEXES
+        skip_regexes += IVREGEXES
+    elif context == "InputValue":
+        regexes = IVREGEXES
+        skip_regexes += FREGEXES
+    else:
+        raise Exception(f"Unknown context: {context}")
+
+    for r in skip_regexes:
+        if re.fullmatch(r, error_message):
             return set()
 
-    for regex in single_suggestion_regexes:
-        if re.fullmatch(regex, error_message):
-            match = re.fullmatch(regex, error_message)
-            valid_args.add(match.group("arg"))
+    if what == "typeref":
+        for r in regexes:
+            match = re.fullmatch(r, error_message)
+            if match:
+                is_unknown_error_message = False
+                if "typeref" in match.groupdict():
+                    ret.add(match.group("typeref"))
+                break
+    elif what == "name":
+        for r in regexes:
+            match = re.fullmatch(r, error_message)
+            if match:
+                is_unknown_error_message = False
+                if "arg" in match.groupdict():
+                    ret.add(match.group("arg"))
+                elif (
+                    "first_arg" in match.groupdict()
+                    and "second_arg" in match.groupdict()
+                ):
+                    ret.add(match.group("first_arg"))
+                    ret.add(match.group("second_arg"))
+    else:
+        raise Exception(f"Unknown what: {what}")
 
-    for regex in double_suggestion_regexes:
-        match = re.fullmatch(regex, error_message)
-        if match:
-            valid_args.add(match.group("first"))
-            valid_args.add(match.group("second"))
+    if is_unknown_error_message:
+        logging.warning(f"Unknown error ({context}, {what}): {error_message}")
 
-    if not valid_args:
-        logging.warning(f"Unknown error message: {error_message}")
-
-    return valid_args
-
-
-def get_valid_input_fields(error_message: str) -> Set:
-    valid_fields = set()
-
-    single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
-
-    if re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
-        if match.group("field"):
-            valid_fields.add(match.group("field"))
-        else:
-            logging.warning(f"Unknown error message: '{error_message}'")
-
-    return valid_fields
-
-
-def probe_input_fields(
-    field: str, argument: str, wordlist: Set, config: graphql.Config
-) -> Set[str]:
-    valid_input_fields = set(wordlist)
-
-    document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
-
-    response = graphql.post(
-        config.url, headers=config.headers, json={"query": document}
-    )
-    errors = response.json()["errors"]
-
-    for error in errors:
-        error_message = error["message"]
-
-        # First remove field if it produced an error
-        match = re.search(
-            'Field "(?P<invalid_field>[_0-9a-zA-Z\[\]!]*)" is not defined by type [_0-9a-zA-Z\[\]!]*.',
-            error_message,
-        )
-        if match:
-            valid_input_fields.discard(match.group("invalid_field"))
-
-        # Second obtain field suggestions from error message
-        valid_input_fields |= get_valid_input_fields(error_message)
-
-    return valid_input_fields
+    return ret
 
 
 def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     typeref = None
 
-    field_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_0-9a-zA-Z\[\]!]* \{ ... \}"\?',
-        'Field "[_0-9a-zA-Z\[\]!]*" must not have a selection since type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" has no subfields.',
-        'Cannot query field "[_0-9a-zA-Z\[\]!]*" on type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)".',
-    ]
-    arg_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
-        "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
-    ]
-    arg_skip_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" of type "[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*" must have a selection of subfields\. Did you mean "[_0-9a-zA-Z\[\]!]* \{ \.\.\. \}"\?'
-    ]
-
-    match = None
-
-    if context == "Field":
-        for regex in field_regexes:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
-    elif context == "InputValue":
-        for regex in arg_skip_regexes:
-            if re.fullmatch(regex, error_message):
-                return None
-
-        for regex in arg_regexes:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
+    match = grep(error_message, context, "typeref")
 
     if match:
-        tk = match.group("typeref")
+        if len(match) != 1:
+            raise Exception(f"grep for TypeRef returned {match} matches")
 
-        name = tk.replace("!", "").replace("[", "").replace("]", "")
-        kind = ""
-        if name.endswith("Input"):
-            kind = "INPUT_OBJECT"
-        elif name in ["Int", "Float", "String", "Boolean", "ID"]:
+        typeref_string = match.pop()
+
+        name = typeref_string.replace("!", "").replace("[", "").replace("]", "")
+        kind = None
+
+        if name in ["Int", "Float", "String", "Boolean", "ID"]:
             kind = "SCALAR"
         else:
-            kind = "OBJECT"
-        is_list = True if "[" and "]" in tk else False
-        non_null_item = True if is_list and "!]" in tk else False
-        non_null = True if tk.endswith("!") else False
+            if context == "Field":
+                kind = "OBJECT"
+            elif context == "InputValue":
+                kind = "INPUT_OBJECT"
+            else:
+                raise Exception(f"Unexpected context: {context}")
+
+        is_list = True if "[" and "]" in typeref_string else False
+        non_null_item = True if "!]" in typeref_string else False
+        non_null = True if typeref_string.endswith("!") else False
 
         typeref = graphql.TypeRef(
-            name=name,
-            kind=kind,
+            name,
+            kind,
             is_list=is_list,
             non_null_item=non_null_item,
             non_null=non_null,
         )
-    else:
-        logging.warning(f"Unknown error message: '{error_message}'")
 
     return typeref
 
@@ -299,22 +273,23 @@ def probe_typeref(
     documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
     typeref = None
+    errors = []
 
     for document in documents:
         response = graphql.post(
             config.url, headers=config.headers, json={"query": document}
         )
-        errors = response.json().get("errors", [])
+        errors += response.json().get("errors", [])
 
-        for error in errors:
-            typeref = get_typeref(error["message"], context)
-            if typeref:
-                return typeref
+    for error in errors:
+        typeref = get_typeref(error["message"], context)
+        if typeref:
+            break
 
     if not typeref:
         raise Exception(f"Unable to get TypeRef for {documents}")
 
-    return None
+    return typeref
 
 
 def probe_field_type(
@@ -333,9 +308,9 @@ def probe_arg_typeref(
     field: str, arg: str, config: graphql.Config, input_document: str
 ) -> graphql.TypeRef:
     documents = [
-        input_document.replace("FUZZ", f"{field}({arg}: 7)"),
-        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
         input_document.replace("FUZZ", f"{field}({arg[:-1]}: 7)"),
+        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
+        input_document.replace("FUZZ", f"{field}({arg}: 7)"),
     ]
 
     typeref = probe_typeref(documents, "InputValue", config)
@@ -420,32 +395,105 @@ def clairvoyance(
         schema = graphql.Schema(schema=input_schema)
 
     typename = probe_typename(input_document, config)
-    logging.debug(f"__typename = {typename}")
+    field_names = probe_valid_fields(wordlist, config, input_document)
 
-    valid_mutation_fields = probe_valid_fields(wordlist, config, input_document)
-    logging.debug(f"{typename}.fields = {valid_mutation_fields}")
+    logging.debug(f"{typename}.fields = {field_names}")
 
-    for field_name in valid_mutation_fields:
+    for field_name in field_names:
         typeref = probe_field_type(field_name, config, input_document)
         field = graphql.Field(field_name, typeref)
 
-        if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
-            arg_names = probe_args(field.name, wordlist, config, input_document)
-            logging.debug(f"{typename}.{field_name}.args = {arg_names}")
-            for arg_name in arg_names:
-                arg_typeref = probe_arg_typeref(
-                    field.name, arg_name, config, input_document
-                )
-                arg = graphql.InputValue(arg_name, arg_typeref)
-
-                field.args.append(arg)
-                schema.add_type(arg.type.name, "INPUT_OBJECT")
-        else:
-            logging.debug(
-                f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
+        arg_names = probe_args(field.name, wordlist, config, input_document)
+        logging.debug(f"{typename}.{field_name}.args = {arg_names}")
+        for arg_name in arg_names:
+            arg_typeref = probe_arg_typeref(
+                field.name, arg_name, config, input_document
             )
+            arg = graphql.InputValue(arg_name, arg_typeref)
+
+            field.args.append(arg)
+            schema.add_type(arg.type.name, arg.type.kind)
 
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, "OBJECT")
+
+    return schema.to_json()
+
+
+def probe_input_value_typeref(
+    input_value: str, input_document: str, config: graphql.Config
+) -> graphql.TypeRef:
+    documents = [
+        input_document.replace("FUZZ", f"{input_value}: 7"),
+        input_document.replace("FUZZ", f"{input_value}: {{}}"),
+    ]
+
+    typeref = probe_typeref(documents, "InputValue", config)
+    return typeref
+
+
+def probe_input_values(
+    wordlist: Set, input_document: str, config: graphql.Config
+) -> List[str]:
+    errors = []
+
+    for i in range(0, len(wordlist), config.bucket_size):
+        bucket = wordlist[i : i + config.bucket_size]
+
+        document = input_document.replace(
+            "FUZZ", ", ".join([w + ": 7" for w in wordlist])
+        )
+
+        response = graphql.post(
+            config.url, headers=config.headers, json={"query": document}
+        )
+
+        errors += [e["message"] for e in response.json()["errors"]]
+
+    return errors
+
+
+def grep_valid_input_values(error_message: str) -> Set[str]:
+    return grep(error_message, "InputValue", "name")
+
+
+def obtain_valid_input_values(wordlist: Set[str], errors: List[str]) -> Set[str]:
+    valid_input_values = set(wordlist.copy())
+
+    for error_message in errors:
+        # Frist remove entity if it produced an error
+        match = re.search(
+            'Field "(?P<field>[_A-Za-z][_0-9A-Za-z]*)" is not defined by type "?[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*"?\.',
+            error_message,
+        )
+        if match:
+            valid_input_values.discard(match.group("field"))
+
+        # Second obtain suggestions from error message
+        valid_input_values |= grep_valid_input_values(error_message)
+
+    return valid_input_values
+
+
+# clairvoyance() for INPUT_OBJECT
+def clairvoyance_io(
+    wordlist: List[str],
+    config: graphql.Config,
+    input_schema: Dict[str, Any],
+    input_document: str,
+    name: str,
+) -> Dict[str, Any]:
+    schema = graphql.Schema(schema=input_schema)
+
+    errors = probe_input_values(wordlist, input_document, config)
+    input_values = obtain_valid_input_values(wordlist, errors)
+
+    for input_value in input_values:
+        typeref = probe_input_value_typeref(input_value, input_document, config)
+        logging.info(
+            f"{input_value}.TypeRef.kind = {typeref.kind}\t{input_value}.TypeRef.name = {typeref.name}"
+        )
+
+        schema.types[name].fields.append(graphql.Field(input_value, typeref))
 
     return schema.to_json()

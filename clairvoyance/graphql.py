@@ -7,6 +7,7 @@ from typing import List
 from typing import Dict
 from typing import Any
 from typing import Set
+from typing import Tuple
 
 
 def post(url, data=None, json=None, **kwargs):
@@ -126,12 +127,71 @@ class Schema:
 
         return path_from_root
 
-    def get_type_without_fields(self, ignore: Set[str] = []) -> str:
-        for t in self.types.values():
-            if not t.fields and t.name not in ignore and t.kind != "INPUT_OBJECT":
-                return t.name
+    @property
+    def roots(self) -> List[str]:
+        roots = [
+            self._schema["queryType"]["name"] if self._schema["queryType"] else "",
+            self._schema["mutationType"]["name"]
+            if self._schema["mutationType"]
+            else "",
+            self._schema["subscriptionType"]["name"]
+            if self._schema["subscriptionType"]
+            else "",
+        ]
+        roots = [r for r in roots if r]
 
-        return ""
+        if not roots:
+            raise Exception("No root types")
+
+        return roots
+
+    def get_path_from_root_ex(self, name: str) -> Tuple[List[str], List[str]]:
+        logging.debug(f"Entered get_path_from_root_ex({name})")
+
+        fpath = None  # field path
+        apath = None  # argument path
+
+        if name not in self.types:
+            raise Exception(f"Type '{name}' not in schema!")
+
+        kind = self.types[name].kind
+
+        if kind == "OBJECT":
+            fpath = self.get_path_from_root(name)
+        elif kind == "INPUT_OBJECT":
+            cur = name
+            roots = self.roots
+            apath = []
+
+            while cur not in roots:
+                for t in self.types.values():
+
+                    if t.kind == "OBJECT":
+                        for f in t.fields:
+                            for a in f.args:
+                                if a.type.name == cur:
+                                    apath.insert(0, a.name)
+                                    fpath = self.get_path_from_root(t.name)
+                                    fpath.append(f.name)
+                                    cur = roots[0]  # to break from outer loop
+                                    break
+                    elif t.kind == "INPUT_OBJECT":
+                        pass
+                        # raise Exception(f"Handling for kind {t.kind} not implemented")
+                    else:
+                        pass
+                        # raise Exception(f"Handling for kind {t.kind} not implemented")
+        else:
+            raise Exception(f"Handling of {kind} not implemented")
+
+        return fpath, apath
+
+    def get_type_without_fields(self, ignore: Set[str]) -> "Type":
+        for t in self.types.values():
+            if not t.fields and t.name not in ignore:
+                return t
+
+        return None
 
     def convert_path_to_document(self, path: List[str]) -> str:
         logging.debug(f"Entered convert_path_to_document({path})")
@@ -148,6 +208,42 @@ class Schema:
             doc = f"subscription {{ {doc} }}"
         else:
             raise Exception("Unknown operation type")
+
+        return doc
+
+    # fpath - field path
+    # apath - argument path
+    def convert_path_to_document_ex(self, fpath: List[str], apath: List[str]) -> str:
+        logging.debug(f"Entered convert_path_to_document_ex({fpath}, {apath})")
+
+        if len(fpath) < 2:
+            raise Exception(f"len(fpath) is {len(fpath)} but must be at least 2")
+
+        doc = None
+
+        if fpath and apath:
+            args = "FUZZ"
+
+            while apath:
+                args = f"{apath.pop()}: {{ {args} }}"
+
+            doc = f"{fpath.pop()} ({args})"
+
+            while len(fpath) > 1:
+                doc = f"{fpath.pop()} {{ {doc} }}"
+
+            if fpath[0] == self._schema["queryType"]["name"]:
+                doc = f"query {{ {doc} }}"
+            elif fpath[0] == self._schema["mutationType"]["name"]:
+                doc = f"mutation {{ {doc} }}"
+            elif fpath[0] == self._schema["subscriptionType"]["name"]:
+                doc = f"subscription {{ {doc} }}"
+            else:
+                raise Exception(f"Unknown operation type {fpath[0]}")
+        elif fpath and not apath:
+            doc = self.convert_path_to_document(fpath)
+        else:
+            raise Exception("Not implemented")
 
         return doc
 

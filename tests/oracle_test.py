@@ -65,15 +65,6 @@ class TestGetValidArgs(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class TestGetValidInputFields(unittest.TestCase):
-    def test_single_suggestion(self):
-        want = {"name"}
-        got = oracle.get_valid_input_fields(
-            "Field SetNameForHomeInput.name of required type String! was not provided."
-        )
-        self.assertEqual(got, want)
-
-
 class TestGetTypeRef(unittest.TestCase):
     def test_non_nullable_object(self):
         want = graphql.TypeRef(
@@ -154,6 +145,30 @@ class TestGetTypeRef(unittest.TestCase):
             logging.warning("Dummy warning")
         self.assertEqual(want, got)
         self.assertCountEqual(["WARNING:root:Dummy warning"], cm.output)
+
+    def test_argument(self):
+        want = {
+            "kind": "NON_NULL",
+            "name": None,
+            "ofType": {"kind": "SCALAR", "name": "ID", "ofType": None},
+        }
+
+        errors = [
+            'Field "launch" of type "Launch" must have a selection of subfields. Did you mean "launch { ... }"?',
+            'Unknown argument "i" on field "Query.launch". Did you mean "id"?',
+            'Field "launch" argument "id" of type "ID!" is required, but it was not provided.',
+            'Field "launch" of type "Launch" must have a selection of subfields. Did you mean "launch { ... }"?',
+            "ID cannot represent a non-string and non-integer value: {}",
+            'Field "launch" of type "Launch" must have a selection of subfields. Did you mean "launch { ... }"?',
+        ]
+
+        for error in errors:
+            typeref = oracle.get_typeref(error, "InputValue")
+            if typeref:
+                got = typeref.to_json()
+                break
+
+        self.assertEqual(got, want)
 
 
 class TestTypeRef(unittest.TestCase):
