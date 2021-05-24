@@ -1,5 +1,8 @@
 import urllib3
 import requests
+from urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 import json
 import logging
@@ -31,7 +34,7 @@ def post(url, data=None, json=None, **kwargs):
 
     session.mount("http://", adapter)
     session.mount("https://", adapter)
-
+    print(kwargs)
     response = session.post(url, data=data, json=json, **kwargs)
 
     return response
@@ -155,6 +158,7 @@ class Schema:
 class Config:
     def __init__(self):
         self.url = ""
+        self.verify = True
         self.headers = dict()
         self.bucket_size = 4096
 
