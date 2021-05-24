@@ -1,5 +1,7 @@
 import urllib3
 import requests
+from urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 import json
 import logging
@@ -32,7 +34,7 @@ def post(url, data=None, json=None, **kwargs):
     session.mount("http://", adapter)
     session.mount("https://", adapter)
 
-    response = session.post(url, data=data, json=json, **kwargs)
+    response = session.post(url, data=data, json=json, **kwargs, verify=False)
 
     return response
 
