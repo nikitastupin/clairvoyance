@@ -14,6 +14,12 @@ def parse_args():
 
     parser.add_argument("-v", default=0, action="count")
     parser.add_argument(
+        "-k",
+        "--insecure",
+        action="store_true",
+        help="Disable server's certificate verification",
+    )
+    parser.add_argument(
         "-i",
         "--input",
         metavar="<file>",
@@ -70,6 +76,7 @@ if __name__ == "__main__":
 
     config = graphql.Config()
     config.url = args.url
+    config.verify = not args.insecure
     for h in args.headers:
         key, value = h.split(": ", 1)
         config.headers[key] = value

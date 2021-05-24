@@ -72,7 +72,10 @@ def probe_valid_fields(
         document = input_document.replace("FUZZ", " ".join(bucket))
 
         response = graphql.post(
-            config.url, headers=config.headers, json={"query": document}
+            config.url,
+            headers=config.headers,
+            json={"query": document},
+            verify=config.verify,
         )
         errors = response.json()["errors"]
         logging.debug(
@@ -112,7 +115,10 @@ def probe_valid_args(
     )
 
     response = graphql.post(
-        config.url, headers=config.headers, json={"query": document}
+        config.url,
+        headers=config.headers,
+        json={"query": document},
+        verify=config.verify,
     )
     errors = response.json()["errors"]
 
@@ -213,7 +219,10 @@ def probe_input_fields(
     document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
 
     response = graphql.post(
-        config.url, headers=config.headers, json={"query": document}
+        config.url,
+        headers=config.headers,
+        json={"query": document},
+        verify=config.verify,
     )
     errors = response.json()["errors"]
 
@@ -302,7 +311,10 @@ def probe_typeref(
 
     for document in documents:
         response = graphql.post(
-            config.url, headers=config.headers, json={"query": document}
+            config.url,
+            headers=config.headers,
+            json={"query": document},
+            verify=config.verify,
         )
         errors = response.json().get("errors", [])
 
@@ -348,7 +360,10 @@ def probe_typename(input_document: str, config: graphql.Config) -> str:
     document = input_document.replace("FUZZ", wrong_field)
 
     response = graphql.post(
-        config.url, headers=config.headers, json={"query": document}
+        config.url,
+        headers=config.headers,
+        json={"query": document},
+        verify=config.verify,
     )
     errors = response.json()["errors"]
 
@@ -391,7 +406,10 @@ def fetch_root_typenames(config: graphql.Config) -> Dict[str, Optional[str]]:
 
     for name, document in documents.items():
         response = graphql.post(
-            config.url, headers=config.headers, json={"query": document}
+            config.url,
+            headers=config.headers,
+            json={"query": document},
+            verify=config.verify,
         )
         data = response.json().get("data", {})
 
