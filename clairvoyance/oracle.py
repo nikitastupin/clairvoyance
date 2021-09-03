@@ -250,6 +250,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         'Field "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must have a selection of subfields. Did you mean "[_0-9a-zA-Z\[\]!]* \{ ... \}"\?',
         'Field "[_0-9a-zA-Z\[\]!]*" must not have a selection since type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" has no subfields.',
         'Cannot query field "[_0-9a-zA-Z\[\]!]*" on type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)".',
+        'Field "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" must not have a sub selection\.',
     ]
     arg_regexes = [
         'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required.+\.',
@@ -324,7 +325,7 @@ def probe_typeref(
             if typeref:
                 return typeref
 
-    if not typeref:
+    if not typeref and context != 'InputValue':
         raise Exception(f"Unable to get TypeRef for {documents} in context {context}")
 
     return None
@@ -349,6 +350,8 @@ def probe_arg_typeref(
         input_document.replace("FUZZ", f"{field}({arg}: 7)"),
         input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
         input_document.replace("FUZZ", f"{field}({arg[:-1]}: 7)"),
+        input_document.replace("FUZZ", f"{field}({arg}: \"7\")"),
+        input_document.replace("FUZZ", f"{field}({arg}: false)"),
     ]
 
     typeref = probe_typeref(documents, "InputValue", config)
@@ -455,6 +458,9 @@ def clairvoyance(
                 arg_typeref = probe_arg_typeref(
                     field.name, arg_name, config, input_document
                 )
+                if not arg_typeref:
+                    logging.warning(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
+                    continue
                 arg = graphql.InputValue(arg_name, arg_typeref)
 
                 field.args.append(arg)
