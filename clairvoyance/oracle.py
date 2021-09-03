@@ -252,7 +252,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
         'Cannot query field "[_0-9a-zA-Z\[\]!]*" on type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)".',
     ]
     arg_regexes = [
-        'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required, but it was not provided.',
+        'Field "[_0-9a-zA-Z\[\]!]*" argument "[_0-9a-zA-Z\[\]!]*" of type "(?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)" is required.+\.',
         "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
     ]
     arg_skip_regexes = [
