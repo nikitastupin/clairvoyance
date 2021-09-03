@@ -17,7 +17,7 @@ def post(url, data=None, json=None, **kwargs):
 
     retries = urllib3.util.Retry(
         status=5,
-        method_whitelist={
+        allowed_methods={
             "DELETE",
             "GET",
             "HEAD",
