@@ -172,6 +172,23 @@ class TestGetTypeRef(unittest.TestCase):
         self.assertEqual(got.non_null_item, want.non_null_item)
         self.assertEqual(got.non_null, want.non_null)
 
+    def test_dvga(self):
+        want = graphql.TypeRef(
+            name="String",
+            kind="SCALAR",
+            is_list=False,
+            non_null_item=False,
+            non_null=False,
+        )
+        got = oracle.get_typeref(
+            'Field "systemHealth" of type "String" must not have a sub selection.', "Field"
+        )
+        self.assertEqual(got.name, want.name)
+        self.assertEqual(got.kind, want.kind)
+        self.assertEqual(got.is_list, want.is_list)
+        self.assertEqual(got.non_null_item, want.non_null_item)
+        self.assertEqual(got.non_null, want.non_null)
+
 
 class TestTypeRef(unittest.TestCase):
     def test_to_json(self):
