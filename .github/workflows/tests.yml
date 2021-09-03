@@ -2,18 +2,18 @@ name: Tests
 
 on:
   push:
-    paths:
-      - 'clairvoyance/**'
-      - 'tests/**'
-      - '.github/workflows/*'
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
     branches:
       - main
       - master
   pull_request:
-    paths:
-      - 'clairvoyance/**'
-      - 'tests/**'
-      - '.github/workflows/*'
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.gitignore'
     branches:
       - main
       - master
