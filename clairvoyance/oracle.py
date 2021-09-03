@@ -320,11 +320,12 @@ def probe_typeref(
 
         for error in errors:
             typeref = get_typeref(error["message"], context)
+            logging.debug(f"get_typeref('{error['message']}', '{context}') -> {typeref}")
             if typeref:
                 return typeref
 
     if not typeref:
-        raise Exception(f"Unable to get TypeRef for {documents}")
+        raise Exception(f"Unable to get TypeRef for {documents} in context {context}")
 
     return None
 

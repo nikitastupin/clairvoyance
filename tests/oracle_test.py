@@ -155,6 +155,23 @@ class TestGetTypeRef(unittest.TestCase):
         self.assertEqual(want, got)
         self.assertCountEqual(["WARNING:root:Dummy warning"], cm.output)
 
+    def test_issue_16(self):
+        want = graphql.TypeRef(
+            name="ID",
+            kind="SCALAR",
+            is_list=False,
+            non_null_item=False,
+            non_null=True,
+        )
+        got = oracle.get_typeref(
+            'Field "node" argument "id" of type "ID!" is required but not provided.', "InputValue"
+        )
+        self.assertEqual(got.name, want.name)
+        self.assertEqual(got.kind, want.kind)
+        self.assertEqual(got.is_list, want.is_list)
+        self.assertEqual(got.non_null_item, want.non_null_item)
+        self.assertEqual(got.non_null, want.non_null)
+
 
 class TestTypeRef(unittest.TestCase):
     def test_to_json(self):
