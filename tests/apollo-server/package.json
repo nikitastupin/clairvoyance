@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "apollo-server": "^2.19.0"
+    "apollo-server": "^3.3.0"
   }
 }
