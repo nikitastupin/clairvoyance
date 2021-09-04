@@ -13,13 +13,21 @@ $ pip3 install -r requirements.txt
 ```
 
 ## Usage
-
+### From Python interpreter
 ```
 $ python3 -m clairvoyance --help
 ```
 
 ```
 $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
+```
+### From Docker Image
+```
+$ docker run --rm nikitastupin/clairvoyance --help
+```
+```
+# Assuming the wordlist.txt file is found in $PWD
+$ docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
 You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
