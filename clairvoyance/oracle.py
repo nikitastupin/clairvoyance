@@ -300,6 +300,10 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
             non_null=non_null,
         )
     else:
+        # this warning can be misleading because get_typeref function
+        # is called multiple times in a loop and even if one
+        # error message is unkown in the parcticular context
+        # the other may be OK and there is no need in the warining
         logging.warning(f"Unknown error message: '{error_message}'")
 
     return typeref
@@ -433,6 +437,15 @@ def clairvoyance(
 ) -> Dict[str, Any]:
     if not input_schema:
         root_typenames = fetch_root_typenames(config)
+
+        # hotfix https://github.com/nikitastupin/clairvoyance/issues/22
+        if not root_typenames["queryType"]:
+            root_typenames["queryType"] = probe_typename("query { imwrongfield }", config)
+        # if not root_typenames["mutationType"]:
+        #     root_typenames["mutationType"] = probe_typename("mutation { imwrongfield }", config)
+        # if not root_typenames["subscriptionType"]:
+        #     root_typenames["subscriptionType"] = probe_typename("subscription { imwrongfield }", config)
+
         schema = graphql.Schema(
             queryType=root_typenames["queryType"],
             mutationType=root_typenames["mutationType"],
