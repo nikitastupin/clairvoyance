@@ -35,7 +35,7 @@ def get_valid_fields(error_message: str) -> Set:
 
         for m in match.group("multi").split(", "):
             if m:
-                valid_fields.add(m.strip('"'))
+                valid_fields.add(m.strip('"').strip("'"))
 
         if match.group("last"):
             valid_fields.add(match.group("last"))
