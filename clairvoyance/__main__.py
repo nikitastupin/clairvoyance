@@ -60,7 +60,7 @@ def parse_args():
         "--proxy",
         dest="proxies",
         default=None,
-        required=False,
+        metavar="[protocol://]host[:port]",
         help="Use the specified HTTP proxy (e.g. BurpSuite to debug requests). Proxy can also be defined by standard environment variables 'http_proxy', 'https_proxy', 'no_proxy', and 'all_proxy'. Uppercase variants of these variables are also supported. This argument is passed directly to the https://requests.readthedocs.io/en/latest/user/advanced/#proxies parameter.",
     )
     parser.add_argument("url")
