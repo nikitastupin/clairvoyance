@@ -55,6 +55,14 @@ def parse_args():
         type=argparse.FileType("r"),
         help="This wordlist will be used for all brute force effots (fields, arguments and so on)",
     )
+    parser.add_argument(
+        "-p",
+        "--proxy",
+        dest="proxies",
+        default=False,
+        required=False,
+        help="Use a proxy such as BurpSuite to debug requests.",
+    )
     parser.add_argument("url")
 
     return parser.parse_args()
@@ -77,6 +85,10 @@ if __name__ == "__main__":
     config = graphql.Config()
     config.url = args.url
     config.verify = not args.insecure
+    
+    if args.proxies != False:
+        config.proxies = args.proxies
+        
     for h in args.headers:
         key, value = h.split(": ", 1)
         config.headers[key] = value
