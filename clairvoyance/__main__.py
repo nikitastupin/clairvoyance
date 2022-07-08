@@ -88,6 +88,8 @@ if __name__ == "__main__":
     
     if args.proxies != False:
         config.proxies = args.proxies
+    else:
+        config.proxies = False
         
     for h in args.headers:
         key, value = h.split(": ", 1)
