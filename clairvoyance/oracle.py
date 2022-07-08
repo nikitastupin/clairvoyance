@@ -70,13 +70,26 @@ def probe_valid_fields(
         bucket = wordlist[i : i + config.bucket_size]
 
         document = input_document.replace("FUZZ", " ".join(bucket))
-
-        response = graphql.post(
-            config.url,
-            headers=config.headers,
-            json={"query": document},
-            verify=config.verify,
-        )
+        
+        if config.proxies != False:
+            
+            response = graphql.post(
+                config.url,
+                headers=config.headers,
+                proxies=config.proxies,
+                json={"query": document},
+                verify=config.verify,
+            )
+            
+        else:
+            
+            response = graphql.post(
+                config.url,
+                headers=config.headers,
+                json={"query": document},
+                verify=config.verify,
+            )
+            
         errors = response.json()["errors"]
         logging.debug(
             f"Sent {len(bucket)} fields, recieved {len(errors)} errors in {response.elapsed.total_seconds()} seconds"
