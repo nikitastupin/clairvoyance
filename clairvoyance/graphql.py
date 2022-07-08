@@ -1,3 +1,4 @@
+import re
 import urllib3
 import requests
 from urllib3.exceptions import InsecureRequestWarning
@@ -12,7 +13,8 @@ from typing import Any
 from typing import Set
 
 
-def post(url, data=None, json=None, **kwargs):
+def post(url, data=None, json=None, proxies=None, **kwargs):
+    
     session = requests.Session()
 
     retries = urllib3.util.Retry(
@@ -34,7 +36,10 @@ def post(url, data=None, json=None, **kwargs):
 
     session.mount("http://", adapter)
     session.mount("https://", adapter)
-
+    
+    if proxies != None:
+        session.proxies = {"http": proxies, "https": proxies}
+            
     response = session.post(url, data=data, json=json, **kwargs)
 
     return response
