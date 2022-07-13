@@ -67,7 +67,7 @@ def probe_valid_fields(
     valid_fields = set(wordlist)
 
     for i in range(0, len(wordlist), config.bucket_size):
-        bucket = wordlist[i : i + config.bucket_size]
+        bucket = wordlist[i: i + config.bucket_size]
 
         document = input_document.replace("FUZZ", " ".join(bucket))
 
@@ -139,9 +139,9 @@ def probe_valid_args(
         if match:
             valid_args.discard(match.group("invalid_arg"))
 
-        duplicate_arg_regex = 'There can be only one argument named [\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\"]'
-        if re.match(duplicate_arg_regex, error_message):
-            match = re.match(duplicate_arg_regex, error_message)
+        duplicate_arg_regex = 'There can be only one argument named [\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\"]\.?'
+        if re.fullmatch(duplicate_arg_regex, error_message):
+            match = re.fullmatch(duplicate_arg_regex, error_message)
             valid_args.discard(match.group("arg"))
             continue
 
@@ -157,7 +157,7 @@ def probe_args(
     valid_args = set()
 
     for i in range(0, len(wordlist), config.bucket_size):
-        bucket = wordlist[i : i + config.bucket_size]
+        bucket = wordlist[i: i + config.bucket_size]
         valid_args |= probe_valid_args(field, bucket, config, input_document)
 
     return valid_args
@@ -341,7 +341,7 @@ def probe_typeref(
 
 
 def probe_field_type(
-    field: str, config: graphql.Config, input_document: str
+        field: str, config: graphql.Config, input_document: str
 ) -> graphql.TypeRef:
     documents = [
         input_document.replace("FUZZ", f"{field}"),
