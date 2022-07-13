@@ -60,7 +60,7 @@ def get_valid_fields(error_message: str) -> Set:
 
 
 def probe_valid_fields(
-        wordlist: Set, config: graphql.Config, input_document: str
+    wordlist: Set, config: graphql.Config, input_document: str
 ) -> Set[str]:
     # We're assuming all fields from wordlist are valid,
     # then remove fields that produce an error message
@@ -86,8 +86,8 @@ def probe_valid_fields(
             error_message = error["message"]
 
             if (
-                    "must not have a selection since type" in error_message
-                    and "has no subfields" in error_message
+                "must not have a selection since type" in error_message
+                and "has no subfields" in error_message
             ):
                 return set()
 
@@ -106,7 +106,7 @@ def probe_valid_fields(
 
 
 def probe_valid_args(
-        field: str, wordlist: Set, config: graphql.Config, input_document: str
+    field: str, wordlist: Set, config: graphql.Config, input_document: str
 ) -> Set[str]:
     valid_args = set(wordlist)
 
@@ -146,7 +146,7 @@ def probe_valid_args(
 
 
 def probe_args(
-        field: str, wordlist: Set, config: graphql.Config, input_document: str
+    field: str, wordlist: Set, config: graphql.Config, input_document: str
 ) -> Set[str]:
     valid_args = set()
 
@@ -212,7 +212,7 @@ def get_valid_input_fields(error_message: str) -> Set:
 
 
 def probe_input_fields(
-        field: str, argument: str, wordlist: Set, config: graphql.Config
+    field: str, argument: str, wordlist: Set, config: graphql.Config
 ) -> Set[str]:
     valid_input_fields = set(wordlist)
 
@@ -306,7 +306,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
 
 
 def probe_typeref(
-        documents: List[str], context: str, config: graphql.Config
+    documents: List[str], context: str, config: graphql.Config
 ) -> Optional[graphql.TypeRef]:
     typeref = None
 
@@ -344,7 +344,7 @@ def probe_field_type(
 
 
 def probe_arg_typeref(
-        field: str, arg: str, config: graphql.Config, input_document: str
+    field: str, arg: str, config: graphql.Config, input_document: str
 ) -> graphql.TypeRef:
     documents = [
         input_document.replace("FUZZ", f"{field}({arg}: 7)"),
@@ -426,10 +426,10 @@ def fetch_root_typenames(config: graphql.Config) -> Dict[str, Optional[str]]:
 
 
 def clairvoyance(
-        wordlist: List[str],
-        config: graphql.Config,
-        input_schema: Dict[str, Any] = None,
-        input_document: str = None,
+    wordlist: List[str],
+    config: graphql.Config,
+    input_schema: Dict[str, Any] = None,
+    input_document: str = None,
 ) -> Dict[str, Any]:
     if not input_schema:
         root_typenames = fetch_root_typenames(config)
