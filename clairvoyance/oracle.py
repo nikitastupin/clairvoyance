@@ -139,6 +139,12 @@ def probe_valid_args(
         if match:
             valid_args.discard(match.group("invalid_arg"))
 
+        duplicate_arg_regex = 'There can be only one argument named [\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\"]'
+        if re.match(duplicate_arg_regex, error_message):
+            match = re.match(duplicate_arg_regex, error_message)
+            valid_args.discard(match.group("arg"))
+            continue
+
         # Second obtain args suggestions from error message
         valid_args |= get_valid_args(error_message)
 
@@ -168,12 +174,14 @@ def get_valid_args(error_message: str) -> Set[str]:
     ]
 
     single_suggestion_regexes = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
+        'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
     ]
 
     double_suggestion_regexes = [
         'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<first>[_0-9a-zA-Z\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
     ]
+
 
     for regex in skip_regexes:
         if re.fullmatch(regex, error_message):
@@ -255,6 +263,7 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
     arg_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required.+\.',
         "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
+        'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<typeref>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
     ]
     arg_skip_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] must have a selection of subfields\. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ \.\.\. \}[\'"]\?'
