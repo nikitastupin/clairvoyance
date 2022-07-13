@@ -126,8 +126,8 @@ def probe_valid_args(
         error_message = error["message"]
 
         if (
-                "must not have a selection since type" in error_message
-                and "has no subfields" in error_message
+            "must not have a selection since type" in error_message
+            and "has no subfields" in error_message
         ):
             return set()
 
