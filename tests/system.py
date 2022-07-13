@@ -27,6 +27,7 @@ class TestClairvoyance(unittest.TestCase):
                 "-o",
                 output_file,
                 "-w",
+                "-wv",
                 "tests/data/wordlist-for-apollo-server.txt",
                 f"http://localhost:{cls.port}",
             ],
@@ -37,6 +38,7 @@ class TestClairvoyance(unittest.TestCase):
             j = json.load(f)
 
         cls.schema = j["data"]["__schema"]
+
 
     @property
     def query_type(self):
@@ -57,6 +59,9 @@ class TestClairvoyance(unittest.TestCase):
     @unittest.skip("Clairvoyance produces false positive warnings")
     def test_no_warnings(self):
         self.assertFalse(p.stderr)
+
+    def test_validate_wordlist(self):
+        self.assertIn("Removed 1 items from Wordlist", self.clairvoyance.stdout)
 
     def test_found_root_type_names(self):
         self.assertEqual(self.schema["queryType"], {"name": "Query"})

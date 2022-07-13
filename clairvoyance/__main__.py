@@ -1,6 +1,7 @@
 import json
 import logging
 import argparse
+import re
 from typing import Dict
 
 from clairvoyance import graphql
@@ -55,6 +56,12 @@ def parse_args():
         type=argparse.FileType("r"),
         help="This wordlist will be used for all brute force effots (fields, arguments and so on)",
     )
+    parser.add_argument(
+        "-wv",
+        "--validate",
+        action="store_true",
+        help="Validate the wordlist items match name Regex",
+    )
     parser.add_argument("url")
 
     return parser.parse_args()
@@ -83,6 +90,15 @@ if __name__ == "__main__":
 
     with args.wordlist as f:
         wordlist = [w.strip() for w in f.readlines() if w.strip()]
+        # de-dupe the wordlist.
+        wordlist = list(set(wordlist))
+
+    # remove wordlist items that don't conform to graphQL regex github-issue #11
+    if args.validate:
+        wordlist_parsed = [w for w in wordlist if re.match(r'[_A-Za-z][_0-9A-Za-z]*', w)]
+        logging.info(f'Removed {len(wordlist) - len(wordlist_parsed)} items from Wordlist, to conform to name regex. '
+                     f'https://spec.graphql.org/June2018/#sec-Names')
+        wordlist = wordlist_parsed
 
     input_schema = None
     if args.input:
