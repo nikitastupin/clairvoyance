@@ -1,1 +1,1 @@
-from clairvoyance.entities.primitives import *
+from clairvoyance.entities.primitives import *  # noqa
