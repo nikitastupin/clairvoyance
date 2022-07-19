@@ -1,32 +1,38 @@
-# Image: python:3.9.6-slim-buster
-FROM python@sha256:ab2e6f2a33c44bd0cda2138a8308ca45145edd21ba80a125c9df57c46a255839 as build
+# BASE
+FROM  python:3.10-alpine as python-base
 
-RUN apt update \
-    && apt upgrade -y \
-    && apt install -y python3-dev build-essential
+ENV APP_NAME="clairvoyance" \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    PIP_NO_CACHE_DIR=off \
+    PYSETUP_PATH="/opt/pysetup" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    VENV_PATH="/opt/pysetup/.venv" \
+    PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-ENV VIRTUAL_ENV=/tmp/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# BUILDER
+FROM python-base as builder-base
 
-COPY requirements.txt /tmp/
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+WORKDIR $PYSETUP_PATH
+RUN apk add build-base zlib-dev libffi-dev
+RUN pip install poetry
 
+COPY ./poetry.lock ./pyproject.toml ./README.md ./
+RUN poetry install --no-dev --no-root
 
-# Image: python:3.9.6-alpine3.14
-FROM python@sha256:3e7e8a57a959c393797f0c90fa7b0fdbf7a40c4a274028e3f28a4f33d4783866
+COPY ./$APP_NAME ./$APP_NAME
+RUN poetry install --no-dev
 
-WORKDIR /home/clairvoyance
+# RELEASE
+FROM python-base as release
 
-RUN adduser \
-    --home "$(pwd)" \
-    --gecos "" \
-    --disabled-password \
-    clairvoyance
+ENV PYTHONWARNINGS="ignore"
 
-COPY --from=build /tmp/venv .venv/
-COPY clairvoyance clairvoyance/
+COPY --from=builder-base $VENV_PATH $VENV_PATH
+COPY ./$APP_NAME /$APP_NAME/
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 
-USER clairvoyance
-ENV PYTHONPATH=/home/clairvoyance
-ENTRYPOINT [".venv/bin/python3", "clairvoyance/__main__.py"]
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT /docker-entrypoint.sh $0 $@
+CMD ["--help"]
