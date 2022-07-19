@@ -7,7 +7,7 @@ from enum import Enum, unique
 class GraphQLPrimitive(str, Enum):
 
     """The default GraphQL Scalar primitives.
-    
+
     ref: https://spec.graphql.org/draft/#sec-Input-Values
     """
 
@@ -22,7 +22,7 @@ class GraphQLPrimitive(str, Enum):
 class GraphQLKind(str, Enum):
 
     """The default GraphQL kinds.
-    
+
     ref: https://spec.graphql.org/draft/#sec-Types
     """
 

@@ -171,8 +171,8 @@ class TypeRef:
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, TypeRef):
-            for attr in self.__dict__.keys():
-                if self.__dict__[attr] != other.__dict__[attr]:
+            for key, attr in self.__dict__.items():
+                if attr != other.__dict__[key]:
                     return False
             return True
         return False

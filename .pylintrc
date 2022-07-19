@@ -52,6 +52,6 @@ ignore-imports=yes
 [MESSAGES CONTROL]
 
 #TODO: DEV - Fix these one day: broad-except, fixme
-disable=logging-format-interpolation, logging-fstring-interpolation, broad-except, fixme
+disable=logging-format-interpolation, logging-fstring-interpolation, broad-except, fixme, missing-class-docstring, missing-module-docstring, missing-function-docstring
 enable=print-statement
 extension-pkg-whitelist=lxml

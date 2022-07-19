@@ -53,14 +53,14 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 
 def setup_logger(verbosity: int) -> None:
-    format = '%(asctime)s \t%(levelname)s\t| %(message)s'
+    _format = '%(asctime)s \t%(levelname)s\t| %(message)s'
     datefmt = '%Y-%m-%d %H:%M:%S'
 
     level = logging.DEBUG if verbosity > 1 else logging.INFO
 
     logging.basicConfig(
         level=level,
-        format=format,
+        format=_format,
         datefmt=datefmt,
     )
 

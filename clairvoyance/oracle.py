@@ -1,5 +1,6 @@
+# pylint: disable=anomalous-backslash-in-string, line-too-long
+
 import asyncio
-import logging
 import re
 import time
 from typing import Any, Dict, List, Optional, Set
@@ -8,6 +9,7 @@ from clairvoyance import graphql
 from clairvoyance.config import Config
 
 
+# pylint: disable=too-many-branches
 def get_valid_fields(
     error_message: str,
     config: Config,
