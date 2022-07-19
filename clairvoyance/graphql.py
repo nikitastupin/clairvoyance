@@ -2,12 +2,12 @@ import json
 import logging
 from typing import List, Dict, Any, Optional, Set
 
-from clairvoyance.entities.primitives import GraphQLPrimitive
+from clairvoyance.entities import GraphQLPrimitive
 
 
 class Schema:
 
-    '''Host of the introspection data.'''
+    """Host of the introspection data."""
 
     def __init__(
         self,
@@ -62,14 +62,14 @@ class Schema:
         name: str,
         kind: str,
     ) -> None:
-        '''Adds type to schema if it's not exists already.'''
+        """Adds type to schema if it's not exists already."""
 
         if name not in self.types:
             typ = Type(name=name, kind=kind)
             self.types[name] = typ
 
     def __repr__(self) -> str:
-        '''Json representation of the schema.'''
+        """Json representation of the schema."""
 
         schema = {'data': {'__schema': self._schema}}
 
@@ -83,7 +83,7 @@ class Schema:
         self,
         name: str,
     ) -> List[str]:
-        '''Getting path starting from root.'''
+        """Getting path starting from root."""
 
         logging.debug(f'Entered get_path_from_root({name})')
         path_from_root: List[str] = []
@@ -114,7 +114,7 @@ class Schema:
         self,
         ignore: Set[str],
     ) -> str:
-        '''Gets the type without a field.'''
+        """Gets the type without a field."""
 
         for t in self.types.values():
             if not t.fields and t.name not in ignore and t.kind != 'INPUT_OBJECT':
@@ -126,7 +126,7 @@ class Schema:
         self,
         path: List[str],
     ) -> str:
-        '''Converts a path to document.'''
+        """Converts a path to document."""
 
         logging.debug(f'Entered convert_path_to_document({path})')
         doc = 'FUZZ'

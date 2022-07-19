@@ -1,7 +1,11 @@
 import re
+import time
 import logging
+import asyncio
+
 from typing import Any, List, Dict, Set, Optional
 
+from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.config import Config
 from clairvoyance import graphql
 
@@ -65,10 +69,10 @@ def get_valid_fields(error_message: str) -> Set[str]:
     return valid_fields
 
 
-def probe_valid_fields(
+async def probe_valid_fields(
     wordlist: List[str],
-    config: graphql.Config,
     input_document: str,
+    config: Config,
 ) -> Set[str]:
     """Sending a wordlist to check for valid fields.
 
@@ -81,19 +85,19 @@ def probe_valid_fields(
         A set of discovered valid fields.
     """
 
-    # We're assuming all fields from wordlist are valid,
-    # then remove fields that produce an error message
-    valid_fields = set(wordlist)
-
-    for i in range(0, len(wordlist), config.bucket_size):
+    async def __probation(i: int) -> Set[str]:
+        valid_fields = set(wordlist)
         bucket = wordlist[i:i + config.bucket_size]
-
         document = input_document.replace('FUZZ', ' '.join(bucket))
 
-        response = graphql.post(json={'query': document}, )
-        errors = response.json()['errors']
+        start_time = time.time()
 
-        logging.debug(f'Sent {len(bucket)} fields, received {len(errors)} errors in {response.elapsed.total_seconds()} seconds')
+        response = await config.client.post(document)
+        errors = response['errors']
+
+        total_time = time.time() - start_time
+
+        config.log.debug(f'Sent {len(bucket)} fields, received {len(errors)} errors in {round(total_time, 2)} seconds')
 
         for error in errors:
             error_message = error['message']
@@ -102,6 +106,7 @@ def probe_valid_fields(
                 'has no subfields' in error_message):
                 return set()
 
+            # ! LEGACY CODE please keep
             # First remove field if it produced an 'Cannot query field' error
             # match = re.search(
             #     'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
@@ -113,14 +118,27 @@ def probe_valid_fields(
             # Second obtain field suggestions from error message
             valid_fields |= get_valid_fields(error_message)
 
+        return valid_fields
+
+    # Create task list
+    tasks: list[asyncio.Task] = []
+    for i in range(0, len(wordlist), config.bucket_size):
+        tasks.append(asyncio.create_task(__probation(i)))
+
+    # Process results
+    valid_fields = set()
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        valid_fields |= result
+
     return valid_fields
 
 
-def probe_valid_args(
+async def probe_valid_args(
     field: str,
     wordlist: List[str],
-    config: Config,
     input_document: str,
+    config: Config,
 ) -> Set[str]:
     """Sends the wordlist as arguments and deduces its type from the error msgs received."""
 
@@ -128,8 +146,8 @@ def probe_valid_args(
 
     document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
 
-    response = graphql.post(json={'query': document}, )
-    errors = response.json()['errors']
+    response = await config.client.post(document=document)
+    errors = response['errors']
 
     for error in errors:
         error_message = error['message']
@@ -146,29 +164,37 @@ def probe_valid_args(
             valid_args.discard(match.group('invalid_arg'))
 
         # Second obtain args suggestions from error message
-        valid_args |= get_valid_args(error_message)
+        valid_args |= get_valid_args(error_message, config)
 
     return valid_args
 
 
-def probe_args(
+async def probe_args(
     field: str,
     wordlist: List[str],
-    config: Config,
     input_document: str,
+    config: Config,
 ) -> Set[str]:
     """Wrapper function for deducing the arg types."""
 
-    valid_args = set()
-
+    tasks: list[asyncio.Task] = []
     for i in range(0, len(wordlist), config.bucket_size):
         bucket = wordlist[i:i + config.bucket_size]
-        valid_args |= probe_valid_args(field, bucket, config, input_document)
+        tasks.append(asyncio.create_task(probe_valid_args(field, bucket, input_document, config)))
+
+    valid_args: set[str] = set()
+
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        valid_args |= result
 
     return valid_args
 
 
-def get_valid_args(error_message: str) -> Set[str]:
+def get_valid_args(
+    error_message: str,
+    config: Config,
+) -> Set[str]:
     """Get the type of an arg using regex."""
 
     valid_args = set()
@@ -203,64 +229,15 @@ def get_valid_args(error_message: str) -> Set[str]:
             valid_args.add(match.group('second'))
 
     if not valid_args:
-        logging.debug(f'Unknown error message: {error_message}')
+        config.log.debug(f'Unknown error message: {error_message}')
 
     return valid_args
-
-
-def get_valid_input_fields(error_message: str) -> Set:
-    """Fetching valid input field using regex."""
-
-    valid_fields = set()
-
-    single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
-
-    if re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
-        if match:
-            if match.group("field"):
-                valid_fields.add(match.group('field'))
-        else:
-            logging.warning(f'Unknown error message: \'{error_message}\'')
-
-    return valid_fields
-
-
-def probe_input_fields(
-    field: str,
-    argument: str,
-    wordlist: Set,
-    config: Config,
-) -> Set[str]:
-    """Sending arguments to input fields to also deduce them."""
-
-    valid_input_fields = set(wordlist)
-
-    document = f'mutation {{ {field}({argument}: {{ {", ".join([w + ": 7" for w in wordlist])} }}) }}'
-
-    response = graphql.post(json={'query': document}, )
-    errors = response.json()['errors']
-
-    for error in errors:
-        error_message = error['message']
-
-        # First remove field if it produced an error
-        match = re.search(
-            'Field [\'"](?P<invalid_field>[_0-9a-zA-Z\[\]!]*)[\'"] is not defined by type [_0-9a-zA-Z\[\]!]*.',
-            error_message,
-        )
-        if match:
-            valid_input_fields.discard(match.group('invalid_field'))
-
-        # Second obtain field suggestions from error message
-        valid_input_fields |= get_valid_input_fields(error_message)
-
-    return valid_input_fields
 
 
 def get_typeref(
     error_message: str,
     context: str,
+    config: Config,
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
@@ -321,40 +298,55 @@ def get_typeref(
             non_null=non_null,
         )
     else:
-        logging.debug(f'Unknown error message: \'{error_message}\'')
+        config.log.debug(f'Unknown error message: \'{error_message}\'')
 
     return typeref
 
 
-def probe_typeref(
+async def probe_typeref(
     documents: List[str],
     context: str,
     config: Config,
 ) -> Optional[graphql.TypeRef]:
     """Sending a document to attain errors in order to deduce the type of fields."""
 
-    typeref = None
+    async def __probation(document: str) -> Optional[graphql.TypeRef]:
+        """Send a document to attempt discovering a typeref."""
 
-    for document in documents:
-        response = graphql.post(json={'query': document}, )
-        errors = response.json().get('errors', [])
+        response = await config.client.post(document)
+        for error in response.get('errors', []):
+            if isinstance(error, str):
+                continue
+            if not isinstance(error['message'], dict):
+                typeref = get_typeref(error['message'], context, config)
 
-        for error in errors:
-            typeref = get_typeref(error['message'], context)
-            logging.debug(f'get_typeref(\'{error["message"]}\', \'{context}\') -> {typeref}')
+            config.log.debug(f'get_typeref("{error["message"]}", "{context}") -> {typeref}')
             if typeref:
                 return typeref
+
+        return None
+
+    tasks: list[asyncio.Task] = []
+    for document in documents:
+        tasks.append(asyncio.create_task(__probation(document)))
+
+    typeref: Optional[graphql.TypeRef] = None
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        if not result:
+            continue
+        typeref = result
 
     if not typeref and context != 'InputValue':
         raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
 
-    return None
+    return typeref
 
 
-def probe_field_type(
+async def probe_field_type(
     field: str,
-    config: Config,
     input_document: str,
+    config: Config,
 ) -> Optional[graphql.TypeRef]:
     """Wrapper function for sending the queries to deduce the field type."""
 
@@ -363,15 +355,14 @@ def probe_field_type(
         input_document.replace('FUZZ', f'{field} {{ lol }}'),
     ]
 
-    typeref = probe_typeref(documents, 'Field', config)
-    return typeref
+    return await probe_typeref(documents, 'Field', config)
 
 
-def probe_arg_typeref(
+async def probe_arg_typeref(
     field: str,
     arg: str,
-    config: Config,
     input_document: str,
+    config: Config,
 ) -> Optional[graphql.TypeRef]:
     """Wrapper function to deduce the type of an arg."""
 
@@ -383,20 +374,18 @@ def probe_arg_typeref(
         input_document.replace('FUZZ', f'{field}({arg}: false)'),
     ]
 
-    typeref = probe_typeref(documents, 'InputValue', config)
-    return typeref
+    return await probe_typeref(documents, 'InputValue', config)
 
 
-def probe_typename(
+async def probe_typename(
     input_document: str,
     config: Config,
 ) -> str:
-    typename = ''
     wrong_field = 'imwrongfield'
     document = input_document.replace('FUZZ', wrong_field)
 
-    response = graphql.post(json={'query': document}, )
-    errors = response.json()['errors']
+    response = await config.client.post(document=document)
+    errors = response['errors']
 
     wrong_field_regexes = [
         f'Cannot query field [\'"]{wrong_field}[\'"] on type [\'"](?P<typename>[_0-9a-zA-Z\[\]!]*)[\'"].',
@@ -405,7 +394,6 @@ def probe_typename(
     ]
 
     match = None
-
     for regex in wrong_field_regexes:
         for error in errors:
             match = re.fullmatch(regex, error['message'])
@@ -417,12 +405,10 @@ def probe_typename(
     if not match:
         raise Exception(f'Expected "{errors}" to match any of "{wrong_field_regexes}".')
 
-    typename = (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
-
-    return typename
+    return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
 
 
-def fetch_root_typenames(config: Config) -> Dict[str, Optional[str]]:
+async def fetch_root_typenames(config: Config) -> Dict[str, Optional[str]]:
     documents: Dict[str, str] = {
         'queryType': 'query { __typename }',
         'mutationType': 'mutation { __typename }',
@@ -435,25 +421,67 @@ def fetch_root_typenames(config: Config) -> Dict[str, Optional[str]]:
     }
 
     for name, document in documents.items():
-        response = graphql.post(json={'query': document}, )
-        data = response.json().get('data', {})
+        response = await config.client.post(document=document)
 
+        data = response.get('data', {})
         if data:
             typenames[name] = data['__typename']
 
-    logging.debug(f'Root typenames are: {typenames}')
-
+    config.log.debug(f'Root typenames are: {typenames}')
     return typenames
 
 
-def clairvoyance(
-    wordlist: List[str],
-    config: Config,
+async def explore_field(
+    field_name: str,
     input_document: str,
+    wordlist: list[str],
+    typename: str,
+    config: Config,
+) -> tuple[graphql.Field, list[graphql.InputValue]]:
+    """Perform exploration on a field."""
+
+    typeref = await probe_field_type(
+        field_name,
+        input_document,
+        config,
+    )
+    field = graphql.Field(field_name, typeref)
+    args = []
+
+    if field.type.name not in GraphQLPrimitive.__members__.values():
+        arg_names = await probe_args(
+            field.name,
+            wordlist,
+            input_document,
+            config,
+        )
+
+        config.log.debug(f'{typename}.{field_name}.args = {arg_names}')
+        for arg_name in arg_names:
+            arg_typeref = await probe_arg_typeref(field.name, arg_name, input_document, config)
+
+            if not arg_typeref:
+                config.log.debug(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
+                continue
+
+            arg = graphql.InputValue(arg_name, arg_typeref)
+
+            field.args.append(arg)
+            args.append(arg)
+    else:
+        config.log.debug(f'Skip probe_args() for "{field.name}" of type "{field.type.name}"')
+
+    return field, args
+
+
+async def clairvoyance(
+    wordlist: List[str],
+    input_document: str,
+    config: Config,
     input_schema: Dict[str, Any] = None,
-) -> Dict[str, Any]:
+) -> str:
     if not input_schema:
-        root_typenames = fetch_root_typenames(config)
+        root_typenames = await fetch_root_typenames(config)
         schema = graphql.Schema(
             queryType=root_typenames['queryType'],
             mutationType=root_typenames['mutationType'],
@@ -462,32 +490,35 @@ def clairvoyance(
     else:
         schema = graphql.Schema(schema=input_schema)
 
-    typename = probe_typename(input_document, config)
-    logging.debug(f'__typename = {typename}')
+    typename = await probe_typename(
+        input_document,
+        config,
+    )
+    config.log.debug(f'__typename = {typename}')
 
-    valid_mutation_fields = probe_valid_fields(wordlist, config, input_document)
-    logging.debug(f'{typename}.fields = {valid_mutation_fields}')
+    valid_mutation_fields = await probe_valid_fields(
+        wordlist,
+        input_document,
+        config,
+    )
+    config.log.debug(f'{typename}.fields = {valid_mutation_fields}')
 
+    tasks: list[asyncio.Task] = []
     for field_name in valid_mutation_fields:
-        typeref = probe_field_type(field_name, config, input_document)
-        field = graphql.Field(field_name, typeref)
+        task: asyncio.Task = asyncio.create_task(explore_field(
+            field_name,
+            input_document,
+            wordlist,
+            typename,
+            config,
+        ))
+        tasks.append(task)
 
-        if field.type.name not in ['Int', 'Float', 'String', 'Boolean', 'ID']:
-            arg_names = probe_args(field.name, wordlist, config, input_document)
-            logging.debug(f'{typename}.{field_name}.args = {arg_names}')
-            for arg_name in arg_names:
-                arg_typeref = probe_arg_typeref(field.name, arg_name, config, input_document)
-                if not arg_typeref:
-                    logging.warning(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
-                    continue
-                arg = graphql.InputValue(arg_name, arg_typeref)
-
-                field.args.append(arg)
-                schema.add_type(arg.type.name, 'INPUT_OBJECT')
-        else:
-            logging.debug(f'Skip probe_args() for \'{field.name}\' of type \'{field.type.name}\'')
-
+    results = await asyncio.gather(*tasks)
+    for (field, args) in results:
+        for arg in args:
+            schema.add_type(arg.type.name, 'INPUT_OBJECT')
         schema.types[typename].fields.append(field)
         schema.add_type(field.type.name, 'OBJECT')
 
-    return schema.to_json()
+    return repr(schema)

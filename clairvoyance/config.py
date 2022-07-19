@@ -27,7 +27,7 @@ class Config:
         return self._client
 
     @property
-    def logger(self) -> logging.Logger:
+    def log(self) -> logging.Logger:
         return self._logger
 
     @property

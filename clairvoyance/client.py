@@ -21,12 +21,20 @@ class Client:
 
     async def post(
         self,
-        document: Optional[Dict],
-    ) -> aiohttp.ClientResponse:
+        document: Optional[str],
+    ) -> Dict:
+        """Post a GraphQL document to the server and return the response as JSON."""
+
         if not self._session:
             self._session = aiohttp.ClientSession(headers=self._headers)
 
+        gql_document = None
         if document:
-            document = {'query': document}
+            gql_document = {'query': document}
 
-        return await self._session.post(self._url, json=document)
+        response = await self._session.post(
+            self._url,
+            json=gql_document,
+        )
+
+        return await response.json()
