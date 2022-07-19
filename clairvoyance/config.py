@@ -29,3 +29,7 @@ class Config:
     @property
     def logger(self) -> logging.Logger:
         return self._logger
+
+    @property
+    def bucket_size(self) -> int:
+        return self._bucket_size

@@ -1,4 +1,4 @@
-from enum import unique
+"""Define the primitives used in the Clairvoyance system."""
 
 from enum import Enum, unique
 
@@ -17,17 +17,18 @@ class GraphQLPrimitive(str, Enum):
     BOOLEAN = 'Boolean'
     FLOAT = 'Float'
 
+
 @unique
 class GraphQLKind(str, Enum):
-    
+
     """The default GraphQL kinds.
     
     ref: https://spec.graphql.org/draft/#sec-Types
     """
-    
-    SCALAR = 'Scalar'
-    OBJECT = 'Object'
-    INTERFACE = 'Interface'
-    UNION = 'Union'
-    ENUM = 'Enum'
-    INPUTOBJECT = 'InputObject'
+
+    SCALAR = 'SCALAR'
+    OBJECT = 'OBJECT'
+    INTERFACE = 'INTERFACE'
+    UNION = 'UNION'
+    ENUM = 'ENUM'
+    INPUTOBJECT = 'INPUT_OBJECT'
