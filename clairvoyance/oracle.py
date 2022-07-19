@@ -8,7 +8,10 @@ from clairvoyance import graphql
 from clairvoyance.config import Config
 
 
-def get_valid_fields(error_message: str) -> Set[str]:
+def get_valid_fields(
+    error_message: str,
+    config: Config,
+) -> Set[str]:
     """Fetching valid fields using regex heuristics."""
 
     valid_fields: Set[str] = set()
@@ -62,7 +65,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
             valid_fields.add(match.group('field'))
 
     else:
-        logging.info(f'Unknown error message: "{error_message}"')
+        config.log.debug(f'Unknown error message: "{error_message}"')
 
     return valid_fields
 
@@ -115,7 +118,7 @@ async def probe_valid_fields(
             #     valid_fields.discard(match.group('invalid_field'))
 
             # Second obtain field suggestions from error message
-            valid_fields |= get_valid_fields(error_message)
+            valid_fields |= get_valid_fields(error_message, config)
 
         return valid_fields
 

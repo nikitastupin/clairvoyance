@@ -57,12 +57,7 @@ def setup_logger(verbosity: int) -> None:
     format = '%(asctime)s \t%(levelname)s\t| %(message)s'
     datefmt = '%Y-%m-%d %H:%M:%S'
 
-    if verbosity == 1:
-        level = logging.INFO
-    elif verbosity > 1:
-        level = logging.DEBUG
-    else:
-        level = logging.WARNING
+    level = logging.DEBUG if verbosity > 1 else logging.INFO
 
     logging.basicConfig(
         level=level,
