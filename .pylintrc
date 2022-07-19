@@ -1,0 +1,57 @@
+[MASTER]
+# init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc())); import pylint_venv; pylint_venv.inithook('./.venv')"
+load-plugins=pylint_absolute_imports, pylint_quotes
+ignore=.venv,setup.py
+
+[DESIGN]
+
+# Maximum number of characters on a single line.
+max-line-length=160
+# Good variable names which should always be accepted, separated by a comma
+good-names=i,e
+# Maximum number of branch for function / method body
+max-branches=15
+# Maximum number of arguments for function / method
+max-args=10
+# Variable naming style
+variable-rgx=([a-z_][a-z0-9_]{1,31}|[a-zA-Z0-9_]{1})$
+# Argument naming style
+argument-rgx=([a-z_][a-z0-9_]{1,31}|[a-zA-Z0-9_]{1})$
+# Attribute naming style
+attr-rgx=([a-z_][a-z0-9_]{1,31}|[a-zA-Z0-9_]{1})$
+# Maximum number of public methods per class
+max-public-methods=30
+# Maximum number of locals for function / method body
+max-locals=20
+# Make docstring compulsory for all functions
+no-docstring-rgx=$^ 
+
+# MODULE-PARAM: pylint-quotes
+string-quote=single
+triple-quote=double
+docstring-quote=double
+
+[ELIF]
+
+# Maximum number of nested blocks for function/method body
+max-nested-blocks=8
+
+
+[SIMILARITIES]
+
+# Minimum lines number of a similarity.
+min-similarity-lines=15
+# Ignore comments when computing similarities.
+ignore-comments=yes
+# Ignore docstrings when computing similarities.
+ignore-docstrings=yes
+# Ignore imports when computing similarities.
+ignore-imports=yes
+
+
+[MESSAGES CONTROL]
+
+#TODO: DEV - Fix these one day: broad-except, fixme
+disable=logging-format-interpolation, logging-fstring-interpolation, broad-except, fixme
+enable=print-statement
+extension-pkg-whitelist=lxml
