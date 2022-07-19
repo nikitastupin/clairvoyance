@@ -1,46 +1,14 @@
-import urllib3
-import requests
-from urllib3.exceptions import InsecureRequestWarning
-
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
 import json
 import logging
-from typing import List
-from typing import Dict
-from typing import Any
-from typing import Set
+from typing import List, Dict, Any, Optional, Set
 
-
-def post(url, data=None, json=None, **kwargs):
-    session = requests.Session()
-
-    retries = urllib3.util.Retry(
-        status=5,
-        allowed_methods={
-            "DELETE",
-            "GET",
-            "HEAD",
-            "OPTIONS",
-            "PUT",
-            "TRACE",
-            "POST",
-        },
-        status_forcelist=range(500, 600),
-        backoff_factor=2,
-    )
-
-    adapter = requests.adapters.HTTPAdapter(max_retries=retries)
-
-    session.mount("http://", adapter)
-    session.mount("https://", adapter)
-
-    response = session.post(url, data=data, json=json, **kwargs)
-
-    return response
+from clairvoyance.entities.primitives import GraphQLPrimitive
 
 
 class Schema:
+
+    """Host of the introspection data."""
+
     def __init__(
         self,
         queryType: str = None,
@@ -63,9 +31,7 @@ class Schema:
         else:
             self.queryType = {"name": queryType} if queryType else None
             self.mutationType = {"name": mutationType} if mutationType else None
-            self.subscriptionType = (
-                {"name": subscriptionType} if subscriptionType else None
-            )
+            self.subscriptionType = ({"name": subscriptionType} if subscriptionType else None)
             self._schema = {
                 "directives": [],
                 "mutationType": self.mutationType,
@@ -74,23 +40,37 @@ class Schema:
                 "types": [],
             }
             self.types = {
-                "String": Type(name="String", kind="SCALAR"),
-                "ID": Type(name="ID", kind="SCALAR"),
+                GraphQLPrimitive.STRING: Type(
+                    name=GraphQLPrimitive.STRING,
+                    kind="SCALAR",
+                ),
+                GraphQLPrimitive.ID: Type(
+                    name=GraphQLPrimitive.ID,
+                    kind="SCALAR",
+                ),
             }
-            if self.queryType:
+            if queryType:
                 self.add_type(queryType, "OBJECT")
-            if self.mutationType:
+            if mutationType:
                 self.add_type(mutationType, "OBJECT")
-            if self.subscriptionType:
+            if subscriptionType:
                 self.add_type(subscriptionType, "OBJECT")
 
     # Adds type to schema if it's not exists already
-    def add_type(self, name: str, kind: str) -> None:
+    def add_type(
+        self,
+        name: str,
+        kind: str,
+    ) -> None:
+        """Adds type to schema if it's not exists already."""
+
         if name not in self.types:
             typ = Type(name=name, kind=kind)
             self.types[name] = typ
 
-    def to_json(self):
+    def __repr__(self) -> str:
+        """Json representation of the schema."""
+
         schema = {"data": {"__schema": self._schema}}
 
         for t in self.types.values():
@@ -99,21 +79,22 @@ class Schema:
         output = json.dumps(schema, indent=4, sort_keys=True)
         return output
 
-    def get_path_from_root(self, name: str) -> List[str]:
+    def get_path_from_root(
+        self,
+        name: str,
+    ) -> List[str]:
+        """Getting path starting from root."""
+
         logging.debug(f"Entered get_path_from_root({name})")
-        path_from_root = []
+        path_from_root: List[str] = []
 
         if name not in self.types:
-            raise Exception(f"Type '{name}' not in schema!")
+            raise Exception(f'Type "{name}" not in schema!')
 
         roots = [
             self._schema["queryType"]["name"] if self._schema["queryType"] else "",
-            self._schema["mutationType"]["name"]
-            if self._schema["mutationType"]
-            else "",
-            self._schema["subscriptionType"]["name"]
-            if self._schema["subscriptionType"]
-            else "",
+            self._schema["mutationType"]["name"] if self._schema["mutationType"] else "",
+            self._schema["subscriptionType"]["name"] if self._schema["subscriptionType"] else "",
         ]
         roots = [r for r in roots if r]
 
@@ -129,41 +110,53 @@ class Schema:
 
         return path_from_root
 
-    def get_type_without_fields(self, ignore: Set[str] = []) -> str:
+    def get_type_without_fields(
+        self,
+        ignore: Set[str],
+    ) -> str:
+        """Gets the type without a field."""
+
         for t in self.types.values():
-            if not t.fields and t.name not in ignore and t.kind != "INPUT_OBJECT":
+            if not t.fields and t.name not in ignore and t.kind != 'INPUT_OBJECT':
                 return t.name
 
-        return ""
+        return ''
 
-    def convert_path_to_document(self, path: List[str]) -> str:
-        logging.debug(f"Entered convert_path_to_document({path})")
-        doc = "FUZZ"
+    def convert_path_to_document(
+        self,
+        path: List[str],
+    ) -> str:
+        """Converts a path to document."""
+
+        logging.debug(f'Entered convert_path_to_document({path})')
+        doc = 'FUZZ'
 
         while len(path) > 1:
-            doc = f"{path.pop()} {{ {doc} }}"
+            doc = f'{path.pop()} {{ {doc} }}'
 
-        if path[0] == self._schema["queryType"]["name"]:
-            doc = f"query {{ {doc} }}"
-        elif path[0] == self._schema["mutationType"]["name"]:
-            doc = f"mutation {{ {doc} }}"
-        elif path[0] == self._schema["subscriptionType"]["name"]:
-            doc = f"subscription {{ {doc} }}"
+        if path[0] == self._schema['queryType']['name']:
+            doc = f'query {{ {doc} }}'
+        elif path[0] == self._schema['mutationType']['name']:
+            doc = f'mutation {{ {doc} }}'
+        elif path[0] == self._schema['subscriptionType']['name']:
+            doc = f'subscription {{ {doc} }}'
         else:
-            raise Exception("Unknown operation type")
+            raise Exception('Unknown operation type')
 
         return doc
 
 
 class Config:
-    def __init__(self):
-        self.url = ""
-        self.verify = True
-        self.headers = dict()
-        self.bucket_size = 4096
+
+    def __init__(self) -> None:
+
+        self.url: Optional[str] = None
+        self.headers: dict[str, str] = dict()
+        self.bucket_size: int = 512
 
 
 class TypeRef:
+
     def __init__(
         self,
         name: str,
@@ -171,9 +164,10 @@ class TypeRef:
         is_list: bool = False,
         non_null_item: bool = False,
         non_null: bool = False,
-    ):
+    ) -> None:
         if not is_list and non_null_item:
-            raise Exception("elements can't be NON_NULL if TypeRef is not LIST")
+            raise Exception('elements can\'t be NON_NULL if TypeRef is not LIST')
+
         self.name = name
         self.kind = kind
         self.is_list = is_list
@@ -181,7 +175,7 @@ class TypeRef:
         self.list = self.is_list
         self.non_null_item = non_null_item
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, TypeRef):
             for attr in self.__dict__.keys():
                 if self.__dict__[attr] != other.__dict__[attr]:
@@ -189,74 +183,87 @@ class TypeRef:
             return True
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__dict__)
 
     def to_json(self) -> Dict[str, Any]:
-        j = {"kind": self.kind, "name": self.name, "ofType": None}
+        j: Dict[str, Any] = {
+            'kind': self.kind,
+            'name': self.name,
+            'ofType': None,
+        }
 
-        if self.non_null_item:
-            j = {"kind": "NON_NULL", "name": None, "ofType": j}
+        if self.non_null_item or self.list or self.non_null:
+            j['ofType'] = j
+            j['name'] = None
 
         if self.list:
-            j = {"kind": "LIST", "name": None, "ofType": j}
-
-        if self.non_null:
-            j = {"kind": "NON_NULL", "name": None, "ofType": j}
+            j['kind'] = 'LIST'
+        elif self.non_null_item or self.non_null:
+            j['kind'] = 'NON_NULL'
 
         return j
 
 
 class InputValue:
-    def __init__(self, name: str, typ: TypeRef):
+
+    def __init__(
+        self,
+        name: str,
+        typ: TypeRef,
+    ) -> None:
         self.name = name
         self.type = typ
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{{ "name": {self.name}, "type": {str(self.type)} }}'
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
-            "defaultValue": None,
-            "description": None,
-            "name": self.name,
-            "type": self.type.to_json(),
+            'defaultValue': None,
+            'description': None,
+            'name': self.name,
+            'type': self.type.to_json(),
         }
 
     @classmethod
-    def from_json(cls, jso: Dict[str, Any]) -> "InputValue":
-        name = jso["name"]
-        typ = field_or_arg_type_from_json(jso["type"])
+    def from_json(
+        cls,
+        _json: Dict[str, Any],
+    ) -> 'InputValue':
+        name = _json['name']
+        typ = field_or_arg_type_from_json(_json['type'])
 
-        return cls(name=name, typ=typ)
+        return cls(
+            name=name,
+            typ=typ,
+        )
 
 
-def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
+def field_or_arg_type_from_json(_json: Dict[str, Any]) -> "TypeRef":
     typ = None
 
-    if jso["kind"] not in ["NON_NULL", "LIST"]:
-        typ = TypeRef(name=jso["name"], kind=jso["kind"])
-    elif not jso["ofType"]["ofType"]:
-        actual_type = jso["ofType"]
+    if _json["kind"] not in ["NON_NULL", "LIST"]:
+        typ = TypeRef(name=_json["name"], kind=_json["kind"])
+    elif not _json["ofType"]["ofType"]:
+        actual_type = _json["ofType"]
 
-        if jso["kind"] == "NON_NULL":
+        if _json["kind"] == "NON_NULL":
             typ = TypeRef(
                 name=actual_type["name"],
                 kind=actual_type["kind"],
                 non_null=True,
             )
-        elif jso["kind"] == "LIST":
-            typ = TypeRef(
-                name=actual_type["name"], kind=actual_type["kind"], is_list=True
-            )
+        elif _json["kind"] == "LIST":
+            typ = TypeRef(name=actual_type["name"], kind=actual_type["kind"], is_list=True)
         else:
-            raise Exception(f"Unexpected type.kind: {jso['kind']}")
-    elif not jso["ofType"]["ofType"]["ofType"]:
-        actual_type = jso["ofType"]["ofType"]
+            raise Exception(f"Unexpected type.kind: {_json['kind']}")
+    elif not _json["ofType"]["ofType"]["ofType"]:
+        actual_type = _json["ofType"]["ofType"]
 
-        if jso["kind"] == "NON_NULL":
+        if _json["kind"] == "NON_NULL":
             typ = TypeRef(actual_type["name"], actual_type["kind"], True, False, True)
-        elif jso["kind"] == "LIST":
+        elif _json["kind"] == "LIST":
             typ = TypeRef(
                 name=actual_type["name"],
                 kind=actual_type["kind"],
@@ -264,9 +271,9 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
                 non_null_item=True,
             )
         else:
-            raise Exception(f"Unexpected type.kind: {jso['kind']}")
-    elif not jso["ofType"]["ofType"]["ofType"]["ofType"]:
-        actual_type = jso["ofType"]["ofType"]["ofType"]
+            raise Exception(f"Unexpected type.kind: {_json['kind']}")
+    elif not _json["ofType"]["ofType"]["ofType"]["ofType"]:
+        actual_type = _json["ofType"]["ofType"]["ofType"]
         typ = TypeRef(
             name=actual_type["name"],
             kind=actual_type["kind"],
@@ -281,7 +288,13 @@ def field_or_arg_type_from_json(jso: Dict[str, Any]) -> "TypeRef":
 
 
 class Field:
-    def __init__(self, name: str, typeref: TypeRef, args: List[InputValue] = None):
+
+    def __init__(
+        self,
+        name: str,
+        typeref: Optional[TypeRef],
+        args: List[InputValue] = None,
+    ):
         if not typeref:
             raise Exception(f"Can't create {name} Field from {typeref} TypeRef.")
 
@@ -289,30 +302,36 @@ class Field:
         self.type = typeref
         self.args = args or []
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
-            "args": [a.to_json() for a in self.args],
-            "deprecationReason": None,
-            "description": None,
-            "isDeprecated": False,
-            "name": self.name,
-            "type": self.type.to_json(),
+            'args': [a.to_json() for a in self.args],
+            'deprecationReason': None,
+            'description': None,
+            'isDeprecated': False,
+            'name': self.name,
+            'type': self.type.to_json(),
         }
 
     @classmethod
-    def from_json(cls, jso: Dict[str, Any]) -> "Field":
-        name = jso["name"]
-        typ = field_or_arg_type_from_json(jso["type"])
+    def from_json(cls, _json: Dict[str, Any]) -> 'Field':
+        name = _json['name']
+        typ = field_or_arg_type_from_json(_json['type'])
 
         args = []
-        for a in jso["args"]:
+        for a in _json['args']:
             args.append(InputValue.from_json(a))
 
         return cls(name, typ, args)
 
 
 class Type:
-    def __init__(self, name: str = "", kind: str = "", fields: List[Field] = None):
+
+    def __init__(
+        self,
+        name: str = '',
+        kind: str = '',
+        fields: List[Field] = None,
+    ):
         self.name = name
         self.kind = kind
         self.fields = fields or []  # type: List[Field]
@@ -320,32 +339,38 @@ class Type:
     def to_json(self):
         # dirty hack
         if not self.fields:
-            field_typeref = TypeRef(name="String", kind="SCALAR")
-            dummy = Field("dummy", field_typeref)
+            field_typeref = TypeRef(
+                name=GraphQLPrimitive.STRING,
+                kind="SCALAR",
+            )
+            dummy = Field('dummy', field_typeref)
             self.fields.append(dummy)
 
         output = {
-            "description": None,
-            "enumValues": None,
-            "interfaces": [],
-            "kind": self.kind,
-            "name": self.name,
-            "possibleTypes": None,
+            'description': None,
+            'enumValues': None,
+            'interfaces': [],
+            'kind': self.kind,
+            'name': self.name,
+            'possibleTypes': None,
         }
 
-        if self.kind in ["OBJECT", "INTERFACE"]:
-            output["fields"] = [f.to_json() for f in self.fields]
-            output["inputFields"] = None
+        if self.kind in ['OBJECT', 'INTERFACE']:
+            output['fields'] = [f.to_json() for f in self.fields]
+            output['inputFields'] = None
         elif self.kind == "INPUT_OBJECT":
-            output["fields"] = None
-            output["inputFields"] = [f.to_json() for f in self.fields]
+            output['fields'] = None
+            output['inputFields'] = [f.to_json() for f in self.fields]
 
         return output
 
     @classmethod
-    def from_json(cls, jso: Dict[str, Any]) -> "Type":
-        name = jso["name"]
-        kind = jso["kind"]
+    def from_json(
+        cls,
+        _json: Dict[str, Any],
+    ) -> 'Type':
+        name = _json["name"]
+        kind = _json["kind"]
         fields = []
 
         if kind in ["OBJECT", "INTERFACE", "INPUT_OBJECT"]:
@@ -355,10 +380,14 @@ class Type:
             elif kind == "INPUT_OBJECT":
                 fields_field = "inputFields"
 
-            for f in jso[fields_field]:
+            for f in _json[fields_field]:
                 # Don't add dummy fields!
-                if f["name"] == "dummy":
+                if f['name'] == 'dummy':
                     continue
                 fields.append(Field.from_json(f))
 
-        return cls(name=name, kind=kind, fields=fields)
+        return cls(
+            name=name,
+            kind=kind,
+            fields=fields,
+        )
