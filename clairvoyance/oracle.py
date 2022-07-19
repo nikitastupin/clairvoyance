@@ -1,13 +1,11 @@
+import asyncio
+import logging
 import re
 import time
-import logging
-import asyncio
+from typing import Any, Dict, List, Optional, Set
 
-from typing import Any, List, Dict, Set, Optional
-
-from clairvoyance.entities import GraphQLPrimitive
-from clairvoyance.config import Config
 from clairvoyance import graphql
+from clairvoyance.config import Config
 
 
 def get_valid_fields(error_message: str) -> Set[str]:
@@ -34,7 +32,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
         if match:
             for m in match.group('multi').split(', '):
                 if m:
-                    valid_fields.add(m.strip(''').strip('''))
+                    valid_fields.add(m.strip('"').strip('\''))
 
             if match.group('last'):
                 valid_fields.add(match.group('last'))
@@ -86,7 +84,8 @@ async def probe_valid_fields(
     """
 
     async def __probation(i: int) -> Set[str]:
-        valid_fields = set(wordlist)
+        valid_fields = set()
+
         bucket = wordlist[i:i + config.bucket_size]
         document = input_document.replace('FUZZ', ' '.join(bucket))
 
@@ -241,8 +240,6 @@ def get_typeref(
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
-    typeref = None
-
     field_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ ... \}[\'"]\?',
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
@@ -259,7 +256,6 @@ def get_typeref(
     ]
 
     match = None
-
     if context == 'Field':
         for regex in field_regexes:
             if re.fullmatch(regex, error_message):
@@ -286,21 +282,21 @@ def get_typeref(
             kind = 'SCALAR'
         else:
             kind = 'OBJECT'
-        is_list = True if '[' and ']' in tk else False
-        non_null_item = True if is_list and '!]' in tk else False
-        non_null = True if tk.endswith('!') else False
 
-        typeref = graphql.TypeRef(
+        is_list = bool('[' in tk and ']' in tk)
+        non_null_item = bool(is_list and '!]' in tk)
+        non_null = tk.endswith('!')
+
+        return graphql.TypeRef(
             name=name,
             kind=kind,
             is_list=is_list,
             non_null_item=non_null_item,
             non_null=non_null,
         )
-    else:
-        config.log.debug(f'Unknown error message: \'{error_message}\'')
 
-    return typeref
+    config.log.debug(f'Unknown error message: \'{error_message}\'')
+    return None
 
 
 async def probe_typeref(
@@ -313,16 +309,17 @@ async def probe_typeref(
     async def __probation(document: str) -> Optional[graphql.TypeRef]:
         """Send a document to attempt discovering a typeref."""
 
-        if not document:
-            return None
-
         response = await config.client.post(document)
         for error in response.get('errors', []):
             if isinstance(error, str):
                 continue
 
             if not isinstance(error['message'], dict):
-                typeref = get_typeref(error['message'], context, config)
+                typeref = get_typeref(
+                    error['message'],
+                    context,
+                    config,
+                )
 
             config.log.debug(f'get_typeref("{error["message"]}", "{context}") -> {typeref}')
             if typeref:
@@ -451,10 +448,10 @@ async def explore_field(
         input_document,
         config,
     )
-    field = graphql.Field(field_name, typeref)
-    args = []
 
-    if field.type.name not in GraphQLPrimitive.__members__.values():
+    args = []
+    field = graphql.Field(field_name, typeref)
+    if field.type.name not in ['Int', 'Float', 'String', 'Boolean', 'ID']:
         arg_names = await probe_args(
             field.name,
             wordlist,
@@ -489,12 +486,16 @@ async def clairvoyance(
     if not input_schema:
         root_typenames = await fetch_root_typenames(config)
         schema = graphql.Schema(
+            config.log,
             queryType=root_typenames['queryType'],
             mutationType=root_typenames['mutationType'],
             subscriptionType=root_typenames['subscriptionType'],
         )
     else:
-        schema = graphql.Schema(schema=input_schema)
+        schema = graphql.Schema(
+            config.log,
+            schema=input_schema,
+        )
 
     typename = await probe_typename(
         input_document,

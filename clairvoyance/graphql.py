@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Dict, Any, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from clairvoyance.entities import GraphQLPrimitive
 
@@ -11,11 +11,14 @@ class Schema:
 
     def __init__(
         self,
+        logger: logging.Logger,
         queryType: str = None,
         mutationType: str = None,
         subscriptionType: str = None,
         schema: Dict[str, Any] = None,
     ):
+        self._log = logger
+
         if schema:
             self._schema = {
                 'directives': schema['data']['__schema']['directives'],
@@ -69,7 +72,7 @@ class Schema:
             self.types[name] = typ
 
     def __repr__(self) -> str:
-        """Json representation of the schema."""
+        """String representation of the schema."""
 
         schema = {'data': {'__schema': self._schema}}
 
@@ -85,7 +88,7 @@ class Schema:
     ) -> List[str]:
         """Getting path starting from root."""
 
-        logging.debug(f'Entered get_path_from_root({name})')
+        self._log.debug(f'Entered get_path_from_root({name})')
         path_from_root: List[str] = []
 
         if name not in self.types:
@@ -128,7 +131,7 @@ class Schema:
     ) -> str:
         """Converts a path to document."""
 
-        logging.debug(f'Entered convert_path_to_document({path})')
+        self._log.debug(f'Entered convert_path_to_document({path})')
         doc = 'FUZZ'
 
         while len(path) > 1:
@@ -178,20 +181,16 @@ class TypeRef:
         return str(self.__dict__)
 
     def to_json(self) -> Dict[str, Any]:
-        j: Dict[str, Any] = {
-            'kind': self.kind,
-            'name': self.name,
-            'ofType': None,
-        }
+        j: Dict[str, Any] = {'kind': self.kind, 'name': self.name, 'ofType': None}
 
-        if self.non_null_item or self.list or self.non_null:
-            j['ofType'] = j
-            j['name'] = None
+        if self.non_null_item:
+            j = {'kind': 'NON_NULL', 'name': None, 'ofType': j}
 
         if self.list:
-            j['kind'] = 'LIST'
-        elif self.non_null_item or self.non_null:
-            j['kind'] = 'NON_NULL'
+            j = {'kind': 'LIST', 'name': None, 'ofType': j}
+
+        if self.non_null:
+            j = {'kind': 'NON_NULL', 'name': None, 'ofType': j}
 
         return j
 
@@ -342,6 +341,7 @@ class Type:
 
     def to_json(self) -> Dict[str, Any]:
         # dirty hack
+
         if not self.fields:
             field_typeref = TypeRef(
                 name=GraphQLPrimitive.STRING,

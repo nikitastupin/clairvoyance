@@ -1,13 +1,12 @@
-import sys
-import json
 import asyncio
+import json
 import logging
-
+import sys
 from typing import Dict, List, Optional
 
 from clairvoyance import graphql, oracle
-from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.config import Config
+from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.utils import parse_args, setup_logger
 
 
@@ -25,6 +24,8 @@ async def blind_introspection(
         headers=headers,
         logger=logger,
     )
+
+    logger.info('Starting blind introspection...')
 
     wordlist_path = wordlist_path or 'clairvoyance/wordlist.txt'
     with open(wordlist_path, 'r', encoding='utf-8') as f:
@@ -50,7 +51,7 @@ async def blind_introspection(
                 f.write(schema)
 
         input_schema = json.loads(schema)
-        s = graphql.Schema(schema=input_schema)
+        s = graphql.Schema(config.log, schema=input_schema)
 
         _next = s.get_type_without_fields(ignore)
         ignore.add(_next)
@@ -59,6 +60,10 @@ async def blind_introspection(
             input_document = s.convert_path_to_document(s.get_path_from_root(_next))
         else:
             break
+
+    logger.info('Blind introspection complete.')
+
+    await config.client.close()
 
     return schema
 
