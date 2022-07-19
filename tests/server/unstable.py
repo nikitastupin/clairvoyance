@@ -1,5 +1,5 @@
-import os
 import http.server
+import os
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):

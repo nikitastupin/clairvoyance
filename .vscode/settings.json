@@ -11,24 +11,24 @@
       "commands": [
         {
           "match": "\\.py$",
-          "cmd": "cd ${workspaceFolder} && poetry run isort -m 9 --line-length 160 pytemplate tests scripts"
+          "cmd": "cd ${workspaceFolder} && poetry run isort -m 9 --line-length 160 clairvoyance tests scripts"
         },
         {
           "match": "\\.py$",
-          "cmd": "cd ${workspaceFolder} && poetry run autoflake --in-place --remove-unused-variables --remove-all-unused-imports pytemplate/**/*.py"
+          "cmd": "cd ${workspaceFolder} && poetry run autoflake --in-place --remove-unused-variables --remove-all-unused-imports clairvoyance/**/*.py"
         },
         {
           "match": "\\.py$",
-          "cmd": "cd ${workspaceFolder} && poetry run docformatter --wrap-summaries 160 --wrap-descriptions 160 -ri pytemplate tests scripts"
+          "cmd": "cd ${workspaceFolder} && poetry run docformatter --wrap-summaries 160 --wrap-descriptions 160 -ri clairvoyance tests scripts"
         },
         {
           "match": "\\.py$",
-          "cmd": "cd ${workspaceFolder} && poetry run unify -ri pytemplate tests scripts"
+          "cmd": "cd ${workspaceFolder} && poetry run unify -ri clairvoyance tests scripts"
         }
       ]
     },
     "python.testing.pytestArgs": [
-      "--cov=pytemplate tests scripts"
+      "--cov=clairvoyance tests scripts"
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.pytestPath": "../scripts/pytest-with-cov",

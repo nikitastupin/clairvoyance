@@ -1,6 +1,6 @@
-import os
-import json
 import http.server
+import json
+import os
 
 
 class GraphqlHTTPRequestHandler(http.server.BaseHTTPRequestHandler):

@@ -1,4 +1,4 @@
-name: CI
+name: Lint
 on:
   push:
   pull_request:
@@ -6,10 +6,9 @@ on:
 
 env:
   MODULE_NAME: clairvoyance
-  MIN_TEST_COV: 0
 
 jobs:
-  CI:
+  Lint:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -31,13 +30,3 @@ jobs:
           yapf -rd $MODULE_NAME tests
           mypy -V
           mypy $MODULE_NAME tests
-      # - name: Run tests
-      #   run: |
-      #     source .venv/bin/activate
-      #     pytest --cov=$MODULE_NAME --cov-report=xml --cov-fail-under=$MIN_TEST_COV tests/unit
-      # - name: Upload coverage to Codecov
-      #   uses: codecov/codecov-action@v2
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./coverage.xml
-      #     flags: unittests

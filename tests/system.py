@@ -1,11 +1,9 @@
-import os
 import json
+import os
+import subprocess
 import time
 import unittest
-import subprocess
-
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 
 class TestClairvoyance(unittest.TestCase):

@@ -1,6 +1,5 @@
 import argparse
 import logging
-
 from typing import List
 
 

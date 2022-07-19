@@ -1,8 +1,8 @@
-import unittest
-import logging
 import json
-import time
+import logging
 import subprocess
+import time
+import unittest
 
 logging.basicConfig(level=logging.ERROR)
 

@@ -1,10 +1,9 @@
-import time
 import logging
-import unittest
 import subprocess
+import time
+import unittest
 
-from clairvoyance import graphql
-from clairvoyance import oracle
+from clairvoyance import graphql, oracle
 
 
 class TestGetValidFields(unittest.TestCase):
