@@ -1,66 +1,65 @@
-import requests
-
 import re
 import logging
-from typing import Any
-from typing import Set
-from typing import List
-from typing import Dict
-from typing import Optional
+from typing import Any, List, Dict, Set, Optional
 
 from clairvoyance import graphql
 
+MULTIPLE_SUGGESTION_REGEX = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
+OR_SUGGESTION_REGEX = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
+SINGLE_SUGGESTION_REGEX = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
+INVALID_FIELD_REGEX = ('Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].')
+# TODO: this regex here more than one time, make it shared?
+VALID_FIELD_REGEXES = [
+    'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
+    'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
+]
+NO_FIELDS_REGEX = 'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.'
 
-def get_valid_fields(error_message: str) -> Set:
-    valid_fields = set()
+def get_valid_fields(error_message: str) -> Set[str]:
+    valid_fields: Set[str] = Set()
 
-    multiple_suggestions_re = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
-    or_suggestion_re = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    single_suggestion_re = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    invalid_field_re = (
-        'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].'
-    )
-    # TODO: this regex here more than one time, make it shared?
-    valid_field_regexes = [
-        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
-    ]
-
-    no_fields_regex = 'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.'
-
-    if re.fullmatch(no_fields_regex, error_message):
+    if re.fullmatch(NO_FIELDS_REGEX, error_message):
         return valid_fields
 
-    if re.fullmatch(multiple_suggestions_re, error_message):
-        match = re.fullmatch(multiple_suggestions_re, error_message)
+    if re.fullmatch(MULTIPLE_SUGGESTION_REGEX, error_message):
+        if match := re.fullmatch(MULTIPLE_SUGGESTION_REGEX, error_message):
+            for m in match.group("multi").split(", "):
+                if m:
+                    valid_fields.add(m.strip('"').strip("'"))
 
-        for m in match.group("multi").split(", "):
-            if m:
-                valid_fields.add(m.strip('"').strip("'"))
+            if match.group("last"):
+                valid_fields.add(match.group("last"))
 
-        if match.group("last"):
-            valid_fields.add(match.group("last"))
-    elif re.fullmatch(or_suggestion_re, error_message):
-        match = re.fullmatch(or_suggestion_re, error_message)
+    elif re.fullmatch(OR_SUGGESTION_REGEX, error_message):
+        if match := re.fullmatch(OR_SUGGESTION_REGEX, error_message):
+            valid_fields.add(match.group("one"))
+            valid_fields.add(match.group("two"))
 
-        valid_fields.add(match.group("one"))
-        valid_fields.add(match.group("two"))
-    elif re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
+    elif re.fullmatch(SINGLE_SUGGESTION_REGEX, error_message): 
+        if match := re.fullmatch(SINGLE_SUGGESTION_REGEX, error_message):
+            valid_fields.add(match.group("field"))
 
-        valid_fields.add(match.group("field"))
-    elif re.fullmatch(invalid_field_re, error_message):
+    elif re.fullmatch(INVALID_FIELD_REGEX, error_message):
         pass
-    elif re.fullmatch(valid_field_regexes[0], error_message):
-        match = re.fullmatch(valid_field_regexes[0], error_message)
-        valid_fields.add(match.group("field"))
+
+    elif re.fullmatch(VALID_FIELD_REGEXES[0], error_message):
+        if match := re.fullmatch(VALID_FIELD_REGEXES[0], error_message):
+            valid_fields.add(match.group("field"))
+
+    elif re.fullmatch(VALID_FIELD_REGEXES[1], error_message):
+        if match := re.fullmatch(VALID_FIELD_REGEXES[1], error_message):
+            valid_fields.add(match.group("field"))
+
     else:
-        logging.warning(f"Unknown error message: '{error_message}'")
+        logging.info(f'Unknown error message: "{error_message}"')
 
     return valid_fields
 
 
 def probe_valid_fields(
-    wordlist: Set, config: graphql.Config, input_document: str
+    wordlist: Set,
+    config: graphql.Config,
+    input_document: str,
 ) -> Set[str]:
     # We're assuming all fields from wordlist are valid,
     # then remove fields that produce an error message
