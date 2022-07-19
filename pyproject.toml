@@ -16,6 +16,7 @@ packages = [
 ]
 include = [
     "LICENSE",
+    "clairvoyance/wordlist.txt"
 ]
 readme = "README.md"
 "homepage" = "https://escape.tech/"

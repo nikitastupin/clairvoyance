@@ -13,7 +13,7 @@ from clairvoyance import graphql
 def get_valid_fields(error_message: str) -> Set[str]:
     """Fetching valid fields using regex heuristics."""
 
-    valid_fields: Set[str] = Set()
+    valid_fields: Set[str] = set()
 
     multiple_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
     or_suggestion_regex = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
@@ -313,10 +313,14 @@ async def probe_typeref(
     async def __probation(document: str) -> Optional[graphql.TypeRef]:
         """Send a document to attempt discovering a typeref."""
 
+        if not document:
+            return None
+
         response = await config.client.post(document)
         for error in response.get('errors', []):
             if isinstance(error, str):
                 continue
+
             if not isinstance(error['message'], dict):
                 typeref = get_typeref(error['message'], context, config)
 
@@ -333,12 +337,14 @@ async def probe_typeref(
     typeref: Optional[graphql.TypeRef] = None
     results = await asyncio.gather(*tasks)
     for result in results:
-        if not result:
-            continue
-        typeref = result
+        if result:
+            typeref = result
 
     if not typeref and context != 'InputValue':
-        raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
+        try:
+            raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
+        except Exception as e:
+            raise Exception(e) from e
 
     return typeref
 

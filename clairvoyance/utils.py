@@ -45,7 +45,6 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         '-w',
         '--wordlist',
         metavar='<file>',
-        required=True,
         type=argparse.FileType('r'),
         help='This wordlist will be used for all brute force effots (fields, arguments and so on)',
     )
@@ -70,3 +69,5 @@ def setup_logger(verbosity: int) -> None:
         format=format,
         datefmt=datefmt,
     )
+
+    logging.getLogger('asyncio').setLevel(logging.ERROR)

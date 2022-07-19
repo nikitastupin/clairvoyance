@@ -14,7 +14,7 @@ from clairvoyance.utils import parse_args, setup_logger
 async def blind_introspection(
     url: str,
     logger: logging.Logger,
-    wordlist_path: str,
+    wordlist_path: Optional[str] = None,
     input_schema_path: Optional[str] = None,
     input_document: Optional[str] = None,
     output_path: Optional[str] = None,
@@ -26,6 +26,7 @@ async def blind_introspection(
         logger=logger,
     )
 
+    wordlist_path = wordlist_path or 'clairvoyance/wordlist.txt'
     with open(wordlist_path, 'r', encoding='utf-8') as f:
         wordlist = [w.strip() for w in f.readlines() if w.strip()]
 
