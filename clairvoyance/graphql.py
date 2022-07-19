@@ -146,15 +146,6 @@ class Schema:
         return doc
 
 
-class Config:
-
-    def __init__(self) -> None:
-
-        self.url: Optional[str] = None
-        self.headers: dict[str, str] = dict()
-        self.bucket_size: int = 512
-
-
 class TypeRef:
 
     def __init__(
