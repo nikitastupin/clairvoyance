@@ -17,6 +17,13 @@ on:
     branches:
       - main
       - master
+    types: 
+      - opened
+      - reopened
+
+env:
+  MODULE_NAME: clairvoyance
+  MIN_TEST_COV: 0
 
 jobs:
   unit-tests:
@@ -27,15 +34,27 @@ jobs:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Test with pytest
+        pip install poetry
+    - name: Setup poetry
       run: |
-        python -m unittest tests/*_test.py
+        poetry config virtualenvs.in-project true
+        poetry install
+    - name: Run lint
+      if: always()
+      run: |
+        source .venv/bin/activate
+        isort -m 9 --line-length 160 $MODULE_NAME tests --check-only
+        pylint --load-plugins pylint_quotes $MODULE_NAME tests
+        docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
+        yapf -rd $MODULE_NAME tests
+        mypy -V
+        mypy $MODULE_NAME tests
+    - name: Run tests
+      run: |
+        source .venv/bin/activate
+        pytest --cov=$MODULE_NAME --cov-report=xml --cov-fail-under=$MIN_TEST_COV tests/unit
 
   system-tests:
 

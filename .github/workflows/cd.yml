@@ -1,12 +1,41 @@
-name: ci-to-dockerhub
+name: cd
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    branches: [main]
-    types: [completed]
+  push:
+    tags:
+      - "v*"
 
 jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Release
+        uses: softprops/action-gh-release@v1
+
+  pypi-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install dependencies
+        run: |
+          pip install poetry
+      - name: Setup poetry
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-dev
+      - name: Build package
+        run: |
+          source .venv/bin/activate
+          poetry build
+      - name: Upload package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
+
   build:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
