@@ -4,6 +4,7 @@ version = "2.0.0"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin.com>",
+    "Swan <swan@escape.tech>"
 ]
 maintainers = [
     "Nikita Stupin <nikitastupin.com>",
