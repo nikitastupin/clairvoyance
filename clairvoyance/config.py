@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Dict
 
 from clairvoyance.client import Client
 
@@ -13,7 +13,7 @@ class Config:
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self._url: str = url
-        self._headers: dict[str, str] = headers or {}
+        self._headers: Dict[str, str] = headers or {}
         self._logger = logger or logging.getLogger('clairvoyance')
         self._bucket_size: int = 64
 

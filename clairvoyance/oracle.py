@@ -3,7 +3,7 @@
 import asyncio
 import re
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple, List
 
 from clairvoyance import graphql
 from clairvoyance.config import Config
@@ -125,7 +125,7 @@ async def probe_valid_fields(
         return valid_fields
 
     # Create task list
-    tasks: list[asyncio.Task] = []
+    tasks: List[asyncio.Task] = []
     for i in range(0, len(wordlist), config.bucket_size):
         tasks.append(asyncio.create_task(__probation(i)))
 
@@ -181,12 +181,12 @@ async def probe_args(
 ) -> Set[str]:
     """Wrapper function for deducing the arg types."""
 
-    tasks: list[asyncio.Task] = []
+    tasks: List[asyncio.Task] = []
     for i in range(0, len(wordlist), config.bucket_size):
         bucket = wordlist[i:i + config.bucket_size]
         tasks.append(asyncio.create_task(probe_valid_args(field, bucket, input_document, config)))
 
-    valid_args: set[str] = set()
+    valid_args: Set[str] = set()
 
     results = await asyncio.gather(*tasks)
     for result in results:
@@ -332,7 +332,7 @@ async def probe_typeref(
 
         return None
 
-    tasks: list[asyncio.Task] = []
+    tasks: List[asyncio.Task] = []
     for document in documents:
         tasks.append(asyncio.create_task(__probation(document)))
 
@@ -442,10 +442,10 @@ async def fetch_root_typenames(config: Config) -> Dict[str, Optional[str]]:
 async def explore_field(
     field_name: str,
     input_document: str,
-    wordlist: list[str],
+    wordlist: List[str],
     typename: str,
     config: Config,
-) -> tuple[graphql.Field, list[graphql.InputValue]]:
+) -> Tuple[graphql.Field, List[graphql.InputValue]]:
     """Perform exploration on a field."""
 
     typeref = await probe_field_type(
@@ -515,7 +515,7 @@ async def clairvoyance(
     )
     config.log.debug(f'{typename}.fields = {valid_mutation_fields}')
 
-    tasks: list[asyncio.Task] = []
+    tasks: List[asyncio.Task] = []
     for field_name in valid_mutation_fields:
         task: asyncio.Task = asyncio.create_task(explore_field(
             field_name,
