@@ -1,14 +1,12 @@
 [tool.poetry]
 name = "clairvoyance"
-version = "0.1.0"
+version = "1.0.0"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin.com>",
-    "Escape Technologies SAS <ping@escape.tech>"
 ]
 maintainers = [
-    "Swan <swan@escape.tech>",
-    "Antoine Carossio <antoine@escape.tech>"
+    "Nikita Stupin <nikitastupin.com>",
 ]
 license = "MIT"
 packages = [
@@ -19,8 +17,8 @@ include = [
     "clairvoyance/wordlist.txt"
 ]
 readme = "README.md"
-"homepage" = "https://escape.tech/"
-"repository" = "https://github.com/Escape-Technologies/clairvoyance"
+"homepage" = "https://github.com/nikitastupin/clairvoyance"
+"repository" = "https://github.com/nikitastupin/clairvoyance"
 
 [tool.poetry.scripts]
 clairvoyance = 'clairvoyance:cli'
@@ -36,7 +34,6 @@ omit = [
 python = ">=3.7,<=3.11"
 asyncio = "^3.4.3"
 aiohttp = {extras = ["speedups"], version = "^3.8.1"}
-gql = "^3.4.0"
 
 [tool.poetry.dev-dependencies]
 autoflake = "^1.4"
