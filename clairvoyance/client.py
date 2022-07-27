@@ -1,34 +1,29 @@
 import asyncio
-import logging
 from typing import Dict, Optional
 
 import aiohttp
 
+from clairvoyance.entities.context import client_ctx, log
+from clairvoyance.entities.interfaces import IClient
 
-class Client:
 
-    _url: str
-    _headers: Dict[str, str]
-    _max_retries: int
-
-    _session: Optional[aiohttp.ClientSession]
-    _semaphore: asyncio.Semaphore
-    _logger: logging.Logger
+class Client(IClient):
 
     def __init__(
         self,
         url: str,
-        headers: Dict[str, str],
-        logger: logging.Logger,
-        max_retries: int = 3,
+        max_retries: Optional[int] = None,
+        headers: Optional[Dict[str, str]] = None,
+        concurrent_requests: Optional[int] = None,
     ) -> None:
         self._url = url
-        self._headers = headers
-        self._max_retries = max_retries
-
         self._session = None
-        self._semaphore = asyncio.Semaphore(50)
-        self._logger = logger
+
+        self._headers = headers or {}
+        self._max_retries = max_retries or 3
+        self._semaphore = asyncio.Semaphore(concurrent_requests or 50)
+
+        client_ctx.set(self)
 
     async def post(
         self,
@@ -44,9 +39,8 @@ class Client:
             if not self._session:
                 self._session = aiohttp.ClientSession(headers=self._headers)
 
-            gql_document = None
-            if document:
-                gql_document = {'query': document}
+            # Translate an existing document into a GraphQL request.
+            gql_document = {'query': document} if document else None
 
             try:
                 response = await self._session.post(
@@ -56,8 +50,11 @@ class Client:
                 body = await response.json()
                 return body
 
-            except (aiohttp.client_exceptions.ClientConnectionError, aiohttp.client_exceptions.ClientPayloadError) as e:
-                self._logger.warning(f'Error posting to {self._url}: {e}')
+            except (
+                aiohttp.client_exceptions.ClientConnectionError,
+                aiohttp.client_exceptions.ClientPayloadError,
+            ) as e:
+                log().warning(f'Error posting to {self._url}: {e}')
 
         return await self.post(document, retries + 1)
 

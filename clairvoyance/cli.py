@@ -5,24 +5,46 @@ import sys
 from typing import Dict, List, Optional
 
 from clairvoyance import graphql, oracle
+from clairvoyance.client import Client
 from clairvoyance.config import Config
 from clairvoyance.entities import GraphQLPrimitive
+from clairvoyance.entities.context import logger_ctx
 from clairvoyance.utils import parse_args, setup_logger
+
+
+def setup_context(
+    url: str,
+    logger: logging.Logger,
+    headers: Optional[Dict[str, str]] = None,
+    concurrent_requests: Optional[int] = None,
+) -> None:
+    """Initialize objects and freeze them into the context."""
+
+    Config()
+    Client(
+        url,
+        headers=headers,
+        concurrent_requests=concurrent_requests,
+    )
+    logger_ctx.set(logger)
 
 
 async def blind_introspection(
     url: str,
     logger: logging.Logger,
-    wordlist_path: Optional[str] = None,
-    input_schema_path: Optional[str] = None,
-    input_document: Optional[str] = None,
-    output_path: Optional[str] = None,
+    concurrent_requests: Optional[int] = None,
     headers: Optional[Dict[str, str]] = None,
+    input_document: Optional[str] = None,
+    input_schema_path: Optional[str] = None,
+    output_path: Optional[str] = None,
+    wordlist_path: Optional[str] = None,
 ) -> str:
-    config = Config(
+
+    setup_context(
         url,
-        headers=headers,
         logger=logger,
+        headers=headers,
+        concurrent_requests=concurrent_requests,
     )
 
     logger.info(f'Starting blind introspection on {url}...')
@@ -42,7 +64,6 @@ async def blind_introspection(
         schema = await oracle.clairvoyance(
             wordlist,
             input_document=input_document,
-            config=config,
             input_schema=input_schema,
         )
 
@@ -51,7 +72,7 @@ async def blind_introspection(
                 f.write(schema)
 
         input_schema = json.loads(schema)
-        s = graphql.Schema(config.log, schema=input_schema)
+        s = graphql.Schema(schema=input_schema)
 
         _next = s.get_type_without_fields(ignored)
         ignored.add(_next)
@@ -62,8 +83,6 @@ async def blind_introspection(
             break
 
     logger.info('Blind introspection complete.')
-
-    await config.client.close()
 
     return schema
 
@@ -84,10 +103,11 @@ def cli(argv: Optional[List[str]] = None) -> None:
         blind_introspection(
             args.url,
             logger=logging.getLogger('clairvoyance'),
-            wordlist_path=args.wordlist,
-            input_schema_path=args.input_schema,
-            input_document=args.document,
-            output_path=args.output,
+            concurrent_requests=args.concurrent_requests,
             headers=headers,
+            input_document=args.document,
+            input_schema_path=args.input_schema,
+            output_path=args.output,
+            wordlist_path=args.wordlist,
         )
     )

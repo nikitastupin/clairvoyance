@@ -1,36 +1,9 @@
-import logging
-from typing import Dict, Optional, Dict
-
-from clairvoyance.client import Client
+from clairvoyance.entities.context import config_ctx
+from clairvoyance.entities.interfaces import IConfig
 
 
-class Config:
+class Config(IConfig):
 
-    def __init__(
-        self,
-        url: str,
-        headers: Optional[Dict[str, str]] = None,
-        logger: Optional[logging.Logger] = None,
-    ) -> None:
-        self._url: str = url
-        self._headers: Dict[str, str] = headers or {}
-        self._logger = logger or logging.getLogger('clairvoyance')
+    def __init__(self) -> None:
         self._bucket_size: int = 64
-
-        self._client = Client(
-            self._url,
-            headers=self._headers,
-            logger=self._logger,
-        )
-
-    @property
-    def client(self) -> Client:
-        return self._client
-
-    @property
-    def log(self) -> logging.Logger:
-        return self._logger
-
-    @property
-    def bucket_size(self) -> int:
-        return self._bucket_size
+        config_ctx.set(self)

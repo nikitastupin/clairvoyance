@@ -1,8 +1,8 @@
 import json
-import logging
 from typing import Any, Dict, List, Optional, Set
 
 from clairvoyance.entities import GraphQLPrimitive
+from clairvoyance.entities.context import log
 
 
 class Schema:
@@ -11,14 +11,11 @@ class Schema:
 
     def __init__(
         self,
-        logger: logging.Logger,
         queryType: str = None,
         mutationType: str = None,
         subscriptionType: str = None,
         schema: Dict[str, Any] = None,
     ):
-        self._log = logger
-
         if schema:
             self._schema = {
                 'directives': schema['data']['__schema']['directives'],
@@ -88,7 +85,7 @@ class Schema:
     ) -> List[str]:
         """Getting path starting from root."""
 
-        self._log.debug(f'Entered get_path_from_root({name})')
+        log().debug(f'Entered get_path_from_root({name})')
         path_from_root: List[str] = []
 
         if name not in self.types:
@@ -132,7 +129,7 @@ class Schema:
     ) -> str:
         """Converts a path to document."""
 
-        self._log.debug(f'Entered convert_path_to_document({path})')
+        log().debug(f'Entered convert_path_to_document({path})')
         doc = 'FUZZ'
 
         while len(path) > 1:

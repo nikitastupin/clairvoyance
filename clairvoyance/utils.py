@@ -1,6 +1,6 @@
-import os
 import argparse
 import logging
+import os
 from typing import List
 
 
@@ -40,6 +40,14 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         dest='headers',
         action='append',
         default=[],
+    )
+    parser.add_argument(
+        '-c',
+        '--concurrent-requests',
+        metavar='<int>',
+        type=int,
+        default=None,
+        help='Number of concurrent requests to send to the server',
     )
     parser.add_argument(
         '-w',
