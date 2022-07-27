@@ -1,3 +1,5 @@
+# pylint: disable=too-few-public-methods
+
 import asyncio
 from abc import ABC, abstractmethod
 from typing import Dict, Optional

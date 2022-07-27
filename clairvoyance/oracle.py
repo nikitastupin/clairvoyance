@@ -470,9 +470,9 @@ async def clairvoyance(
     if not input_schema:
         root_typenames = await fetch_root_typenames()
         schema = graphql.Schema(
-            queryType=root_typenames['queryType'],
-            mutationType=root_typenames['mutationType'],
-            subscriptionType=root_typenames['subscriptionType'],
+            query_type=root_typenames['queryType'],
+            mutation_type=root_typenames['mutationType'],
+            subscription_type=root_typenames['subscriptionType'],
         )
     else:
         schema = graphql.Schema(schema=input_schema)

@@ -11,9 +11,9 @@ class Schema:
 
     def __init__(
         self,
-        queryType: str = None,
-        mutationType: str = None,
-        subscriptionType: str = None,
+        query_type: str = None,
+        mutation_type: str = None,
+        subscription_type: str = None,
         schema: Dict[str, Any] = None,
     ):
         if schema:
@@ -29,14 +29,14 @@ class Schema:
                 typ = Type.from_json(t)
                 self.types[typ.name] = typ
         else:
-            self.queryType = {'name': queryType} if queryType else None
-            self.mutationType = {'name': mutationType} if mutationType else None
-            self.subscriptionType = ({'name': subscriptionType} if subscriptionType else None)
+            self.query_type = {'name': query_type} if query_type else None
+            self.mutation_type = {'name': mutation_type} if mutation_type else None
+            self.subscription_type = ({'name': subscription_type} if subscription_type else None)
             self._schema = {
                 'directives': [],
-                'mutationType': self.mutationType,
-                'queryType': self.queryType,
-                'subscriptionType': self.subscriptionType,
+                'queryType': self.query_type,
+                'mutationType': self.mutation_type,
+                'subscriptionType': self.subscription_type,
                 'types': [],
             }
             self.types = {
@@ -49,12 +49,12 @@ class Schema:
                     kind='SCALAR',
                 ),
             }
-            if queryType:
-                self.add_type(queryType, 'OBJECT')
-            if mutationType:
-                self.add_type(mutationType, 'OBJECT')
-            if subscriptionType:
-                self.add_type(subscriptionType, 'OBJECT')
+            if query_type:
+                self.add_type(query_type, 'OBJECT')
+            if mutation_type:
+                self.add_type(mutation_type, 'OBJECT')
+            if subscription_type:
+                self.add_type(subscription_type, 'OBJECT')
 
     # Adds type to schema if it's not exists already
     def add_type(
