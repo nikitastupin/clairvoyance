@@ -115,12 +115,13 @@ class Schema:
 
     def get_type_without_fields(
         self,
-        ignore: Set[str],
+        ignored: Set[str] = None,
     ) -> str:
         """Gets the type without a field."""
+        ignored = ignored or set()
 
         for t in self.types.values():
-            if not t.fields and t.name not in ignore and t.kind != 'INPUT_OBJECT':
+            if not t.fields and t.name not in ignored and t.kind != 'INPUT_OBJECT':
                 return t.name
 
         return ''
