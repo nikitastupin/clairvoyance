@@ -46,6 +46,17 @@ python-versions = ">=3.6"
 frozenlist = ">=1.1.0"
 
 [[package]]
+name = "aiounittest"
+version = "1.4.2"
+description = "Test asyncio code more easily."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+wrapt = "*"
+
+[[package]]
 name = "astroid"
 version = "2.11.7"
 description = "An abstract syntax tree for Python with inference support."
@@ -639,7 +650,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<=3.11"
-content-hash = "da8b7afb5dcae1ad8ac9fc7c6ceb240eb4a367f72e73650ea8d195c6462e521f"
+content-hash = "acd4990ea86e19e11f4a1f21ad81d844b95daa134fbe77575890b158a55b50c7"
 
 [metadata.files]
 aiodns = [
@@ -723,6 +734,10 @@ aiohttp = [
 aiosignal = [
     {file = "aiosignal-1.2.0-py3-none-any.whl", hash = "sha256:26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a"},
     {file = "aiosignal-1.2.0.tar.gz", hash = "sha256:78ed67db6c7b7ced4f98e495e572106d5c432a93e1ddd1bf475e1dc05f5b7df2"},
+]
+aiounittest = [
+    {file = "aiounittest-1.4.2-py3-none-any.whl", hash = "sha256:11634918fbbf09b954d97c74d857835750d025d1cafb675391d0099b8d83665a"},
+    {file = "aiounittest-1.4.2.tar.gz", hash = "sha256:1478ec8013c70046569cdc76d541083ca7da362e6513cf29c7ecb51330229bdb"},
 ]
 astroid = [
     {file = "astroid-2.11.7-py3-none-any.whl", hash = "sha256:86b0a340a512c65abf4368b80252754cda17c02cdbbd3f587dddf98112233e7b"},

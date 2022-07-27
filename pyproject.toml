@@ -38,6 +38,7 @@ aiohttp = {extras = ["speedups"], version = "^3.8.1"}
 
 [tool.poetry.dev-dependencies]
 autoflake = "^1.4"
+aiounittest = "^1.4.2"
 docformatter = "^1.4"
 isort = "^5.10.1"
 mypy = "^0.950"
