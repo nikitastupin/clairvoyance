@@ -39,6 +39,14 @@ There are at least two approaches:
 - Use general English words (e.g. [google-10000-english](https://github.com/first20hours/google-10000-english)).
 - Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is [`[_A-Za-z][_0-9A-Za-z]*`](http://spec.graphql.org/June2018/#sec-Names).
 
+### Environment Variables
+
+```markdown
+LOG_FMT=`%(asctime)s \t%(levelname)s\t| %(message)s` # A string format for logging.
+LOG_DATEFMT=`%Y-%m-%d %H:%M:%S` # A string format for logging date.
+LOG_LEVEL=`INFO` # A string level for logging.
+```
+
 ## Support
 
 In case of question or issue with clairvoyance please refer to [wiki](https://github.com/nikitastupin/clairvoyance/wiki) or [issues](https://github.com/nikitastupin/clairvoyance/issues). If this doesn't solve your problem feel free to open a [new issue](https://github.com/nikitastupin/clairvoyance/issues/new).
