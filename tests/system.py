@@ -2,9 +2,7 @@ import json
 import os
 import subprocess
 import unittest
-from typing import Any, Dict, Optional, cast
-
-from clairvoyance import graphql
+from typing import Any, Dict, Optional
 
 
 class TestClairvoyance(unittest.TestCase):
@@ -35,6 +33,7 @@ class TestClairvoyance(unittest.TestCase):
                 f'http://localhost:{cls.port}',
             ],
             capture_output=True,
+            check=True,
         )
 
         with open(output_file, 'r', encoding='utf-8') as f:
