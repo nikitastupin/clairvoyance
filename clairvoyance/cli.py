@@ -25,7 +25,7 @@ async def blind_introspection(
         logger=logger,
     )
 
-    logger.info('Starting blind introspection...')
+    logger.info(f'Starting blind introspection on {url}...')
 
     wordlist_path = wordlist_path or 'clairvoyance/wordlist.txt'
     with open(wordlist_path, 'r', encoding='utf-8') as f:
