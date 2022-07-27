@@ -48,7 +48,7 @@ class Client(IClient):
                     json=gql_document,
                 )
 
-                if not 200 <= response.status <= 299:
+                if response.status >= 500:
                     log().warning(f'Received status code {response.status}')
                     return await self.post(document, retries + 1)
 

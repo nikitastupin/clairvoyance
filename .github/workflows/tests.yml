@@ -22,6 +22,7 @@ on:
 env:
   MODULE_NAME: clairvoyance
   MIN_TEST_COV: 0
+  SERVER: http://localhost:4000
 
 jobs:
   unit-tests:
@@ -79,17 +80,20 @@ jobs:
         node src/index.js &
     - name: Wait for server
       run: |
-        echo "SERVER=http://localhost:4000" > $GITHUB_ENV
-
-        for i in {0..9}; do
+        for i in {0..10}; do
           echo "Sleep for 1 second ..."
           sleep 1
           if curl -s -o /dev/null "$SERVER"; then
             echo "$SERVER returned HTTP response!"
             break
           fi
+          if [ $i -eq 10 ]; then
+            echo "Server did not respond after 10 seconds!"
+            exit 1
+          fi
         done
     - name: Test with pytest
       run: |
         source .venv/bin/activate
         python -m unittest tests/system.py
+        exit 0
