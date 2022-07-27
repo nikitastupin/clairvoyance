@@ -1,3 +1,4 @@
+import os
 import argparse
 import logging
 from typing import List
@@ -53,14 +54,15 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 
 def setup_logger(verbosity: int) -> None:
-    _format = '%(asctime)s \t%(levelname)s\t| %(message)s'
-    datefmt = '%Y-%m-%d %H:%M:%S'
+    fmt = os.getenv('LOG_FMT') or '%(asctime)s \t%(levelname)s\t| %(message)s'
+    datefmt = os.getenv('LOG_DATEFMT') or '%Y-%m-%d %H:%M:%S'
 
-    level = logging.DEBUG if verbosity > 1 else logging.INFO
+    default_level = os.getenv('LOG_LEVEL') or 'INFO'
+    level = 'DEBUG' if verbosity > 1 else default_level.upper()
 
     logging.basicConfig(
         level=level,
-        format=_format,
+        format=fmt,
         datefmt=datefmt,
     )
 
