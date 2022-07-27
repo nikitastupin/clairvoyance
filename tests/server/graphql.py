@@ -22,11 +22,12 @@ class GraphqlHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(bytes(body, "ascii"))
 
-    def log_message(self, format, *args) -> None:
+    def log_message(self, format, *args) -> None:  # type: ignore[no-untyped-def]
         pass
 
 
-def main(port=8001) -> None:
+def main(port: int = None) -> None:
+    port = port or 8081
     with http.server.HTTPServer(("", port), GraphqlHTTPRequestHandler) as httpd:
         httpd.serve_forever()
 

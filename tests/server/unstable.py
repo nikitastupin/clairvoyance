@@ -17,11 +17,12 @@ class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
         os.environ["COUNT"] = str(int(os.environ["COUNT"]) + 1)
 
-    def log_message(self, format, *args) -> None:
+    def log_message(self, format, *args) -> None:  # type: ignore[no-untyped-def]
         pass
 
 
-def main(port=8000) -> None:
+def main(port: int = None) -> None:
+    port = port or 8000
     with http.server.HTTPServer(("", port), UnstableHTTPRequestHandler) as httpd:
         httpd.serve_forever()
 
