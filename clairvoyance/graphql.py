@@ -335,7 +335,7 @@ class Type:
     ):
         self.name = name
         self.kind = kind
-        self.fields = fields or []  # type: List[Field]
+        self.fields: List[Field] = fields or []
 
     def to_json(self) -> Dict[str, Any]:
         # dirty hack
