@@ -2,10 +2,16 @@ import json
 import os
 import subprocess
 import unittest
-from typing import Any, Dict
+from typing import Any, Dict, Optional, cast
+
+from clairvoyance import graphql
 
 
 class TestClairvoyance(unittest.TestCase):
+
+    port: str
+    clairvoyance: subprocess.CompletedProcess
+    schema: Any
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -37,24 +43,22 @@ class TestClairvoyance(unittest.TestCase):
         cls.schema = j['data']['__schema']
 
     @property
-    def query_type(self) -> None:
+    def query_type(self) -> Any:
         query_type = self.get_type(self.schema['queryType']['name'])
-
         if not query_type:
             raise Exception('Schema don\'t contain query type')
 
         return query_type
 
-    def get_type(self, name: str) -> Dict[str, Any]:
+    def get_type(self, name: str) -> Optional[Dict[str, Any]]:
         for t in self.schema['types']:
             if t['name'] == name:
                 return t
 
         return None
 
-    @unittest.skip('Clairvoyance produces false positive warnings')
     def test_no_warnings(self) -> None:
-        self.assertFalse(p.stderr)
+        self.assertLess(len(self.clairvoyance.stderr), 1)
 
     def test_found_root_type_names(self) -> None:
         self.assertEqual(self.schema['queryType'], {'name': 'Query'})
@@ -137,6 +141,12 @@ class TestClairvoyance(unittest.TestCase):
 
     def test_nonroot_type_field_names(self) -> None:
         nonroot_type = self.get_type('User')
+
+        self.assertIsNotNone(nonroot_type)
+
+        if not nonroot_type:
+            return
+
         field_names = [f['name'] for f in nonroot_type['fields']]
 
         self.assertEqual(len(field_names), 3)

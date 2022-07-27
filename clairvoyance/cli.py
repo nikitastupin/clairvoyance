@@ -32,13 +32,15 @@ def setup_context(
 async def blind_introspection(
     url: str,
     logger: logging.Logger,
+    wordlist: List[str],
     concurrent_requests: Optional[int] = None,
     headers: Optional[Dict[str, str]] = None,
     input_document: Optional[str] = None,
     input_schema_path: Optional[str] = None,
     output_path: Optional[str] = None,
-    wordlist_path: Optional[str] = None,
 ) -> str:
+
+    assert wordlist, 'You must provide a wordlist'
 
     setup_context(
         url,
@@ -48,10 +50,6 @@ async def blind_introspection(
     )
 
     logger.info(f'Starting blind introspection on {url}...')
-
-    wordlist_path = wordlist_path or 'clairvoyance/wordlist.txt'
-    with open(wordlist_path, 'r', encoding='utf-8') as f:
-        wordlist = [w.strip() for w in f.readlines() if w.strip()]
 
     input_schema = None
     if input_schema_path:
@@ -99,6 +97,10 @@ def cli(argv: Optional[List[str]] = None) -> None:
         key, value = h.split(': ', 1)
         headers[key] = value
 
+    wordlist = []
+    if args.wordlist:
+        wordlist = [w.strip() for w in args.wordlist.readlines() if w.strip()]
+
     asyncio.run(
         blind_introspection(
             args.url,
@@ -108,6 +110,6 @@ def cli(argv: Optional[List[str]] = None) -> None:
             input_document=args.document,
             input_schema_path=args.input_schema,
             output_path=args.output,
-            wordlist_path=args.wordlist,
+            wordlist=wordlist,
         )
     )

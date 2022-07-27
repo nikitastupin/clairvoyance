@@ -1,12 +1,18 @@
+import asyncio
 import json
 import logging
 import subprocess
 import time
 import unittest
 
+import aiounittest
+
 from clairvoyance import graphql
+from clairvoyance.client import Client
+from clairvoyance.entities.context import client, logger_ctx
 
 logging.basicConfig(level=logging.ERROR)
+logger_ctx.set(logging.getLogger('clairvoyance'))
 
 
 class TestSchema(unittest.TestCase):
@@ -48,11 +54,15 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class TestPost(unittest.TestCase):
+class TestPost(aiounittest.AsyncTestCase):
+
+    _unstable: subprocess.Popen[bytes]
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._unstable = subprocess.Popen(['python3', 'tests/server/unstable.py'])
+        Client('http://localhost:8000/graphql')
+
+        cls._unstable = subprocess.Popen(['python3', 'tests/server/unstable.py'])  # pylint: disable=consider-using-with
         time.sleep(1)
 
     @classmethod
@@ -60,9 +70,12 @@ class TestPost(unittest.TestCase):
         cls._unstable.terminate()
         cls._unstable.wait()
 
-    def test_retries_on_500(self) -> None:
-        response = graphql.post('http://localhost:8000')
-        self.assertEqual(response.status_code, 200)
+        asyncio.run(client().close())
+
+    async def test_retries_on_500(self) -> None:
+        response = await client().post('http://localhost:8000')
+
+        self.assertIsNotNone(response)
 
 
 class TestToJson(unittest.TestCase):

@@ -1,9 +1,14 @@
+import asyncio
 import logging
 import subprocess
 import time
 import unittest
 
+import aiounittest
+
 from clairvoyance import graphql, oracle
+from clairvoyance.client import Client
+from clairvoyance.entities.context import client
 
 
 class TestGetValidFields(unittest.TestCase):
@@ -55,14 +60,6 @@ class TestGetValidArgs(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class TestGetValidInputFields(unittest.TestCase):
-
-    def test_single_suggestion(self) -> None:
-        want = {'name'}
-        got = oracle.get_valid_input_fields("Field SetNameForHomeInput.name of required type String! was not provided.")
-        self.assertEqual(got, want)
-
-
 class TestGetTypeRef(unittest.TestCase):
 
     def test_non_nullable_object(self) -> None:
@@ -87,9 +84,13 @@ class TestGetTypeRef(unittest.TestCase):
             non_null_item=False,
             non_null=True,
         )
-        got = oracle.get_typeref("Expected type SetArmedStateForHomeInput!, found 7.", "InputValue")
+        got = oracle.get_typeref(
+            'Expected type SetArmedStateForHomeInput!, found 7.',
+            'InputValue',
+        )
         self.assertEqual(got, want)
 
+    # pylint: disable=line-too-long
     def test_object_field(self) -> None:
         want = graphql.TypeRef(
             name='SetArmedStateForHomePayload',
@@ -126,7 +127,10 @@ class TestGetTypeRef(unittest.TestCase):
             non_null_item=False,
             non_null=False,
         )
-        got = oracle.get_typeref('Cannot query field "imwrongfield" on type "HomeSettings".', "Field")
+        got = oracle.get_typeref(
+            'Cannot query field "imwrongfield" on type "HomeSettings".',
+            'Field',
+        )
         self.assertEqual(got, want)
 
     def test_skip_error_message(self) -> None:
@@ -149,14 +153,20 @@ class TestGetTypeRef(unittest.TestCase):
             non_null_item=False,
             non_null=True,
         )
-        got = oracle.get_typeref('Field "node" argument "id" of type "ID!" is required but not provided.', "InputValue")
-        self.assertIsNone(got)
-        if got:
-            self.assertEqual(got.name, want.name)
-            self.assertEqual(got.kind, want.kind)
-            self.assertEqual(got.is_list, want.is_list)
-            self.assertEqual(got.non_null_item, want.non_null_item)
-            self.assertEqual(got.non_null, want.non_null)
+        got = oracle.get_typeref(
+            'Field "node" argument "id" of type "ID!" is required but not provided.',
+            'InputValue',
+        )
+        self.assertIsNotNone(got)
+
+        if not got:
+            return
+
+        self.assertEqual(got.name, want.name)
+        self.assertEqual(got.kind, want.kind)
+        self.assertEqual(got.is_list, want.is_list)
+        self.assertEqual(got.non_null_item, want.non_null_item)
+        self.assertEqual(got.non_null, want.non_null)
 
     def test_dvga(self) -> None:
         want = graphql.TypeRef(
@@ -167,13 +177,16 @@ class TestGetTypeRef(unittest.TestCase):
             non_null=False,
         )
         got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', 'Field')
+
         self.assertIsNotNone(got)
-        if got:
-            self.assertEqual(got.name, want.name)
-            self.assertEqual(got.kind, want.kind)
-            self.assertEqual(got.is_list, want.is_list)
-            self.assertEqual(got.non_null_item, want.non_null_item)
-            self.assertEqual(got.non_null, want.non_null)
+        if not got:
+            return
+
+        self.assertEqual(got.name, want.name)
+        self.assertEqual(got.kind, want.kind)
+        self.assertEqual(got.is_list, want.is_list)
+        self.assertEqual(got.non_null_item, want.non_null_item)
+        self.assertEqual(got.non_null, want.non_null)
 
 
 class TestTypeRef(unittest.TestCase):
@@ -241,11 +254,15 @@ class TestGraphql(unittest.TestCase):
         self.assertEqual(got, want)
 
 
-class TestProbeTypename(unittest.TestCase):
+class TestProbeTypename(aiounittest.AsyncTestCase):
+
+    _unstable: subprocess.Popen[bytes]
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._unstable = subprocess.Popen(['python3', 'tests/server/graphql.py'])
+        Client('http://localhost:8081/graphql')
+
+        cls._unstable = subprocess.Popen(['python3', 'tests/server/graphql.py'])  # pylint: disable=consider-using-with
         time.sleep(1)
 
     @classmethod
@@ -253,10 +270,11 @@ class TestProbeTypename(unittest.TestCase):
         cls._unstable.terminate()
         cls._unstable.wait()
 
-    def test_probe_typename(self) -> None:
-        config = graphql.Config()
-        config.url = 'http://localhost:8001'
-        typename = oracle.probe_typename('123', config)
+        asyncio.run(client().close())
+
+    async def test_probe_typename(self) -> None:
+        typename = await oracle.probe_typename('123')
+
         self.assertEqual(typename, 'Mutation')
 
 

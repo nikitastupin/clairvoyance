@@ -1,5 +1,6 @@
 import http.server
 import os
+import json
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -13,6 +14,9 @@ class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(500)
 
         self.end_headers()
+        if int(os.environ['COUNT']) % 2 == 0:
+            body = json.dumps({'message': 'OK'})
+            self.wfile.write(bytes(body, 'ascii'))
 
         os.environ['COUNT'] = str(int(os.environ['COUNT']) + 1)
 

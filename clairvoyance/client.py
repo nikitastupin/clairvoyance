@@ -47,8 +47,12 @@ class Client(IClient):
                     self._url,
                     json=gql_document,
                 )
-                body = await response.json()
-                return body
+
+                if not 200 <= response.status <= 299:
+                    log().warning(f'Received status code {response.status}')
+                    return await self.post(document, retries + 1)
+
+                return await response.json(content_type=None)
 
             except (
                 aiohttp.client_exceptions.ClientConnectionError,
