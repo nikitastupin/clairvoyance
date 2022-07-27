@@ -37,7 +37,7 @@ async def blind_introspection(
             input_schema = json.load(f)
 
     input_document = input_document or 'query { FUZZ }'
-    ignore = set(GraphQLPrimitive.__members__.keys())
+    ignored = set(GraphQLPrimitive.__members__.keys())
     while True:
         schema = await oracle.clairvoyance(
             wordlist,
@@ -53,8 +53,8 @@ async def blind_introspection(
         input_schema = json.loads(schema)
         s = graphql.Schema(config.log, schema=input_schema)
 
-        _next = s.get_type_without_fields(ignore)
-        ignore.add(_next)
+        _next = s.get_type_without_fields(ignored)
+        ignored.add(_next)
 
         if _next:
             input_document = s.convert_path_to_document(s.get_path_from_root(_next))
