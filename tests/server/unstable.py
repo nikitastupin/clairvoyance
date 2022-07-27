@@ -3,7 +3,8 @@ import os
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    def do_POST(self):
+
+    def do_POST(self) -> None:
         if "COUNT" not in os.environ:
             os.environ["COUNT"] = "1"
 
@@ -16,11 +17,11 @@ class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
         os.environ["COUNT"] = str(int(os.environ["COUNT"]) + 1)
 
-    def log_message(self, format, *args):
+    def log_message(self, format, *args) -> None:
         pass
 
 
-def main(port=8000):
+def main(port=8000) -> None:
     with http.server.HTTPServer(("", port), UnstableHTTPRequestHandler) as httpd:
         httpd.serve_forever()
 

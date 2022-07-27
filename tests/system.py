@@ -7,8 +7,9 @@ from typing import Any, Dict
 
 
 class TestClairvoyance(unittest.TestCase):
+
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         cls.port = "4000"
         output_file = "/tmp/t.json"
 
@@ -37,7 +38,7 @@ class TestClairvoyance(unittest.TestCase):
         cls.schema = j["data"]["__schema"]
 
     @property
-    def query_type(self):
+    def query_type(self) -> None:
         query_type = self.get_type(self.schema["queryType"]["name"])
 
         if not query_type:
@@ -53,15 +54,15 @@ class TestClairvoyance(unittest.TestCase):
         return None
 
     @unittest.skip("Clairvoyance produces false positive warnings")
-    def test_no_warnings(self):
+    def test_no_warnings(self) -> None:
         self.assertFalse(p.stderr)
 
-    def test_found_root_type_names(self):
+    def test_found_root_type_names(self) -> None:
         self.assertEqual(self.schema["queryType"], {"name": "Query"})
         self.assertEqual(self.schema["mutationType"], {"name": "Mutation"})
         self.assertIsNone(self.schema["subscriptionType"])
 
-    def test_type_names(self):
+    def test_type_names(self) -> None:
         type_names = [t["name"] for t in self.schema["types"]]
 
         self.assertIn("Query", type_names)
@@ -72,13 +73,13 @@ class TestClairvoyance(unittest.TestCase):
         self.assertIn("Mission", type_names)
         self.assertIn("TripUpdateResponse", type_names)
 
-    def test_query_basics(self):
+    def test_query_basics(self) -> None:
         query_type = self.query_type
 
         self.assertEqual(query_type["name"], "Query")
         self.assertEqual(query_type["kind"], "OBJECT")
 
-    def test_query_field_names(self):
+    def test_query_field_names(self) -> None:
         query_fields = self.query_type["fields"]
         field_names = [f["name"] for f in query_fields]
 
@@ -87,7 +88,7 @@ class TestClairvoyance(unittest.TestCase):
         self.assertIn("launch", field_names)
         self.assertIn("me", field_names)
 
-    def test_query_field_types(self):
+    def test_query_field_types(self) -> None:
         query_fields = self.query_type["fields"]
 
         for f in query_fields:
@@ -115,7 +116,7 @@ class TestClairvoyance(unittest.TestCase):
             else:
                 self.fail(f"Unexpected field {f['name']} on query type")
 
-    def test_scalar_arguments(self):
+    def test_scalar_arguments(self) -> None:
         query_fields = self.query_type["fields"]
 
         for f in query_fields:
@@ -126,12 +127,16 @@ class TestClairvoyance(unittest.TestCase):
                 want = {
                     "kind": "NON_NULL",
                     "name": None,
-                    "ofType": {"kind": "SCALAR", "name": "ID", "ofType": None},
+                    "ofType": {
+                        "kind": "SCALAR",
+                        "name": "ID",
+                        "ofType": None
+                    },
                 }
 
                 self.assertEqual(f["args"][0]["type"], want)
 
-    def test_nonroot_type_field_names(self):
+    def test_nonroot_type_field_names(self) -> None:
         nonroot_type = self.get_type("User")
         field_names = [f["name"] for f in nonroot_type["fields"]]
 
@@ -141,7 +146,7 @@ class TestClairvoyance(unittest.TestCase):
         self.assertIn("trips", field_names)
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(cls) -> None:
         if cls.clairvoyance.stdout:
             with open("/tmp/clairvoyance-tests.stdout", "wb") as f:
                 f.write(cls.clairvoyance.stdout)
