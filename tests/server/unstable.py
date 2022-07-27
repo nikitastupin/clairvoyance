@@ -1,6 +1,6 @@
 import http.server
-import os
 import json
+import os
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
