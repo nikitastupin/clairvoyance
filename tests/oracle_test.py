@@ -8,35 +8,36 @@ from clairvoyance import graphql, oracle
 
 class TestGetValidFields(unittest.TestCase):
 
+    # pylint: disable=line-too-long
     def test_multiple_suggestions(self) -> None:
         want = {
-            "setNameForHome",
-            "setNameForCamera",
-            "setAddressForHome",
-            "setNameForHomeSensor",
-            "setArmedStateForHome",
+            'setNameForHome',
+            'setNameForCamera',
+            'setAddressForHome',
+            'setNameForHomeSensor',
+            'setArmedStateForHome',
         }
         got = oracle.get_valid_fields(
             'Cannot query field "NameForHome" on type "Mutation". Did you mean "setNameForHome", "setNameForCamera", "setAddressForHome", "setNameForHomeSensor", or "setArmedStateForHome"?'
         )
         self.assertEqual(got, want)
 
-        want_2 = {"homeId", "name", "role"}
+        want_2 = {'homeId', 'name', 'role'}
         got_2 = oracle.get_valid_fields('Cannot query field "home" on type "Home". Did you mean "homeId", "name", or "role"?')
         self.assertEqual(got_2, want_2)
 
     def test_single_suggestion(self) -> None:
-        want = {"homes"}
+        want = {'homes'}
         got = oracle.get_valid_fields('Cannot query field "home" on type "Query". Did you mean "homes"?')
         self.assertEqual(got, want)
 
     def test_valid_field(self) -> None:
-        want = {"address"}
+        want = {'address'}
         got = oracle.get_valid_fields('Field "address" of type "HomeAddress" must have a selection of subfields. Did you mean "address { ... }"?')
         self.assertEqual(got, want)
 
     def test_or_suggestion(self) -> None:
-        want = {"devices", "unassigned"}
+        want = {'devices', 'unassigned'}
         got = oracle.get_valid_fields('Cannot query field "designer" on type "Query". Did you mean "devices" or "unassigned"?')
         self.assertEqual(got, want)
 
@@ -44,12 +45,12 @@ class TestGetValidFields(unittest.TestCase):
 class TestGetValidArgs(unittest.TestCase):
 
     def test_single_suggestion(self) -> None:
-        want = {"input"}
+        want = {'input'}
         got = oracle.get_valid_args('Unknown argument "inpu" on field "setNameForHome" of type "Mutation". Did you mean "input"?')
         self.assertEqual(got, want)
 
     def test_double_suggestion(self) -> None:
-        want = {"after", "last"}
+        want = {'after', 'last'}
         got = oracle.get_valid_args('Unknown argument "fasten" on field "filmConnection" of type "Vehicle". Did you mean "after" or "last"?')
         self.assertEqual(got, want)
 
@@ -57,7 +58,7 @@ class TestGetValidArgs(unittest.TestCase):
 class TestGetValidInputFields(unittest.TestCase):
 
     def test_single_suggestion(self) -> None:
-        want = {"name"}
+        want = {'name'}
         got = oracle.get_valid_input_fields("Field SetNameForHomeInput.name of required type String! was not provided.")
         self.assertEqual(got, want)
 
@@ -66,22 +67,22 @@ class TestGetTypeRef(unittest.TestCase):
 
     def test_non_nullable_object(self) -> None:
         want = graphql.TypeRef(
-            name="SetArmedStateForHomeInput",
-            kind="INPUT_OBJECT",
+            name='SetArmedStateForHomeInput',
+            kind='INPUT_OBJECT',
             is_list=False,
             non_null_item=False,
             non_null=True,
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
-            "InputValue",
+            'InputValue',
         )
         self.assertEqual(got, want)
 
     def test_inputfield_object_non_nullable(self) -> None:
         want = graphql.TypeRef(
-            name="SetArmedStateForHomeInput",
-            kind="INPUT_OBJECT",
+            name='SetArmedStateForHomeInput',
+            kind='INPUT_OBJECT',
             is_list=False,
             non_null_item=False,
             non_null=True,
@@ -91,36 +92,36 @@ class TestGetTypeRef(unittest.TestCase):
 
     def test_object_field(self) -> None:
         want = graphql.TypeRef(
-            name="SetArmedStateForHomePayload",
-            kind="OBJECT",
+            name='SetArmedStateForHomePayload',
+            kind='OBJECT',
             is_list=False,
             non_null_item=False,
             non_null=False,
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" of type "SetArmedStateForHomePayload" must have a selection of subfields. Did you mean "setArmedStateForHome { ... }"?',
-            "Field",
+            'Field',
         )
         self.assertEqual(got, want)
 
     def test_via_wrong_field(self) -> None:
         want = graphql.TypeRef(
-            name="Boolean",
-            kind="SCALAR",
+            name='Boolean',
+            kind='SCALAR',
             is_list=False,
             non_null_item=False,
             non_null=True,
         )
         got = oracle.get_typeref(
             'Field "isMfaEnabled" must not have a selection since type "Boolean!" has no subfields.',
-            "Field",
+            'Field',
         )
         self.assertEqual(got, want)
 
     def test_field_regex_3(self) -> None:
         want = graphql.TypeRef(
-            name="HomeSettings",
-            kind="OBJECT",
+            name='HomeSettings',
+            kind='OBJECT',
             is_list=False,
             non_null_item=False,
             non_null=False,
@@ -133,17 +134,17 @@ class TestGetTypeRef(unittest.TestCase):
         with self.assertLogs() as cm:
             got = oracle.get_typeref(
                 'Field "species" of type "Species" must have a selection of subfields. Did you mean "species { ... }"?',
-                "InputValue",
+                'InputValue',
             )
             # https://stackoverflow.com/a/61381576
-            logging.warning("Dummy warning")
+            logging.warning('Dummy warning')
         self.assertEqual(want, got)
-        self.assertCountEqual(["WARNING:root:Dummy warning"], cm.output)
+        self.assertCountEqual(['WARNING:root:Dummy warning'], cm.output)
 
     def test_issue_16(self) -> None:
         want = graphql.TypeRef(
-            name="ID",
-            kind="SCALAR",
+            name='ID',
+            kind='SCALAR',
             is_list=False,
             non_null_item=False,
             non_null=True,
@@ -159,13 +160,13 @@ class TestGetTypeRef(unittest.TestCase):
 
     def test_dvga(self) -> None:
         want = graphql.TypeRef(
-            name="String",
-            kind="SCALAR",
+            name='String',
+            kind='SCALAR',
             is_list=False,
             non_null_item=False,
             non_null=False,
         )
-        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', "Field")
+        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', 'Field')
         self.assertIsNotNone(got)
         if got:
             self.assertEqual(got.name, want.name)
@@ -178,22 +179,22 @@ class TestGetTypeRef(unittest.TestCase):
 class TestTypeRef(unittest.TestCase):
 
     def test_to_json(self) -> None:
-        name = "TestObject"
-        kind = "OBJECT"
+        name = 'TestObject'
+        kind = 'OBJECT'
 
         want = {
-            "kind": "NON_NULL",
-            "name": None,
-            "ofType": {
-                "kind": "LIST",
-                "name": None,
-                "ofType": {
-                    "kind": "NON_NULL",
-                    "name": None,
-                    "ofType": {
-                        "kind": kind,
-                        "name": name,
-                        "ofType": None
+            'kind': 'NON_NULL',
+            'name': None,
+            'ofType': {
+                'kind': 'LIST',
+                'name': None,
+                'ofType': {
+                    'kind': 'NON_NULL',
+                    'name': None,
+                    'ofType': {
+                        'kind': kind,
+                        'name': name,
+                        'ofType': None
                     },
                 },
             },
@@ -211,8 +212,8 @@ class TestTypeRef(unittest.TestCase):
 class TestGraphql(unittest.TestCase):
 
     def test_field_or_arg_type_from_json(self) -> None:
-        name = "TestObject"
-        kind = "OBJECT"
+        name = 'TestObject'
+        kind = 'OBJECT'
         want = graphql.TypeRef(
             name=name,
             kind=kind,
@@ -221,18 +222,18 @@ class TestGraphql(unittest.TestCase):
             non_null=True,
         )
         got = graphql.field_or_arg_type_from_json({
-            "kind": "NON_NULL",
-            "name": None,
-            "ofType": {
-                "kind": "LIST",
-                "name": None,
-                "ofType": {
-                    "kind": "NON_NULL",
-                    "name": None,
-                    "ofType": {
-                        "kind": kind,
-                        "name": name,
-                        "ofType": None
+            'kind': 'NON_NULL',
+            'name': None,
+            'ofType': {
+                'kind': 'LIST',
+                'name': None,
+                'ofType': {
+                    'kind': 'NON_NULL',
+                    'name': None,
+                    'ofType': {
+                        'kind': kind,
+                        'name': name,
+                        'ofType': None
                     },
                 },
             },
@@ -244,7 +245,7 @@ class TestProbeTypename(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._unstable = subprocess.Popen(["python3", "tests/server/graphql.py"])
+        cls._unstable = subprocess.Popen(['python3', 'tests/server/graphql.py'])
         time.sleep(1)
 
     @classmethod
@@ -254,10 +255,10 @@ class TestProbeTypename(unittest.TestCase):
 
     def test_probe_typename(self) -> None:
         config = graphql.Config()
-        config.url = "http://localhost:8001"
-        typename = oracle.probe_typename("123", config)
-        self.assertEqual(typename, "Mutation")
+        config.url = 'http://localhost:8001'
+        typename = oracle.probe_typename('123', config)
+        self.assertEqual(typename, 'Mutation')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

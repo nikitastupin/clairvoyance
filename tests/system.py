@@ -31,7 +31,7 @@ class TestClairvoyance(unittest.TestCase):
             capture_output=True,
         )
 
-        with open(output_file) as f:
+        with open(output_file, 'r', encoding='utf-8') as f:
             j = json.load(f)
 
         cls.schema = j['data']['__schema']
@@ -41,7 +41,7 @@ class TestClairvoyance(unittest.TestCase):
         query_type = self.get_type(self.schema['queryType']['name'])
 
         if not query_type:
-            raise Exception(f'Schema don\'t contain query type')
+            raise Exception('Schema don\'t contain query type')
 
         return query_type
 
@@ -147,11 +147,11 @@ class TestClairvoyance(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         if cls.clairvoyance.stdout:
-            with open('/tmp/clairvoyance-tests.stdout', 'wb') as f:
+            with open('/tmp/clairvoyance-tests.stdout', 'wb', encoding='utf-8') as f:
                 f.write(cls.clairvoyance.stdout)
 
         if cls.clairvoyance.stderr:
-            with open('/tmp/clairvoyance-tests.stderr', 'wb') as f:
+            with open('/tmp/clairvoyance-tests.stderr', 'wb', encoding='utf-8') as f:
                 f.write(cls.clairvoyance.stderr)
 
 

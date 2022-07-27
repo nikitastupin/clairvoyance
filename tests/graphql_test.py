@@ -4,15 +4,15 @@ import subprocess
 import time
 import unittest
 
-logging.basicConfig(level=logging.ERROR)
-
 from clairvoyance import graphql
+
+logging.basicConfig(level=logging.ERROR)
 
 
 class TestSchema(unittest.TestCase):
 
     def setUp(self) -> None:
-        with open('tests/data/schema.json', 'r') as f:
+        with open('tests/data/schema.json', 'r', encoding='utf-8') as f:
             schema_json = json.load(f)
             self.schema = graphql.Schema(schema=schema_json)
 
@@ -33,10 +33,10 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(got, want)
 
     def test_raise_exception_on_unknown_operation_type(self) -> None:
-        input = ['UnknownType']
+        _input = ['UnknownType']
 
         with self.assertRaises(Exception) as cm:
-            self.schema.convert_path_to_document(input)
+            self.schema.convert_path_to_document(_input)
 
         exception_msg = str(cm.exception)
         self.assertEqual(exception_msg, 'Unknown operation type')
