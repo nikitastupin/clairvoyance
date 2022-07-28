@@ -96,4 +96,3 @@ jobs:
       run: |
         source .venv/bin/activate
         python -m unittest tests/system.py
-        exit 0
