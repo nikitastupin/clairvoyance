@@ -66,7 +66,7 @@ def setup_logger(verbosity: int) -> None:
     datefmt = os.getenv('LOG_DATEFMT') or '%Y-%m-%d %H:%M:%S'
 
     default_level = os.getenv('LOG_LEVEL') or 'INFO'
-    level = 'DEBUG' if verbosity > 1 else default_level.upper()
+    level = 'DEBUG' if verbosity >= 1 else default_level.upper()
 
     logging.basicConfig(
         level=level,
