@@ -65,7 +65,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
             valid_fields.add(match.group('field'))
 
     else:
-        log().debug(f'Unknown error message: "{error_message}"')
+        log().debug(f'Unknown error message: \'{error_message}\'')
 
     return valid_fields
 
@@ -225,7 +225,7 @@ def get_valid_args(error_message: str) -> Set[str]:
             valid_args.add(match.group('second'))
 
     if not valid_args:
-        log().debug(f'Unknown error message: {error_message}')
+        log().debug(f'Unknown error message: \'{error_message}\'')
 
     return valid_args
 
