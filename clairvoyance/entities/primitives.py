@@ -1,10 +1,11 @@
 """Define the primitives used in the Clairvoyance system."""
 
-from enum import Enum, unique
+from enum import unique, Enum
+from clairvoyance.entities.meta import MetaEnum
 
 
 @unique
-class GraphQLPrimitive(str, Enum):
+class GraphQLPrimitive(str, Enum, metaclass=MetaEnum):
 
     """The default GraphQL Scalar primitives.
 
@@ -19,7 +20,7 @@ class GraphQLPrimitive(str, Enum):
 
 
 @unique
-class GraphQLKind(str, Enum):
+class GraphQLKind(str, Enum, metaclass=MetaEnum):
 
     """The default GraphQL kinds.
 

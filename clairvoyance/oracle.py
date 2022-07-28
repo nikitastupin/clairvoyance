@@ -6,6 +6,7 @@ import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
+from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
 
 
@@ -273,7 +274,7 @@ def get_typeref(
         kind = ''
         if name.endswith('Input'):
             kind = 'INPUT_OBJECT'
-        elif name in ['Int', 'Float', 'String', 'Boolean', 'ID']:
+        elif name in GraphQLPrimitive:
             kind = 'SCALAR'
         else:
             kind = 'OBJECT'
@@ -437,7 +438,7 @@ async def explore_field(
 
     args = []
     field = graphql.Field(field_name, typeref)
-    if field.type.name not in ['Int', 'Float', 'String', 'Boolean', 'ID']:
+    if field.type.name not in GraphQLPrimitive:
         arg_names = await probe_args(
             field.name,
             wordlist,
