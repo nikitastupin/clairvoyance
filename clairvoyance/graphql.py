@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import log
+from clairvoyance.entities.primitives import GraphQLKind
 
 
 class Schema:
@@ -42,11 +43,11 @@ class Schema:
             self.types = {
                 GraphQLPrimitive.STRING: Type(
                     name=GraphQLPrimitive.STRING,
-                    kind='SCALAR',
+                    kind=GraphQLKind.SCALAR,
                 ),
                 GraphQLPrimitive.ID: Type(
                     name=GraphQLPrimitive.ID,
-                    kind='SCALAR',
+                    kind=GraphQLKind.SCALAR,
                 ),
             }
             if query_type:
@@ -118,7 +119,7 @@ class Schema:
         ignored = ignored or set()
 
         for t in self.types.values():
-            if not t.fields and t.name not in ignored and t.kind != 'INPUT_OBJECT':
+            if not t.fields and t.name not in ignored and t.kind != GraphQLKind.INPUT_OBJECT:
                 return t.name
 
         return ''
@@ -182,13 +183,13 @@ class TypeRef:
         j: Dict[str, Any] = {'kind': self.kind, 'name': self.name, 'ofType': None}
 
         if self.non_null_item:
-            j = {'kind': 'NON_NULL', 'name': None, 'ofType': j}
+            j = {'kind': GraphQLKind.NON_NULL, 'name': None, 'ofType': j}
 
         if self.list:
-            j = {'kind': 'LIST', 'name': None, 'ofType': j}
+            j = {'kind': GraphQLKind.LIST, 'name': None, 'ofType': j}
 
         if self.non_null:
-            j = {'kind': 'NON_NULL', 'name': None, 'ofType': j}
+            j = {'kind': GraphQLKind.NON_NULL, 'name': None, 'ofType': j}
 
         return j
 
@@ -231,7 +232,7 @@ class InputValue:
 def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
     typ = None
 
-    if _json['kind'] not in ['NON_NULL', 'LIST']:
+    if _json['kind'] not in [GraphQLKind.NON_NULL, GraphQLKind.LIST]:
         typ = TypeRef(
             name=_json['name'],
             kind=_json['kind'],
@@ -239,13 +240,13 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
     elif not _json['ofType']['ofType']:
         actual_type = _json['ofType']
 
-        if _json['kind'] == 'NON_NULL':
+        if _json['kind'] == GraphQLKind.NON_NULL:
             typ = TypeRef(
                 name=actual_type['name'],
                 kind=actual_type['kind'],
                 non_null=True,
             )
-        elif _json['kind'] == 'LIST':
+        elif _json['kind'] == GraphQLKind.LIST:
             typ = TypeRef(
                 name=actual_type['name'],
                 kind=actual_type['kind'],
@@ -256,7 +257,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
     elif not _json['ofType']['ofType']['ofType']:
         actual_type = _json['ofType']['ofType']
 
-        if _json['kind'] == 'NON_NULL':
+        if _json['kind'] == GraphQLKind.NON_NULL:
             typ = TypeRef(
                 actual_type['name'],
                 actual_type['kind'],
@@ -264,7 +265,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
                 False,
                 True,
             )
-        elif _json['kind'] == 'LIST':
+        elif _json['kind'] == GraphQLKind.LIST:
             typ = TypeRef(
                 name=actual_type['name'],
                 kind=actual_type['kind'],
@@ -343,7 +344,7 @@ class Type:
         if not self.fields:
             field_typeref = TypeRef(
                 name=GraphQLPrimitive.STRING,
-                kind='SCALAR',
+                kind=GraphQLKind.SCALAR,
             )
             dummy = Field('dummy', field_typeref)
             self.fields.append(dummy)
@@ -357,10 +358,10 @@ class Type:
             'possibleTypes': None,
         }
 
-        if self.kind in ['OBJECT', 'INTERFACE']:
+        if self.kind in [GraphQLKind.OBJECT, GraphQLKind.INTERFACE]:
             output['fields'] = [f.to_json() for f in self.fields]
             output['inputFields'] = None
-        elif self.kind == 'INPUT_OBJECT':
+        elif self.kind == GraphQLKind.INPUT_OBJECT:
             output['fields'] = None
             output['inputFields'] = [f.to_json() for f in self.fields]
 
@@ -375,11 +376,11 @@ class Type:
         kind = _json['kind']
         fields = []
 
-        if kind in ['OBJECT', 'INTERFACE', 'INPUT_OBJECT']:
+        if kind in [GraphQLKind.OBJECT, GraphQLKind.INTERFACE, GraphQLKind.INPUT_OBJECT]:
             fields_field = ''
-            if kind in ['OBJECT', 'INTERFACE']:
+            if kind in [GraphQLKind.OBJECT, GraphQLKind.INTERFACE]:
                 fields_field = 'fields'
-            elif kind == 'INPUT_OBJECT':
+            elif kind == GraphQLKind.INPUT_OBJECT:
                 fields_field = 'inputFields'
 
             for f in _json[fields_field]:

@@ -33,4 +33,6 @@ class GraphQLKind(str, Enum, metaclass=MetaEnum):
     INTERFACE = 'INTERFACE'
     UNION = 'UNION'
     ENUM = 'ENUM'
-    INPUTOBJECT = 'INPUT_OBJECT'
+    INPUT_OBJECT = 'INPUT_OBJECT'
+    LIST = 'LIST'
+    NON_NULL = 'NON_NULL'
