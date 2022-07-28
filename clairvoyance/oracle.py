@@ -65,7 +65,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
             valid_fields.add(match.group('field'))
 
     else:
-        log().debug(f'Unknown error message: \'{error_message}\'')
+        log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
 
     return valid_fields
 
@@ -225,7 +225,7 @@ def get_valid_args(error_message: str) -> Set[str]:
             valid_args.add(match.group('second'))
 
     if not valid_args:
-        log().debug(f'Unknown error message: \'{error_message}\'')
+        log().debug(f'Unknown error message for `valid_args`: \'{error_message}\'')
 
     return valid_args
 
@@ -291,7 +291,7 @@ def get_typeref(
             non_null=non_null,
         )
 
-    log().debug(f'Unknown error message: \'{error_message}\'')
+    log().debug(f'Unknown error message for `typeref`: \'{error_message}\'')
     return None
 
 
@@ -438,7 +438,9 @@ async def explore_field(
 
     args = []
     field = graphql.Field(field_name, typeref)
-    if field.type.name not in GraphQLPrimitive:
+    if field.type.name in GraphQLPrimitive:
+        log().debug(f'Skip probe_args() for "{field.name}" of type "{field.type.name}"')
+    else:
         arg_names = await probe_args(
             field.name,
             wordlist,
@@ -457,8 +459,6 @@ async def explore_field(
 
             field.args.append(arg)
             args.append(arg)
-    else:
-        log().debug(f'Skip probe_args() for "{field.name}" of type "{field.type.name}"')
 
     return field, args
 
