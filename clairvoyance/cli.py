@@ -8,7 +8,7 @@ from clairvoyance import graphql, oracle
 from clairvoyance.client import Client
 from clairvoyance.config import Config
 from clairvoyance.entities import GraphQLPrimitive
-from clairvoyance.entities.context import logger_ctx
+from clairvoyance.entities.context import logger_ctx, client
 from clairvoyance.utils import parse_args, setup_logger
 
 
@@ -44,7 +44,6 @@ async def blind_introspection(
     input_schema_path: Optional[str] = None,
     output_path: Optional[str] = None,
 ) -> str:
-
     wordlist = wordlist or load_default_wordlist()
     assert wordlist, 'No wordlist provided'
 
@@ -87,7 +86,7 @@ async def blind_introspection(
             break
 
     logger.info('Blind introspection complete.')
-
+    await client().close()
     return schema
 
 
