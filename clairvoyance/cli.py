@@ -8,7 +8,7 @@ from clairvoyance import graphql, oracle
 from clairvoyance.client import Client
 from clairvoyance.config import Config
 from clairvoyance.entities import GraphQLPrimitive
-from clairvoyance.entities.context import logger_ctx, client
+from clairvoyance.entities.context import client, logger_ctx
 from clairvoyance.utils import parse_args, setup_logger
 
 

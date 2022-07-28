@@ -489,13 +489,12 @@ async def clairvoyance(
 
     tasks: List[asyncio.Task] = []
     for field_name in valid_mutation_fields:
-        task: asyncio.Task = asyncio.create_task(explore_field(
+        tasks.append(asyncio.create_task(explore_field(
             field_name,
             input_document,
             wordlist,
             typename,
-        ))
-        tasks.append(task)
+        )))
 
     results = await asyncio.gather(*tasks)
     for (field, args) in results:

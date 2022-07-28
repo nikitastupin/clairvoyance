@@ -1,6 +1,7 @@
 """Define the primitives used in the Clairvoyance system."""
 
-from enum import unique, Enum
+from enum import Enum, unique
+
 from clairvoyance.entities.meta import MetaEnum
 
 

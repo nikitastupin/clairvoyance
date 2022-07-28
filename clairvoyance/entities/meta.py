@@ -1,5 +1,5 @@
 from enum import EnumMeta
-from typing import Type, Any
+from typing import Any, Type
 
 
 class MetaEnum(EnumMeta):
