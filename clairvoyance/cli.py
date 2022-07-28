@@ -90,7 +90,7 @@ def cli(argv: Optional[List[str]] = None) -> None:
         argv = sys.argv[1:]
 
     args = parse_args(argv)
-    setup_logger(args.v)
+    setup_logger(args.verbose)
 
     headers = {}
     for h in args.headers:

@@ -10,6 +10,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-v',
+        '--verbose',
         default=0,
         action='count',
     )
