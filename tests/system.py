@@ -56,9 +56,6 @@ class TestClairvoyance(unittest.TestCase):
 
         return None
 
-    def test_no_warnings(self) -> None:
-        self.assertLess(len(self.clairvoyance.stderr), 1)
-
     def test_found_root_type_names(self) -> None:
         self.assertEqual(self.schema['queryType'], {'name': 'Query'})
         self.assertEqual(self.schema['mutationType'], {'name': 'Mutation'})
@@ -156,11 +153,11 @@ class TestClairvoyance(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         if cls.clairvoyance.stdout:
-            with open('/tmp/clairvoyance-tests.stdout', 'wb', encoding='utf-8') as f:
+            with open('/tmp/clairvoyance-tests.stdout', 'wb') as f:
                 f.write(cls.clairvoyance.stdout)
 
         if cls.clairvoyance.stderr:
-            with open('/tmp/clairvoyance-tests.stderr', 'wb', encoding='utf-8') as f:
+            with open('/tmp/clairvoyance-tests.stderr', 'wb') as f:
                 f.write(cls.clairvoyance.stderr)
 
 
