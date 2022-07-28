@@ -25,10 +25,15 @@ def get_valid_fields(error_message: str) -> Set[str]:
         'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
         'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
     ]
-    no_field_regex = 'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.'
 
-    if re.fullmatch(no_field_regex, error_message):
-        return valid_fields
+    no_field_regexs = [
+        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.',
+        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required, but it was not provided.',
+    ]
+
+    for regex in no_field_regexs:
+        if re.fullmatch(regex, error_message):
+            return valid_fields
 
     if re.fullmatch(multiple_suggestion_regex, error_message):
         match = re.fullmatch(multiple_suggestion_regex, error_message)
@@ -202,7 +207,8 @@ def get_valid_args(error_message: str) -> Set[str]:
         'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]\.',
     ]
     single_suggestion_regex = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'\"]\?'
     ]
     double_suggestion_regexes = [
         'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<first>[_0-9a-zA-Z\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
