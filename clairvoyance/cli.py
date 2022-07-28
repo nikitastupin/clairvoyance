@@ -29,6 +29,11 @@ def setup_context(
     logger_ctx.set(logger)
 
 
+def load_default_wordlist() -> List[str]:
+    with open('clairvoyance/wordlist.txt', 'r', encoding='utf-8') as f:
+        return [w.strip() for w in f.readlines() if w.strip()]
+
+
 async def blind_introspection(
     url: str,
     logger: logging.Logger,
@@ -40,7 +45,8 @@ async def blind_introspection(
     output_path: Optional[str] = None,
 ) -> str:
 
-    assert wordlist, 'You must provide a wordlist'
+    wordlist = wordlist or load_default_wordlist()
+    assert wordlist, 'No wordlist provided'
 
     setup_context(
         url,
