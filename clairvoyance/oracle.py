@@ -91,17 +91,15 @@ async def probe_valid_fields(
     """
 
     async def __probation(i: int) -> Set[str]:
-        valid_fields = set()
-
         bucket = wordlist[i:i + config().bucket_size]
+        valid_fields = set(bucket)
         document = input_document.replace('FUZZ', ' '.join(bucket))
 
         start_time = time.time()
-
         response = await client().post(document)
-        errors = response['errors']
-
         total_time = time.time() - start_time
+
+        errors = response['errors']
 
         log().debug(f'Sent {len(bucket)} fields, received {len(errors)} errors in {round(total_time, 2)} seconds')
 
@@ -114,12 +112,12 @@ async def probe_valid_fields(
 
             # ! LEGACY CODE please keep
             # First remove field if it produced an 'Cannot query field' error
-            # match = re.search(
-            #     'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
-            #     error_message,
-            # )
-            # if match:
-            #     valid_fields.discard(match.group('invalid_field'))
+            match = re.search(
+                'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
+                error_message,
+            )
+            if match:
+                valid_fields.discard(match.group('invalid_field'))
 
             # Second obtain field suggestions from error message
             valid_fields |= get_valid_fields(error_message)
@@ -135,7 +133,7 @@ async def probe_valid_fields(
     valid_fields = set()
     results = await asyncio.gather(*tasks)
     for result in results:
-        valid_fields |= result
+        valid_fields.update(result)
 
     return valid_fields
 
@@ -487,14 +485,14 @@ async def clairvoyance(
     typename = await probe_typename(input_document)
     log().debug(f'__typename = {typename}')
 
-    valid_mutation_fields = await probe_valid_fields(
+    valid_fields = await probe_valid_fields(
         wordlist,
         input_document,
     )
-    log().debug(f'{typename}.fields = {valid_mutation_fields}')
+    log().debug(f'{typename}.fields = {valid_fields}')
 
     tasks: List[asyncio.Task] = []
-    for field_name in valid_mutation_fields:
+    for field_name in valid_fields:
         tasks.append(asyncio.create_task(explore_field(
             field_name,
             input_document,
