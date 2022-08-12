@@ -15,9 +15,6 @@ on:
       - '.gitignore'
     branches:
       - main
-    types: 
-      - opened
-      - reopened
 
 env:
   MODULE_NAME: clairvoyance
