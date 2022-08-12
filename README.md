@@ -7,9 +7,9 @@ Clairvoyance allows us to get GraphQL API schema when introspection is disabled.
 ## Installation
 
 ```bash
-$ git clone https://github.com/nikitastupin/clairvoyance.git
-$ cd clairvoyance
-$ pip3 install -r requirements.txt
+git clone https://github.com/nikitastupin/clairvoyance.git
+cd clairvoyance
+pip3 install -r requirements.txt
 ```
 
 ## Usage
@@ -17,22 +17,22 @@ $ pip3 install -r requirements.txt
 ### From Python interpreter
 
 ```bash
-$ python3 -m clairvoyance --help
+python3 -m clairvoyance --help
 ```
 
 ```bash
-$ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
+python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
 ### From Docker Image
 
 ```bash
-$ docker run --rm nikitastupin/clairvoyance --help
+docker run --rm nikitastupin/clairvoyance --help
 ```
 
 ```bash
 # Assuming the wordlist.txt file is found in $PWD
-$ docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
+docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
 You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
