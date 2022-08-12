@@ -46,7 +46,7 @@ There are at least two approaches:
 
 ### Environment Variables
 
-```markdown
+```bash
 LOG_FMT=`%(asctime)s \t%(levelname)s\t| %(message)s` # A string format for logging.
 LOG_DATEFMT=`%Y-%m-%d %H:%M:%S` # A string format for logging date.
 LOG_LEVEL=`INFO` # A string level for logging.
