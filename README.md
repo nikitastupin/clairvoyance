@@ -8,24 +8,25 @@ Clairvoyance allows us to get GraphQL API schema when introspection is disabled.
 
 Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://github.com/Escape-Technologies) for 2.0 version.
 
-## Installation
+## Usage
+
+### From Python interpreter
 
 ```bash
 git clone https://github.com/nikitastupin/clairvoyance.git
 cd clairvoyance
-pip3 install -r requirements.txt
+pip install poetry
+poetry config virtualenvs.in-project true
+poetry install --no-dev
+source .venv/bin/activate
 ```
-
-## Usage
-
-### From Python interpreter
 
 ```bash
 python3 -m clairvoyance --help
 ```
 
 ```bash
-python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
+python3 -m clairvoyance -o /path/to/schema.json https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
 ### From Docker Image
