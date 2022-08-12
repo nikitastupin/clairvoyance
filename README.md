@@ -6,26 +6,31 @@ Clairvoyance allows us to get GraphQL API schema when introspection is disabled.
 
 ## Installation
 
-```
+```bash
 $ git clone https://github.com/nikitastupin/clairvoyance.git
 $ cd clairvoyance
 $ pip3 install -r requirements.txt
 ```
 
 ## Usage
+
 ### From Python interpreter
-```
+
+```bash
 $ python3 -m clairvoyance --help
 ```
 
-```
+```bash
 $ python3 -m clairvoyance -vv -o /path/to/schema.json -w /path/to/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
+
 ### From Docker Image
-```
+
+```bash
 $ docker run --rm nikitastupin/clairvoyance --help
 ```
-```
+
+```bash
 # Assuming the wordlist.txt file is found in $PWD
 $ docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
@@ -38,6 +43,14 @@ There are at least two approaches:
 
 - Use general English words (e.g. [google-10000-english](https://github.com/first20hours/google-10000-english)).
 - Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is [`[_A-Za-z][_0-9A-Za-z]*`](http://spec.graphql.org/June2018/#sec-Names).
+
+### Environment Variables
+
+```markdown
+LOG_FMT=`%(asctime)s \t%(levelname)s\t| %(message)s` # A string format for logging.
+LOG_DATEFMT=`%Y-%m-%d %H:%M:%S` # A string format for logging date.
+LOG_LEVEL=`INFO` # A string level for logging.
+```
 
 ## Support
 

@@ -1,143 +1,170 @@
-import requests
+# pylint: disable=anomalous-backslash-in-string, line-too-long
 
+import asyncio
 import re
-import logging
-from typing import Any
-from typing import Set
-from typing import List
-from typing import Dict
-from typing import Optional
+import time
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
+from clairvoyance.entities import GraphQLPrimitive
+from clairvoyance.entities.context import client, config, log
 
 
-def get_valid_fields(error_message: str) -> Set:
-    valid_fields = set()
+# pylint: disable=too-many-branches
+def get_valid_fields(error_message: str) -> Set[str]:
+    """Fetching valid fields using regex heuristics."""
 
-    multiple_suggestions_re = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
-    or_suggestion_re = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    single_suggestion_re = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    invalid_field_re = (
-        'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].'
-    )
+    valid_fields: Set[str] = set()
+
+    multiple_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
+    or_suggestion_regex = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
+    single_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
+    invalid_field_regex = ('Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].')
     # TODO: this regex here more than one time, make it shared?
-    valid_field_regexes = [
+    valid_field_regex = [
         'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
+        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
     ]
 
-    no_fields_regex = 'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.'
+    no_field_regexs = [
+        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.',
+        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required, but it was not provided.',
+    ]
 
-    if re.fullmatch(no_fields_regex, error_message):
-        return valid_fields
+    for regex in no_field_regexs:
+        if re.fullmatch(regex, error_message):
+            return valid_fields
 
-    if re.fullmatch(multiple_suggestions_re, error_message):
-        match = re.fullmatch(multiple_suggestions_re, error_message)
+    if re.fullmatch(multiple_suggestion_regex, error_message):
+        match = re.fullmatch(multiple_suggestion_regex, error_message)
+        if match:
+            for m in match.group('multi').split(', '):
+                if m:
+                    valid_fields.add(m.strip('"').strip('\''))
 
-        for m in match.group("multi").split(", "):
-            if m:
-                valid_fields.add(m.strip('"').strip("'"))
+            if match.group('last'):
+                valid_fields.add(match.group('last'))
 
-        if match.group("last"):
-            valid_fields.add(match.group("last"))
-    elif re.fullmatch(or_suggestion_re, error_message):
-        match = re.fullmatch(or_suggestion_re, error_message)
+    elif re.fullmatch(or_suggestion_regex, error_message):
+        match = re.fullmatch(or_suggestion_regex, error_message)
+        if match:
+            valid_fields.add(match.group('one'))
+            valid_fields.add(match.group('two'))
 
-        valid_fields.add(match.group("one"))
-        valid_fields.add(match.group("two"))
-    elif re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
+    elif re.fullmatch(single_suggestion_regex, error_message):
+        match = re.fullmatch(single_suggestion_regex, error_message)
+        if match:
+            valid_fields.add(match.group('field'))
 
-        valid_fields.add(match.group("field"))
-    elif re.fullmatch(invalid_field_re, error_message):
+    elif re.fullmatch(invalid_field_regex, error_message):
         pass
-    elif re.fullmatch(valid_field_regexes[0], error_message):
-        match = re.fullmatch(valid_field_regexes[0], error_message)
-        valid_fields.add(match.group("field"))
+
+    elif re.fullmatch(valid_field_regex[0], error_message):
+        match = re.fullmatch(valid_field_regex[0], error_message)
+        if match:
+            valid_fields.add(match.group('field'))
+
+    elif re.fullmatch(valid_field_regex[1], error_message):
+        match = re.fullmatch(valid_field_regex[1], error_message)
+        if match:
+            valid_fields.add(match.group('field'))
+
     else:
-        logging.warning(f"Unknown error message: '{error_message}'")
+        log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
 
     return valid_fields
 
 
-def probe_valid_fields(
-    wordlist: Set, config: graphql.Config, input_document: str
+async def probe_valid_fields(
+    wordlist: List[str],
+    input_document: str,
 ) -> Set[str]:
-    # We're assuming all fields from wordlist are valid,
-    # then remove fields that produce an error message
-    valid_fields = set(wordlist)
+    """Sending a wordlist to check for valid fields.
 
-    for i in range(0, len(wordlist), config.bucket_size):
-        bucket = wordlist[i : i + config.bucket_size]
+    Args:
+        wordlist: The words that would leads to discovery.
+        config: The config for the graphql client.
+        input_document: The base document.
 
-        document = input_document.replace("FUZZ", " ".join(bucket))
+    Returns:
+        A set of discovered valid fields.
+    """
 
-        response = graphql.post(
-            config.url,
-            headers=config.headers,
-            json={"query": document},
-            verify=config.verify,
-        )
-        errors = response.json()["errors"]
-        logging.debug(
-            f"Sent {len(bucket)} fields, recieved {len(errors)} errors in {response.elapsed.total_seconds()} seconds"
-        )
+    async def __probation(i: int) -> Set[str]:
+        bucket = wordlist[i:i + config().bucket_size]
+        valid_fields = set(bucket)
+        document = input_document.replace('FUZZ', ' '.join(bucket))
+
+        start_time = time.time()
+        response = await client().post(document)
+        total_time = time.time() - start_time
+
+        errors = response['errors']
+
+        log().debug(f'Sent {len(bucket)} fields, received {len(errors)} errors in {round(total_time, 2)} seconds')
 
         for error in errors:
-            error_message = error["message"]
+            error_message = error['message']
 
-            if (
-                "must not have a selection since type" in error_message
-                and "has no subfields" in error_message
-            ):
+            if ('must not have a selection since type' in error_message and \
+                'has no subfields' in error_message):
                 return set()
 
-            # First remove field if it produced an "Cannot query field" error
+            # ! LEGACY CODE please keep
+            # First remove field if it produced an 'Cannot query field' error
             match = re.search(
                 'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
                 error_message,
             )
             if match:
-                valid_fields.discard(match.group("invalid_field"))
+                valid_fields.discard(match.group('invalid_field'))
 
             # Second obtain field suggestions from error message
             valid_fields |= get_valid_fields(error_message)
 
+        return valid_fields
+
+    # Create task list
+    tasks: List[asyncio.Task] = []
+    for i in range(0, len(wordlist), config().bucket_size):
+        tasks.append(asyncio.create_task(__probation(i)))
+
+    # Process results
+    valid_fields = set()
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        valid_fields.update(result)
+
     return valid_fields
 
 
-def probe_valid_args(
-    field: str, wordlist: Set, config: graphql.Config, input_document: str
+async def probe_valid_args(
+    field: str,
+    wordlist: List[str],
+    input_document: str,
 ) -> Set[str]:
+    """Sends the wordlist as arguments and deduces its type from the error msgs received."""
+
     valid_args = set(wordlist)
 
-    document = input_document.replace(
-        "FUZZ", f"{field}({', '.join([w + ': 7' for w in wordlist])})"
-    )
+    document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
 
-    response = graphql.post(
-        config.url,
-        headers=config.headers,
-        json={"query": document},
-        verify=config.verify,
-    )
-    errors = response.json()["errors"]
+    response = await client().post(document=document)
+    errors = response['errors']
 
     for error in errors:
-        error_message = error["message"]
+        error_message = error['message']
 
-        if (
-            "must not have a selection since type" in error_message
-            and "has no subfields" in error_message
-        ):
+        if ('must not have a selection since type' in error_message and 'has no subfields' in error_message):
             return set()
 
-        # First remove arg if it produced an "Unknown argument" error
+        # First remove arg if it produced an 'Unknown argument' error
         match = re.search(
             'Unknown argument [\'"](?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]',
             error_message,
         )
         if match:
-            valid_args.discard(match.group("invalid_arg"))
+            valid_args.discard(match.group('invalid_arg'))
 
         # Second obtain args suggestions from error message
         valid_args |= get_valid_args(error_message)
@@ -145,19 +172,30 @@ def probe_valid_args(
     return valid_args
 
 
-def probe_args(
-    field: str, wordlist: Set, config: graphql.Config, input_document: str
+async def probe_args(
+    field: str,
+    wordlist: List[str],
+    input_document: str,
 ) -> Set[str]:
-    valid_args = set()
+    """Wrapper function for deducing the arg types."""
 
-    for i in range(0, len(wordlist), config.bucket_size):
-        bucket = wordlist[i : i + config.bucket_size]
-        valid_args |= probe_valid_args(field, bucket, config, input_document)
+    tasks: List[asyncio.Task] = []
+    for i in range(0, len(wordlist), config().bucket_size):
+        bucket = wordlist[i:i + config().bucket_size]
+        tasks.append(asyncio.create_task(probe_valid_args(field, bucket, input_document)))
+
+    valid_args: Set[str] = set()
+
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        valid_args |= result
 
     return valid_args
 
 
 def get_valid_args(error_message: str) -> Set[str]:
+    """Get the type of an arg using regex."""
+
     valid_args = set()
 
     skip_regexes = [
@@ -166,11 +204,10 @@ def get_valid_args(error_message: str) -> Set[str]:
         'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required, but it was not provided.',
         'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]\.',
     ]
-
-    single_suggestion_regexes = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
+    single_suggestion_regex = [
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'\"]\?'
     ]
-
     double_suggestion_regexes = [
         'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<first>[_0-9a-zA-Z\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
     ]
@@ -179,95 +216,52 @@ def get_valid_args(error_message: str) -> Set[str]:
         if re.fullmatch(regex, error_message):
             return set()
 
-    for regex in single_suggestion_regexes:
+    for regex in single_suggestion_regex:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
-            valid_args.add(match.group("arg"))
+            if match:
+                valid_args.add(match.group('arg'))
 
     for regex in double_suggestion_regexes:
         match = re.fullmatch(regex, error_message)
         if match:
-            valid_args.add(match.group("first"))
-            valid_args.add(match.group("second"))
+            valid_args.add(match.group('first'))
+            valid_args.add(match.group('second'))
 
     if not valid_args:
-        logging.warning(f"Unknown error message: {error_message}")
+        log().debug(f'Unknown error message for `valid_args`: \'{error_message}\'')
 
     return valid_args
 
 
-def get_valid_input_fields(error_message: str) -> Set:
-    valid_fields = set()
-
-    single_suggestion_re = "Field [_0-9a-zA-Z\[\]!]*.(?P<field>[_0-9a-zA-Z\[\]!]*) of required type [_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]* was not provided."
-
-    if re.fullmatch(single_suggestion_re, error_message):
-        match = re.fullmatch(single_suggestion_re, error_message)
-        if match.group("field"):
-            valid_fields.add(match.group("field"))
-        else:
-            logging.warning(f"Unknown error message: '{error_message}'")
-
-    return valid_fields
-
-
-def probe_input_fields(
-    field: str, argument: str, wordlist: Set, config: graphql.Config
-) -> Set[str]:
-    valid_input_fields = set(wordlist)
-
-    document = f"mutation {{ {field}({argument}: {{ {', '.join([w + ': 7' for w in wordlist])} }}) }}"
-
-    response = graphql.post(
-        config.url,
-        headers=config.headers,
-        json={"query": document},
-        verify=config.verify,
-    )
-    errors = response.json()["errors"]
-
-    for error in errors:
-        error_message = error["message"]
-
-        # First remove field if it produced an error
-        match = re.search(
-            'Field [\'"](?P<invalid_field>[_0-9a-zA-Z\[\]!]*)[\'"] is not defined by type [_0-9a-zA-Z\[\]!]*.',
-            error_message,
-        )
-        if match:
-            valid_input_fields.discard(match.group("invalid_field"))
-
-        # Second obtain field suggestions from error message
-        valid_input_fields |= get_valid_input_fields(error_message)
-
-    return valid_input_fields
-
-
-def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
-    typeref = None
+def get_typeref(
+    error_message: str,
+    context: str,
+) -> Optional[graphql.TypeRef]:
+    """Using predefined regex deduce the type of a field."""
 
     field_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ ... \}[\'"]\?',
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
         'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"].',
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection\.',
+        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
     ]
     arg_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required.+\.',
-        "Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.",
+        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required.+',
+        'Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.',
     ]
     arg_skip_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] must have a selection of subfields\. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ \.\.\. \}[\'"]\?'
     ]
 
     match = None
-
-    if context == "Field":
+    if context == 'Field':
         for regex in field_regexes:
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
-    elif context == "InputValue":
+    elif context == 'InputValue':
         for regex in arg_skip_regexes:
             if re.fullmatch(regex, error_message):
                 return None
@@ -278,199 +272,239 @@ def get_typeref(error_message: str, context: str) -> Optional[graphql.TypeRef]:
                 break
 
     if match:
-        tk = match.group("typeref")
+        tk = match.group('typeref')
 
-        name = tk.replace("!", "").replace("[", "").replace("]", "")
-        kind = ""
-        if name.endswith("Input"):
-            kind = "INPUT_OBJECT"
-        elif name in ["Int", "Float", "String", "Boolean", "ID"]:
-            kind = "SCALAR"
+        name = tk.replace('!', '').replace('[', '').replace(']', '')
+        kind = ''
+        if name.endswith('Input'):
+            kind = 'INPUT_OBJECT'
+        elif name in GraphQLPrimitive:
+            kind = 'SCALAR'
         else:
-            kind = "OBJECT"
-        is_list = True if "[" and "]" in tk else False
-        non_null_item = True if is_list and "!]" in tk else False
-        non_null = True if tk.endswith("!") else False
+            kind = 'OBJECT'
 
-        typeref = graphql.TypeRef(
+        is_list = bool('[' in tk and ']' in tk)
+        non_null_item = bool(is_list and '!]' in tk)
+        non_null = tk.endswith('!')
+
+        return graphql.TypeRef(
             name=name,
             kind=kind,
             is_list=is_list,
             non_null_item=non_null_item,
             non_null=non_null,
         )
-    else:
-        logging.warning(f"Unknown error message: '{error_message}'")
 
-    return typeref
-
-
-def probe_typeref(
-    documents: List[str], context: str, config: graphql.Config
-) -> Optional[graphql.TypeRef]:
-    typeref = None
-
-    for document in documents:
-        response = graphql.post(
-            config.url,
-            headers=config.headers,
-            json={"query": document},
-            verify=config.verify,
-        )
-        errors = response.json().get("errors", [])
-
-        for error in errors:
-            typeref = get_typeref(error["message"], context)
-            logging.debug(f"get_typeref('{error['message']}', '{context}') -> {typeref}")
-            if typeref:
-                return typeref
-
-    if not typeref and context != 'InputValue':
-        raise Exception(f"Unable to get TypeRef for {documents} in context {context}")
-
+    log().debug(f'Unknown error message for `typeref`: \'{error_message}\'')
     return None
 
 
-def probe_field_type(
-    field: str, config: graphql.Config, input_document: str
-) -> graphql.TypeRef:
-    documents = [
-        input_document.replace("FUZZ", f"{field}"),
-        input_document.replace("FUZZ", f"{field} {{ lol }}"),
-    ]
+async def probe_typeref(
+    documents: List[str],
+    context: str,
+) -> Optional[graphql.TypeRef]:
+    """Sending a document to attain errors in order to deduce the type of fields."""
 
-    typeref = probe_typeref(documents, "Field", config)
+    async def __probation(document: str) -> Optional[graphql.TypeRef]:
+        """Send a document to attempt discovering a typeref."""
+
+        response = await client().post(document)
+        for error in response.get('errors', []):
+            if isinstance(error, str):
+                continue
+
+            if not isinstance(error['message'], dict):
+                typeref = get_typeref(
+                    error['message'],
+                    context,
+                )
+
+            log().debug(f'get_typeref("{error["message"]}", "{context}") -> {typeref}')
+            if typeref:
+                return typeref
+
+        return None
+
+    tasks: List[asyncio.Task] = []
+    for document in documents:
+        tasks.append(asyncio.create_task(__probation(document)))
+
+    typeref: Optional[graphql.TypeRef] = None
+    results = await asyncio.gather(*tasks)
+    for result in results:
+        if result:
+            typeref = result
+
+    if not typeref and context != 'InputValue':
+        try:
+            raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
+        except Exception as e:
+            raise Exception(e) from e
+
     return typeref
 
 
-def probe_arg_typeref(
-    field: str, arg: str, config: graphql.Config, input_document: str
-) -> graphql.TypeRef:
+async def probe_field_type(
+    field: str,
+    input_document: str,
+) -> Optional[graphql.TypeRef]:
+    """Wrapper function for sending the queries to deduce the field type."""
+
     documents = [
-        input_document.replace("FUZZ", f"{field}({arg}: 7)"),
-        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
-        input_document.replace("FUZZ", f"{field}({arg[:-1]}: 7)"),
-        input_document.replace("FUZZ", f"{field}({arg}: \"7\")"),
-        input_document.replace("FUZZ", f"{field}({arg}: false)"),
+        input_document.replace('FUZZ', f'{field}'),
+        input_document.replace('FUZZ', f'{field} {{ lol }}'),
     ]
 
-    typeref = probe_typeref(documents, "InputValue", config)
-    return typeref
+    return await probe_typeref(documents, 'Field')
 
 
-def probe_typename(input_document: str, config: graphql.Config) -> str:
-    typename = ""
-    wrong_field = "imwrongfield"
-    document = input_document.replace("FUZZ", wrong_field)
+async def probe_arg_typeref(
+    field: str,
+    arg: str,
+    input_document: str,
+) -> Optional[graphql.TypeRef]:
+    """Wrapper function to deduce the type of an arg."""
 
-    response = graphql.post(
-        config.url,
-        headers=config.headers,
-        json={"query": document},
-        verify=config.verify,
-    )
-    errors = response.json()["errors"]
+    documents = [
+        input_document.replace('FUZZ', f'{field}({arg}: 42)'),
+        input_document.replace('FUZZ', f'{field}({arg}: {{}})'),
+        input_document.replace('FUZZ', f'{field}({arg[:-1]}: 42)'),
+        input_document.replace('FUZZ', f'{field}({arg}: \"42\")'),
+        input_document.replace('FUZZ', f'{field}({arg}: false)'),
+    ]
+
+    return await probe_typeref(documents, 'InputValue')
+
+
+async def probe_typename(input_document: str) -> str:
+    wrong_field = 'imwrongfield'
+    document = input_document.replace('FUZZ', wrong_field)
+
+    response = await client().post(document=document)
+    errors = response['errors']
 
     wrong_field_regexes = [
         f'Cannot query field [\'"]{wrong_field}[\'"] on type [\'"](?P<typename>[_0-9a-zA-Z\[\]!]*)[\'"].',
-        f'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
+        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
+        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection.'
     ]
 
     match = None
-
     for regex in wrong_field_regexes:
         for error in errors:
-            match = re.fullmatch(regex, error["message"])
+            match = re.fullmatch(regex, error['message'])
             if match:
                 break
         if match:
             break
 
     if not match:
-        raise Exception(f"Expected '{errors}' to match any of '{wrong_field_regexes}'.")
+        raise Exception(f'Expected "{errors}" to match any of "{wrong_field_regexes}".')
 
-    typename = (
-        match.group("typename").replace("[", "").replace("]", "").replace("!", "")
-    )
-
-    return typename
+    return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
 
 
-def fetch_root_typenames(config: graphql.Config) -> Dict[str, Optional[str]]:
-    documents = {
-        "queryType": "query { __typename }",
-        "mutationType": "mutation { __typename }",
-        "subscriptionType": "subscription { __typename }",
+async def fetch_root_typenames() -> Dict[str, Optional[str]]:
+    documents: Dict[str, str] = {
+        'queryType': 'query { __typename }',
+        'mutationType': 'mutation { __typename }',
+        'subscriptionType': 'subscription { __typename }',
     }
-    typenames = {
-        "queryType": None,
-        "mutationType": None,
-        "subscriptionType": None,
+    typenames: Dict[str, Optional[str]] = {
+        'queryType': None,
+        'mutationType': None,
+        'subscriptionType': None,
     }
 
     for name, document in documents.items():
-        response = graphql.post(
-            config.url,
-            headers=config.headers,
-            json={"query": document},
-            verify=config.verify,
-        )
-        data = response.json().get("data", {})
+        response = await client().post(document=document)
 
+        data = response.get('data', {})
         if data:
-            typenames[name] = data["__typename"]
+            typenames[name] = data['__typename']
 
-    logging.debug(f"Root typenames are: {typenames}")
-
+    log().debug(f'Root typenames are: {typenames}')
     return typenames
 
 
-def clairvoyance(
+async def explore_field(
+    field_name: str,
+    input_document: str,
     wordlist: List[str],
-    config: graphql.Config,
+    typename: str,
+) -> Tuple[graphql.Field, List[graphql.InputValue]]:
+    """Perform exploration on a field."""
+
+    typeref = await probe_field_type(
+        field_name,
+        input_document,
+    )
+
+    args = []
+    field = graphql.Field(field_name, typeref)
+    if field.type.name in GraphQLPrimitive:
+        log().debug(f'Skip probe_args() for "{field.name}" of type "{field.type.name}"')
+    else:
+        arg_names = await probe_args(
+            field.name,
+            wordlist,
+            input_document,
+        )
+
+        log().debug(f'{typename}.{field_name}.args = {arg_names}')
+        for arg_name in arg_names:
+            arg_typeref = await probe_arg_typeref(field.name, arg_name, input_document)
+
+            if not arg_typeref:
+                log().debug(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
+                continue
+
+            arg = graphql.InputValue(arg_name, arg_typeref)
+
+            field.args.append(arg)
+            args.append(arg)
+
+    return field, args
+
+
+async def clairvoyance(
+    wordlist: List[str],
+    input_document: str,
     input_schema: Dict[str, Any] = None,
-    input_document: str = None,
-) -> Dict[str, Any]:
+) -> str:
     if not input_schema:
-        root_typenames = fetch_root_typenames(config)
+        root_typenames = await fetch_root_typenames()
         schema = graphql.Schema(
-            queryType=root_typenames["queryType"],
-            mutationType=root_typenames["mutationType"],
-            subscriptionType=root_typenames["subscriptionType"],
+            query_type=root_typenames['queryType'],
+            mutation_type=root_typenames['mutationType'],
+            subscription_type=root_typenames['subscriptionType'],
         )
     else:
         schema = graphql.Schema(schema=input_schema)
 
-    typename = probe_typename(input_document, config)
-    logging.debug(f"__typename = {typename}")
+    typename = await probe_typename(input_document)
+    log().debug(f'__typename = {typename}')
 
-    valid_mutation_fields = probe_valid_fields(wordlist, config, input_document)
-    logging.debug(f"{typename}.fields = {valid_mutation_fields}")
+    valid_fields = await probe_valid_fields(
+        wordlist,
+        input_document,
+    )
+    log().debug(f'{typename}.fields = {valid_fields}')
 
-    for field_name in valid_mutation_fields:
-        typeref = probe_field_type(field_name, config, input_document)
-        field = graphql.Field(field_name, typeref)
+    tasks: List[asyncio.Task] = []
+    for field_name in valid_fields:
+        tasks.append(asyncio.create_task(explore_field(
+            field_name,
+            input_document,
+            wordlist,
+            typename,
+        )))
 
-        if field.type.name not in ["Int", "Float", "String", "Boolean", "ID"]:
-            arg_names = probe_args(field.name, wordlist, config, input_document)
-            logging.debug(f"{typename}.{field_name}.args = {arg_names}")
-            for arg_name in arg_names:
-                arg_typeref = probe_arg_typeref(
-                    field.name, arg_name, config, input_document
-                )
-                if not arg_typeref:
-                    logging.warning(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
-                    continue
-                arg = graphql.InputValue(arg_name, arg_typeref)
-
-                field.args.append(arg)
-                schema.add_type(arg.type.name, "INPUT_OBJECT")
-        else:
-            logging.debug(
-                f"Skip probe_args() for '{field.name}' of type '{field.type.name}'"
-            )
-
+    results = await asyncio.gather(*tasks)
+    for (field, args) in results:
+        for arg in args:
+            schema.add_type(arg.type.name, 'INPUT_OBJECT')
         schema.types[typename].fields.append(field)
-        schema.add_type(field.type.name, "OBJECT")
+        schema.add_type(field.type.name, 'OBJECT')
 
-    return schema.to_json()
+    return repr(schema)
