@@ -10,6 +10,12 @@ Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://g
 
 ## Usage
 
+### From PyPI
+
+```bash
+pip install clairvoyance
+```
+
 ### From Python interpreter
 
 ```bash
