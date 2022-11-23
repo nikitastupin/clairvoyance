@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import sys
+import os
 from typing import Dict, List, Optional
 
 from clairvoyance import graphql, oracle
@@ -30,7 +31,8 @@ def setup_context(
 
 
 def load_default_wordlist() -> List[str]:
-    with open('clairvoyance/wordlist.txt', 'r', encoding='utf-8') as f:
+    wl = os.path.join(os.path.dirname(__file__), 'wordlist.txt')
+    with open(wl, 'r', encoding='utf-8') as f:
         return [w.strip() for w in f.readlines() if w.strip()]
 
 
