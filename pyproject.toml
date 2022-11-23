@@ -14,7 +14,6 @@ packages = [
     { include = "clairvoyance" }
 ]
 include = [
-    "LICENSE",
     "clairvoyance/wordlist.txt"
 ]
 readme = "README.md"
