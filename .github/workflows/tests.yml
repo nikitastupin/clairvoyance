@@ -28,8 +28,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: actions/setup-python@v2
     - name: Install dependencies
       run: |
         pip install poetry
@@ -37,16 +36,6 @@ jobs:
       run: |
         poetry config virtualenvs.in-project true
         poetry install
-    - name: Run lint
-      if: always()
-      run: |
-        source .venv/bin/activate
-        isort -m 9 --line-length 160 $MODULE_NAME tests --check-only
-        pylint --load-plugins pylint_quotes $MODULE_NAME tests
-        docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
-        yapf -rd $MODULE_NAME tests
-        mypy -V
-        mypy $MODULE_NAME tests
     - name: Run tests
       run: |
         source .venv/bin/activate
@@ -58,8 +47,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: actions/setup-python@v2
     - name: Install dependencies
       run: |
         pip install poetry
@@ -93,3 +81,29 @@ jobs:
       run: |
         source .venv/bin/activate
         python -m unittest tests/system.py
+
+  lint:
+
+    runs-on: ubuntu-latest
+
+    if: false
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v2
+    - name: Install dependencies
+      run: |
+        pip install poetry
+    - name: Setup poetry
+      run: |
+        poetry config virtualenvs.in-project true
+        poetry install
+    - name: Run lint
+      if: always()
+      run: |
+        source .venv/bin/activate
+        isort -m 9 --line-length 160 $MODULE_NAME tests --check-only
+        pylint --load-plugins pylint_quotes $MODULE_NAME tests
+        docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
+        yapf -rd $MODULE_NAME tests
+        mypy -V
+        mypy $MODULE_NAME tests
