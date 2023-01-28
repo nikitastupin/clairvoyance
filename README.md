@@ -48,6 +48,12 @@ docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.jso
 
 You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
 
+### From BlackArch Linux
+
+```bash
+pacman -S clairvoyance
+```
+
 ### Which wordlist should I use?
 
 There are at least two approaches:
