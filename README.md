@@ -10,7 +10,7 @@ Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://g
 
 ## Usage
 
-You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
+You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.
 
 ### From PyPI
 
