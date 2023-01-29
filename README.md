@@ -10,6 +10,8 @@ Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://g
 
 ## Usage
 
+You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
+
 ### From PyPI
 
 ```bash
@@ -46,9 +48,9 @@ docker run --rm nikitastupin/clairvoyance --help
 docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
 ```
 
-You can refer to 2nd half of [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk for detailed description.
-
 ### From BlackArch Linux
+
+> NOTE: this distribution is supported by a third-party (i.e. not by the mainainters of clairvoyance)
 
 ```bash
 pacman -S clairvoyance
