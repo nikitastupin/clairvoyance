@@ -73,6 +73,8 @@ LOG_LEVEL=`INFO` # A string level for logging.
 
 ## Support
 
+> Due to time constraints @nikitastupin won't be able to answer all the issues for some time but he'll do his best to review & merge PRs
+
 In case of question or issue with clairvoyance please refer to [wiki](https://github.com/nikitastupin/clairvoyance/wiki) or [issues](https://github.com/nikitastupin/clairvoyance/issues). If this doesn't solve your problem feel free to open a [new issue](https://github.com/nikitastupin/clairvoyance/issues/new).
 
 ## Contributing
