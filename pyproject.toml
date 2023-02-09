@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "clairvoyance"
-version = "2.0.6"
+name = "ClairvoyanceNext"
+version = "2.1"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
@@ -8,6 +8,8 @@ authors = [
 ]
 maintainers = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
+    "Antoine Carossio <antoine@escape.tech>",
+    "Swan <swan@escape.tech",
 ]
 license = "MIT"
 packages = [
