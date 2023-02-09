@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Dict, Optional
 
 import aiohttp
@@ -57,6 +58,7 @@ class Client(IClient):
             except (
                 aiohttp.client_exceptions.ClientConnectionError,
                 aiohttp.client_exceptions.ClientPayloadError,
+                json.decoder.JSONDecodeError,
             ) as e:
                 log().warning(f'Error posting to {self._url}: {e}')
 

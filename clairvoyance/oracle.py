@@ -381,6 +381,9 @@ async def probe_typename(input_document: str) -> str:
     document = input_document.replace('FUZZ', wrong_field)
 
     response = await client().post(document=document)
+    if 'errors' not in response: 
+        raise Exception(f'Unable to get typename from {document}')
+
     errors = response['errors']
 
     wrong_field_regexes = [

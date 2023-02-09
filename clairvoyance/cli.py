@@ -1,8 +1,8 @@
 import asyncio
 import json
 import logging
-import sys
 import os
+import sys
 from typing import Dict, List, Optional
 
 from clairvoyance import graphql, oracle
