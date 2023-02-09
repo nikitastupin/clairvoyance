@@ -166,6 +166,12 @@ async def probe_valid_args(
         if match:
             valid_args.discard(match.group('invalid_arg'))
 
+        duplicate_arg_regex = 'There can be only one argument named [\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\"]\.?'
+        if re.fullmatch(duplicate_arg_regex, error_message):
+            match = re.fullmatch(duplicate_arg_regex, error_message)
+            valid_args.discard(match.group("arg"))
+            continue
+
         # Second obtain args suggestions from error message
         valid_args |= get_valid_args(error_message)
 
