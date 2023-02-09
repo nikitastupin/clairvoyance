@@ -150,8 +150,11 @@ async def probe_valid_args(
     document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
 
     response = await client().post(document=document)
-    errors = response['errors']
 
+    if 'errors' not in response:
+        return valid_args
+
+    errors = response['errors']
     for error in errors:
         error_message = error['message']
 
@@ -381,7 +384,7 @@ async def probe_typename(input_document: str) -> str:
     document = input_document.replace('FUZZ', wrong_field)
 
     response = await client().post(document=document)
-    if 'errors' not in response: 
+    if 'errors' not in response:
         raise Exception(f'Unable to get typename from {document}')
 
     errors = response['errors']
