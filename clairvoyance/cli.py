@@ -18,6 +18,7 @@ def setup_context(
     logger: logging.Logger,
     headers: Optional[Dict[str, str]] = None,
     concurrent_requests: Optional[int] = None,
+    proxy: Optional[str] = None,
 ) -> None:
     """Initialize objects and freeze them into the context."""
 
@@ -26,6 +27,7 @@ def setup_context(
         url,
         headers=headers,
         concurrent_requests=concurrent_requests,
+        proxy=proxy,
     )
     logger_ctx.set(logger)
 
@@ -45,6 +47,7 @@ async def blind_introspection(
     input_document: Optional[str] = None,
     input_schema_path: Optional[str] = None,
     output_path: Optional[str] = None,
+    proxy: Optional[str] = None,
 ) -> str:
     wordlist = wordlist or load_default_wordlist()
     assert wordlist, 'No wordlist provided'
@@ -54,6 +57,7 @@ async def blind_introspection(
         logger=logger,
         headers=headers,
         concurrent_requests=concurrent_requests,
+        proxy=proxy,
     )
 
     logger.info(f'Starting blind introspection on {url}...')
@@ -118,5 +122,6 @@ def cli(argv: Optional[List[str]] = None) -> None:
             input_schema_path=args.input_schema,
             output_path=args.output,
             wordlist=wordlist,
+            proxy=args.proxy,
         )
     )
