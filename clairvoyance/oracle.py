@@ -264,13 +264,12 @@ def get_typeref(
     ]
     arg_skip_regexes = [
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] must have a selection of subfields\. Did you mean [\'"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?[\'"]\?'
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\.\[\]!]*[\'"]. Did you mean [\'"](?P<typeref>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
     ]
 
     match = None
     if context == FuzzingContext.FIELD:
         for regex in field_regexes:
-            print()
-            print(regex)
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
