@@ -10,70 +10,80 @@ from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
 from clairvoyance.entities.oracle import FuzzingContext
 
+# yapf: disable
+
+
+MAIN_REGEX = r"""[_0-9A-Za-z\.\[\]!]+"""
+
+
 FIELD_REGEXES = {
     'SKIP': [
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] must not have a selection since type ['"][0-9a-zA-Z\[\]!]+['"] has no subfields.""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"].""",
     ],
     'VALID_FIELD': [
-        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z\.]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\."""
+        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\."""
     ],
     'SINGLE_SUGGESTION': [
-        r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<field>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'DOUBLE_SUGGESTION': [
-        r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<one>[_A-Za-z][_0-9A-Za-z]*)['"] or ['"](?P<two>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<one>""" + MAIN_REGEX + r""")['"] or ['"](?P<two>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
 ARG_REGEXES = {
     'SKIP': [
-        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][a-zA-Z0-9\.\[\]!]*['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z.]*['"]\.""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"].""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
     ],
     'SINGLE_SUGGESTION': [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)['"]\?""",
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\[\]!]*)['"]\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'DOUBLE_SUGGESTION': [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]( of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"])?. Did you mean ['"](?P<first>[_0-9a-zA-Z\.\[\]!]*)['"] or ['"](?P<second>[_0-9a-zA-Z\.\[\]!]*)['"]\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]( of type ['"]""" + MAIN_REGEX + r"""['"])?. Did you mean ['"](?P<first>""" + MAIN_REGEX + r""")['"] or ['"](?P<second>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
 TYPEREF_REGEXES = {
     'FIELD': [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
-        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"].""",
-        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"]. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection\.""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"].""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must not have a sub selection\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\.""",
     ],
     'ARG': [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] argument ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Expected type (?P<typeref>""" + MAIN_REGEX + r"""), found .+\.""",
     ],
     'SKIP': [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] must have a selection of subfields\. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\.\[\]!]*['"]. Did you mean ['"](?P<typeref>[_0-9a-zA-Z\[\]!]*)['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""]['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\?""",
     ]
 }
 
+WRONG_FIELD_EXAMPLE = 'IAmWrongField'
+
 WRONG_FIELD_REFEXES = [
-    r"""Cannot query field ['"]""" + wrong_field + """['"] on type ['"](?P<typename>[_0-9a-zA-Z\[\]!]*)['"].""",
-    r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
-    r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection.""",
+    r"""Cannot query field ['"]""" + WRONG_FIELD_EXAMPLE + r"""['"] on type ['"](?P<typename>""" + MAIN_REGEX + r""")['"].""",
+    r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] has no subfields.""",
+    r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] must not have a sub selection.""",
 ]
+
+# yapf: enable
 
 # Compiling all regexes for performance
 FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
@@ -420,8 +430,8 @@ async def probe_arg_typeref(
 
 
 async def probe_typename(input_document: str) -> str:
-    wrong_field = 'imwrongfield'
-    document = input_document.replace('FUZZ', wrong_field)
+
+    document = input_document.replace('FUZZ', WRONG_FIELD_EXAMPLE)
 
     response = await client().post(document=document)
     if 'errors' not in response:

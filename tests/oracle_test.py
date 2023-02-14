@@ -131,7 +131,7 @@ class TestGetTypeRef(unittest.TestCase):
             non_null=False,
         )
         got = oracle.get_typeref(
-            'Cannot query field "imwrongfield" on type "HomeSettings".',
+            'Cannot query field "IAmWrongField" on type "HomeSettings".',
             FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
