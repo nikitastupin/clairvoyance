@@ -16,6 +16,7 @@ class Client(IClient):
         max_retries: Optional[int] = None,
         headers: Optional[Dict[str, str]] = None,
         concurrent_requests: Optional[int] = None,
+        proxy: Optional[str] = None,
     ) -> None:
         self._url = url
         self._session = None
@@ -23,6 +24,7 @@ class Client(IClient):
         self._headers = headers or {}
         self._max_retries = max_retries or 3
         self._semaphore = asyncio.Semaphore(concurrent_requests or 50)
+        self.proxy = proxy
 
         client_ctx.set(self)
 
@@ -47,6 +49,7 @@ class Client(IClient):
                 response = await self._session.post(
                     self._url,
                     json=gql_document,
+                    proxy=self.proxy,
                 )
 
                 if response.status >= 500:

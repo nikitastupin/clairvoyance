@@ -57,6 +57,20 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=argparse.FileType('r'),
         help='This wordlist will be used for all brute force effots (fields, arguments and so on)',
     )
+    parser.add_argument(
+        '-x',
+        '--proxy',
+        metavar='<string>',
+        type=str,
+        help='Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy',
+    )
+    parser.add_argument(
+        '-m',
+        '--max-retries',
+        metavar='<int>',
+        type=int,
+        help='How many retries should be made when a request fails',
+    )
     parser.add_argument('url')
 
     return parser.parse_args(args)
