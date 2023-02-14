@@ -22,6 +22,7 @@ FIELD_REGEXES = {
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean [^\?]+\?""",
     ],
     'VALID_FIELD': [
         r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
