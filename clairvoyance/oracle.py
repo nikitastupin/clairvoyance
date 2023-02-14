@@ -10,6 +10,27 @@ from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
 from clairvoyance.entities.oracle import FuzzingContext
 
+FIELD_REGEXES = {
+    'SKIP': [
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] must not have a selection since type ['"][0-9a-zA-Z\[\]!]+['"] has no subfields.""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
+    ],
+    'VALID_FIELD': [
+        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z\.]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\."""
+    ],
+    'SINGLE_SUGGESTION': [
+        r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+    ],
+    'DOUBLE_SUGGESTION': [
+        r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<one>[_A-Za-z][_0-9A-Za-z]*)['"] or ['"](?P<two>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+    ],
+    'MULTI_SUGGESTION': [
+        r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
+    ],
+}
+
 
 # pylint: disable=too-many-branches
 def get_valid_fields(error_message: str) -> Set[str]:
@@ -17,61 +38,38 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     valid_fields: Set[str] = set()
 
-    multiple_suggestion_regex = r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
-    or_suggestion_regex = r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<one>[_A-Za-z][_0-9A-Za-z]*)['"] or ['"](?P<two>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
-    single_suggestion_regex = r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
-    invalid_field_regex = r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]."""
-    # TODO: this regex here more than one time, make it shared?
-    valid_field_regex = [
-        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z\.]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\."""
-    ]
-
-    no_field_regexs = [
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] must not have a selection since type ['"][0-9a-zA-Z\[\]!]+['"] has no subfields.""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
-    ]
-
-    for regex in no_field_regexs:
+    for regex in FIELD_REGEXES['SKIP']:
         if re.fullmatch(regex, error_message):
             return valid_fields
 
-    if re.fullmatch(multiple_suggestion_regex, error_message):
-        match = re.fullmatch(multiple_suggestion_regex, error_message)
-        if match:
+    for regex in FIELD_REGEXES['VALID_FIELD']:
+        if (match := re.fullmatch(regex, error_message)):
+            valid_fields.add(match.group('field'))
+            return valid_fields
+
+    for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
+        if (match := re.fullmatch(regex, error_message)):
+            valid_fields.add(match.group('field'))
+            return valid_fields
+
+    for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
+        if (match := re.fullmatch(regex, error_message)):
+            valid_fields.add(match.group('one'))
+            valid_fields.add(match.group('two'))
+            return valid_fields
+
+    for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
+        if (match := re.fullmatch(regex, error_message)):
+
             for m in match.group('multi').split(', '):
                 if m:
                     valid_fields.add(m.strip('"').strip('\''))
-
             if match.group('last'):
                 valid_fields.add(match.group('last'))
 
-    elif re.fullmatch(or_suggestion_regex, error_message):
-        match = re.fullmatch(or_suggestion_regex, error_message)
-        if match:
-            valid_fields.add(match.group('one'))
-            valid_fields.add(match.group('two'))
+            return valid_fields
 
-    elif re.fullmatch(single_suggestion_regex, error_message):
-        match = re.fullmatch(single_suggestion_regex, error_message)
-        if match:
-            valid_fields.add(match.group('field'))
-
-    elif re.fullmatch(invalid_field_regex, error_message):
-        pass
-
-    elif re.fullmatch(valid_field_regex[0], error_message):
-        match = re.fullmatch(valid_field_regex[0], error_message)
-        if match:
-            valid_fields.add(match.group('field'))
-
-    elif re.fullmatch(valid_field_regex[1], error_message):
-        match = re.fullmatch(valid_field_regex[1], error_message)
-        if match:
-            valid_fields.add(match.group('field'))
-
-    else:
-        log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
+    log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
 
     return valid_fields
 

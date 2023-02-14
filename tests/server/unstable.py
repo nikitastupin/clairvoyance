@@ -4,7 +4,6 @@ import os
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-
     def do_POST(self) -> None:  # pylint: disable=invalid-name
         os.environ['COUNT'] = '1'
 

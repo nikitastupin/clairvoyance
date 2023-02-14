@@ -13,7 +13,6 @@ from clairvoyance.entities.oracle import FuzzingContext
 
 
 class TestGetValidFields(unittest.TestCase):
-
     # pylint: disable=line-too-long
     def test_multiple_suggestions(self) -> None:
         want = {
@@ -49,7 +48,6 @@ class TestGetValidFields(unittest.TestCase):
 
 
 class TestGetValidArgs(unittest.TestCase):
-
     def test_single_suggestion(self) -> None:
         want = {'input'}
         got = oracle.get_valid_args('Unknown argument "inpu" on field "setNameForHome" of type "Mutation". Did you mean "input"?')
@@ -67,7 +65,6 @@ class TestGetValidArgs(unittest.TestCase):
 
 
 class TestGetTypeRef(unittest.TestCase):
-
     def test_non_nullable_object(self) -> None:
         want = graphql.TypeRef(
             name='SetArmedStateForHomeInput',
@@ -196,7 +193,6 @@ class TestGetTypeRef(unittest.TestCase):
 
 
 class TestTypeRef(unittest.TestCase):
-
     def test_to_json(self) -> None:
         name = 'TestObject'
         kind = 'OBJECT'
@@ -229,7 +225,6 @@ class TestTypeRef(unittest.TestCase):
 
 
 class TestGraphql(unittest.TestCase):
-
     def test_field_or_arg_type_from_json(self) -> None:
         name = 'TestObject'
         kind = 'OBJECT'
@@ -261,7 +256,6 @@ class TestGraphql(unittest.TestCase):
 
 
 class TestProbeTypename(aiounittest.AsyncTestCase):
-
     _unstable: subprocess.Popen[bytes]
 
     @classmethod

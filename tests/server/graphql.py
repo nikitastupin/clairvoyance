@@ -3,7 +3,6 @@ import json
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-
     def do_POST(self) -> None:  # pylint: disable=invalid-name
         body = json.dumps({
             'errors': [{

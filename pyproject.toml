@@ -33,7 +33,7 @@ omit = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<=3.11"
+python = ">=3.8,<=3.11"
 asyncio = "^3.4.3"
 aiohttp = {extras = ["speedups"], version = "^3.8.1"}
 

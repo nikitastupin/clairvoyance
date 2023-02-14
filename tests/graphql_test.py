@@ -16,7 +16,6 @@ logger_ctx.set(logging.getLogger('clairvoyance'))
 
 
 class TestSchema(unittest.TestCase):
-
     def setUp(self) -> None:
         with open('tests/data/schema.json', 'r', encoding='utf-8') as f:
             schema_json = json.load(f)
@@ -55,7 +54,6 @@ class TestSchema(unittest.TestCase):
 
 
 class TestPost(aiounittest.AsyncTestCase):
-
     _unstable: subprocess.Popen[bytes]
 
     @classmethod
@@ -79,7 +77,6 @@ class TestPost(aiounittest.AsyncTestCase):
 
 
 class TestToJson(unittest.TestCase):
-
     def test_typeref_to_json(self) -> None:
         want = {
             'name': None,
@@ -109,7 +106,6 @@ class TestToJson(unittest.TestCase):
 
 
 class TestFromJson(unittest.TestCase):
-
     def test_typeref_from_json(self) -> None:
         want = graphql.TypeRef('Launch', 'OBJECT', True, False, True)
 

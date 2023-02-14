@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 
 
 class TestClairvoyance(unittest.TestCase):
-
     port: str
     clairvoyance: subprocess.CompletedProcess
     schema: Any

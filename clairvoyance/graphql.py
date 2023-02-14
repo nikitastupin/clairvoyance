@@ -7,7 +7,6 @@ from clairvoyance.entities.primitives import GraphQLKind
 
 
 class Schema:
-
     """Host of the introspection data."""
 
     def __init__(
@@ -149,7 +148,6 @@ class Schema:
 
 
 class TypeRef:
-
     def __init__(
         self,
         name: str,
@@ -195,7 +193,6 @@ class TypeRef:
 
 
 class InputValue:
-
     def __init__(
         self,
         name: str,
@@ -290,7 +287,6 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
 
 
 class Field:
-
     def __init__(
         self,
         name: str,
@@ -327,7 +323,6 @@ class Field:
 
 
 class Type:
-
     def __init__(
         self,
         name: str = '',

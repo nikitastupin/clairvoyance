@@ -9,7 +9,6 @@ from clairvoyance.entities.interfaces import IClient
 
 
 class Client(IClient):
-
     def __init__(
         self,
         url: str,
