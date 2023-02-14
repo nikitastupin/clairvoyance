@@ -61,6 +61,7 @@ class Client(IClient):
             except (
                 aiohttp.client_exceptions.ClientConnectionError,
                 aiohttp.client_exceptions.ClientPayloadError,
+                asyncio.TimeoutError,
                 json.decoder.JSONDecodeError,
             ) as e:
                 log().warning(f'Error posting to {self._url}: {e}')
