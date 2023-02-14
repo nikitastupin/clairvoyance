@@ -22,7 +22,9 @@ FIELD_REGEXES = {
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean [^\?]+\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"]\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"] or ['"]""" + MAIN_REGEX + r"""['"]\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on (['"]""" + MAIN_REGEX + r"""['"], )+(or ['"]""" + MAIN_REGEX + r"""['"])?\?"""
     ],
     'VALID_FIELD': [
         r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
@@ -101,26 +103,31 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     for regex in FIELD_REGEXES['SKIP']:
         if re.fullmatch(regex, error_message):
+            print('HEEEEEEY1')
             return valid_fields
 
     for regex in FIELD_REGEXES['VALID_FIELD']:
         if (match := re.fullmatch(regex, error_message)):
+            print('HEEEEEEY2')
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
+            print('HEEEEEEY3')
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
+            print('HEEEEEEY4')
             valid_fields.add(match.group('one'))
             valid_fields.add(match.group('two'))
             return valid_fields
 
     for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
+            print('HEEEEEEY5')
 
             for m in match.group('multi').split(', '):
                 if m:
