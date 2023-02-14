@@ -136,6 +136,20 @@ class TestGetTypeRef(unittest.TestCase):
         )
         self.assertEqual(got, want)
 
+    def test_field_regex_4(self) -> None:
+        want = graphql.TypeRef(
+            name='InitDomainActionPayload',
+            kind='OBJECT',
+            is_list=False,
+            non_null_item=False,
+            non_null=False,
+        )
+        got = oracle.get_typeref(
+            'Cannot query field "message" on type "InitDomainActionPayload". Did you mean to use an inline fragment on "UserError" or "BaseUserError"?',
+            FuzzingContext.FIELD,
+        )
+        self.assertEqual(got, want)
+
     def test_skip_error_message(self) -> None:
         want = None
         with self.assertLogs() as cm:

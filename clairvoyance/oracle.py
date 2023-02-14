@@ -62,18 +62,15 @@ TYPEREF_REGEXES = {
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields\.""",
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\.""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\. Did you mean [^\?]+\?""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must not have a sub selection\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\.""",
+
     ],
     'ARG': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Expected type (?P<typeref>""" + MAIN_REGEX + r"""), found .+\.""",
     ],
-    'ARG_SKIP': [
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""]['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\?""",
-    ]
 }
 
 WRONG_FIELD_EXAMPLE = 'IAmWrongField'
@@ -313,6 +310,10 @@ def get_typeref(
 
         if context == FuzzingContext.FIELD:
             # in the case of a field
+            for regex in TYPEREF_REGEXES['ARG']:
+                if re.fullmatch(regex, error_message):
+                    return None
+
             for regex in TYPEREF_REGEXES['FIELD']:
                 if (match := re.fullmatch(regex, error_message)):
                     return match
@@ -320,7 +321,7 @@ def get_typeref(
         elif context == FuzzingContext.ARGUMENT:
             # in the case of an argument
             # we drop the following messages
-            for regex in TYPEREF_REGEXES['ARG_SKIP']:
+            for regex in TYPEREF_REGEXES['FIELD']:
                 if re.fullmatch(regex, error_message):
                     return None
             # if not dropped, we try to extract the type
@@ -328,6 +329,7 @@ def get_typeref(
                 if (match := re.fullmatch(regex, error_message)):
                     return match
 
+        log().debug(f'Unknown error message for `typeref`: \'{error_message}\'')
         return None
 
     match = __extract_matching_fields(error_message, context)
@@ -359,7 +361,6 @@ def get_typeref(
             non_null=non_null,
         )
 
-    log().debug(f'Unknown error message for `typeref`: \'{error_message}\'')
     return None
 
 
