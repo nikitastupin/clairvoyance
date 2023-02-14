@@ -50,9 +50,36 @@ ARG_REGEXES = {
     ],
 }
 
+TYPEREF_REGEXES = {
+    'FIELD': [
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
+        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"].""",
+        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"]. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection\.""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\.""",
+    ],
+    'ARG': [
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] argument ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.""",
+    ],
+    'SKIP': [
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] must have a selection of subfields\. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\.\[\]!]*['"]. Did you mean ['"](?P<typeref>[_0-9a-zA-Z\[\]!]*)['"]\?""",
+    ]
+}
+
+WRONG_FIELD_REFEXES = [
+    r"""Cannot query field ['"]""" + wrong_field + """['"] on type ['"](?P<typename>[_0-9a-zA-Z\[\]!]*)['"].""",
+    r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
+    r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection.""",
+]
+
 # Compiling all regexes for performance
 FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
 ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in ARG_REGEXES.items()}
+TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in TYPEREF_REGEXES.items()}
+WRONG_FIELD_REFEXES = [re.compile(r) for r in WRONG_FIELD_REFEXES]
 
 
 # pylint: disable=too-many-branches
@@ -268,35 +295,18 @@ def get_typeref(
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
-    field_regexes = [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
-        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"].""",
-        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"]. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection\.""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\.""",
-    ]
-    arg_regexes = [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] argument ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.""",
-    ]
-    arg_skip_regexes = [
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] must have a selection of subfields\. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\.\[\]!]*['"]. Did you mean ['"](?P<typeref>[_0-9a-zA-Z\[\]!]*)['"]\?""",
-    ]
-
     match = None
     if context == FuzzingContext.FIELD:
-        for regex in field_regexes:
+        for regex in TYPEREF_REGEXES['FIELD']:
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
     elif context == FuzzingContext.ARGUMENT:
-        for regex in arg_skip_regexes:
+        for regex in TYPEREF_REGEXES['ARG']:
             if re.fullmatch(regex, error_message):
                 return None
 
-        for regex in arg_regexes:
+        for regex in TYPEREF_REGEXES['SKIP']:
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
@@ -419,14 +429,8 @@ async def probe_typename(input_document: str) -> str:
 
     errors = response['errors']
 
-    wrong_field_regexes = [
-        r"""Cannot query field ['"]""" + wrong_field + """['"] on type ['"](?P<typename>[_0-9a-zA-Z\[\]!]*)['"].""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
-        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection.""",
-    ]
-
     match = None
-    for regex in wrong_field_regexes:
+    for regex in WRONG_FIELD_REFEXES:
         for error in errors:
             match = re.fullmatch(regex, error['message'])
             if match:
@@ -435,7 +439,7 @@ async def probe_typename(input_document: str) -> str:
             break
 
     if not match:
-        raise Exception(f'Expected "{errors}" to match any of "{wrong_field_regexes}".')
+        raise Exception(f'Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.')
 
     return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
 
