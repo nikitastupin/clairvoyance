@@ -14,64 +14,65 @@ from clairvoyance.entities.oracle import FuzzingContext
 
 
 MAIN_REGEX = r"""[_0-9A-Za-z\.\[\]!]+"""
+REQUIRED_BUT_NOT_PROVIDED = r"""required(, but it was not provided| but not provided)?\."""
 
 
 FIELD_REGEXES = {
     'SKIP': [
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields.""",
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"].""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
     ],
     'VALID_FIELD': [
-        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\."""
     ],
     'SINGLE_SUGGESTION': [
-        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<field>""" + MAIN_REGEX + r""")['"]\?"""
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<field>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'DOUBLE_SUGGESTION': [
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<one>""" + MAIN_REGEX + r""")['"] or ['"](?P<two>""" + MAIN_REGEX + r""")['"]\?"""
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<one>""" + MAIN_REGEX + r""")['"] or ['"](?P<two>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
 ARG_REGEXES = {
     'SKIP': [
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"].""",
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
     ],
     'SINGLE_SUGGESTION': [
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?""",
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'DOUBLE_SUGGESTION': [
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]( of type ['"]""" + MAIN_REGEX + r"""['"])?. Did you mean ['"](?P<first>""" + MAIN_REGEX + r""")['"] or ['"](?P<second>""" + MAIN_REGEX + r""")['"]\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]( of type ['"]""" + MAIN_REGEX + r"""['"])?\. Did you mean ['"](?P<first>""" + MAIN_REGEX + r""")['"] or ['"](?P<second>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
 TYPEREF_REGEXES = {
     'FIELD': [
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields.""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"].""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must not have a sub selection\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\.""",
     ],
     'ARG': [
-        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Expected type (?P<typeref>""" + MAIN_REGEX + r"""), found .+\.""",
     ],
     'ARG_SKIP': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""]['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""]['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\?""",
     ]
 }
 
@@ -305,21 +306,31 @@ def get_typeref(
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
-    match = None
-    if context == FuzzingContext.FIELD:
-        for regex in TYPEREF_REGEXES['FIELD']:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
-    elif context == FuzzingContext.ARGUMENT:
-        for regex in TYPEREF_REGEXES['ARG']:
-            if re.fullmatch(regex, error_message):
-                return None
+    def __extract_matching_fields(
+        error_message: str,
+        context: FuzzingContext,
+    ) -> Optional[re.Match]:
 
-        for regex in TYPEREF_REGEXES['ARG_SKIP']:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
+        if context == FuzzingContext.FIELD:
+            # in the case of a field
+            for regex in TYPEREF_REGEXES['FIELD']:
+                if (match := re.fullmatch(regex, error_message)):
+                    return match
+
+        elif context == FuzzingContext.ARGUMENT:
+            # in the case of an argument
+            # we drop the following messages
+            for regex in TYPEREF_REGEXES['ARG_SKIP']:
+                if re.fullmatch(regex, error_message):
+                    return None
+            # if not dropped, we try to extract the type
+            for regex in TYPEREF_REGEXES['ARG']:
+                if (match := re.fullmatch(regex, error_message)):
+                    return match
+
+        return None
+
+    match = __extract_matching_fields(error_message, context)
 
     if match:
         print(match.groupdict(), 'MATCHED')
