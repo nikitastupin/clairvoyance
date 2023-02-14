@@ -17,19 +17,19 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     valid_fields: Set[str] = set()
 
-    multiple_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
-    or_suggestion_regex = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    single_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    invalid_field_regex = ('Cannot query field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].')
+    multiple_suggestion_regex = r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
+    or_suggestion_regex = r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<one>[_A-Za-z][_0-9A-Za-z]*)['"] or ['"](?P<two>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+    single_suggestion_regex = r"""Cannot query field ['"]([_A-Za-z][_0-9A-Za-z]*)['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]. Did you mean ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"]\?"""
+    invalid_field_regex = r"""Cannot query field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] on type ['"][_A-Za-z][_0-9A-Za-z]*['"]."""
     # TODO: this regex here more than one time, make it shared?
     valid_field_regex = [
-        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z\.]*( \{ \.\.\. \})?[\'"]\?',
-        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
+        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z\.]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"](?P<field>[_A-Za-z][_0-9A-Za-z]*)['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\."""
     ]
 
     no_field_regexs = [
-        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required(, but it was not provided| but not provided)?\.',
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] must not have a selection since type ['"][0-9a-zA-Z\[\]!]+['"] has no subfields.""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
     ]
 
     for regex in no_field_regexs:
