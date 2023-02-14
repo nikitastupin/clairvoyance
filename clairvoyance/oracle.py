@@ -31,8 +31,28 @@ FIELD_REGEXES = {
     ],
 }
 
+ARG_REGEXES = {
+    'SKIP': [
+        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][a-zA-Z0-9\.\[\]!]*['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z.]*['"]\.""",
+    ],
+    'SINGLE_SUGGESTION': [
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)['"]\?""",
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\[\]!]*)['"]\?"""
+    ],
+    'DOUBLE_SUGGESTION': [
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]( of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"])?. Did you mean ['"](?P<first>[_0-9a-zA-Z\.\[\]!]*)['"] or ['"](?P<second>[_0-9a-zA-Z\.\[\]!]*)['"]\?"""
+    ],
+    'MULTI_SUGGESTION': [
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
+    ],
+}
+
 # Compiling all regexes for performance
 FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
+ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in ARG_REGEXES.items()}
 
 
 # pylint: disable=too-many-branches
@@ -209,40 +229,23 @@ def get_valid_args(error_message: str) -> Set[str]:
 
     valid_args = set()
 
-    skip_regexes = [
-        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][a-zA-Z0-9\.\[\]!]*['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?['"]\?""",
-        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
-        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z.]*['"]\.""",
-    ]
-    single_suggestion_regex = [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)['"]\?""",
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\[\]!]*)['"]\?"""
-    ]
-    double_suggestion_regexes = [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]( of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"])?. Did you mean ['"](?P<first>[_0-9a-zA-Z\.\[\]!]*)['"] or ['"](?P<second>[_0-9a-zA-Z\.\[\]!]*)['"]\?"""
-    ]
-    multiple_suggestion_regex = [
-        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
-    ]
-
-    for regex in skip_regexes:
+    for regex in ARG_REGEXES['SKIP']:
         if re.fullmatch(regex, error_message):
             return set()
 
-    for regex in single_suggestion_regex:
+    for regex in ARG_REGEXES['SINGLE_SUGGESTION']:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
             if match:
                 valid_args.add(match.group('arg'))
 
-    for regex in double_suggestion_regexes:
+    for regex in ARG_REGEXES['DOUBLE_SUGGESTION']:
         match = re.fullmatch(regex, error_message)
         if match:
             valid_args.add(match.group('first'))
             valid_args.add(match.group('second'))
 
-    for regex in multiple_suggestion_regex:
+    for regex in ARG_REGEXES['MULTI_SUGGESTION']:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
             if match:
