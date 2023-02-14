@@ -416,9 +416,9 @@ async def probe_typename(input_document: str) -> str:
     errors = response['errors']
 
     wrong_field_regexes = [
-        f'Cannot query field [\'"]{wrong_field}[\'"] on type [\'"](?P<typename>[_0-9a-zA-Z\[\]!]*)[\'"].',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection.'
+        r"""Cannot query field ['"]{wrong_field}['"] on type ['"](?P<typename>[_0-9a-zA-Z\[\]!]*)['"].""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection.""",
     ]
 
     match = None
