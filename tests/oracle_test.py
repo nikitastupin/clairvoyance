@@ -9,6 +9,7 @@ import aiounittest
 from clairvoyance import graphql, oracle
 from clairvoyance.client import Client
 from clairvoyance.entities.context import client
+from clairvoyance.entities.oracle import FuzzingContext
 
 
 class TestGetValidFields(unittest.TestCase):
@@ -72,7 +73,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertEqual(got, want)
 
@@ -86,7 +87,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Expected type SetArmedStateForHomeInput!, found 7.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertEqual(got, want)
 
@@ -101,7 +102,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" of type "SetArmedStateForHomePayload" must have a selection of subfields. Did you mean "setArmedStateForHome { ... }"?',
-            'Field',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -115,7 +116,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "isMfaEnabled" must not have a selection since type "Boolean!" has no subfields.',
-            'Field',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -129,7 +130,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Cannot query field "imwrongfield" on type "HomeSettings".',
-            'Field',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -138,7 +139,7 @@ class TestGetTypeRef(unittest.TestCase):
         with self.assertLogs() as cm:
             got = oracle.get_typeref(
                 'Field "species" of type "Species" must have a selection of subfields. Did you mean "species { ... }"?',
-                'InputValue',
+                FuzzingContext.ARGUMENT,
             )
             # https://stackoverflow.com/a/61381576
             logging.warning('Dummy warning')
@@ -155,7 +156,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "node" argument "id" of type "ID!" is required but not provided.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertIsNotNone(got)
 
@@ -176,7 +177,7 @@ class TestGetTypeRef(unittest.TestCase):
             non_null_item=False,
             non_null=False,
         )
-        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', 'Field')
+        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', FuzzingContext.FIELD)
 
         self.assertIsNotNone(got)
         if not got:
