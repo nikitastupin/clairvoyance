@@ -333,7 +333,6 @@ def get_typeref(
     match = __extract_matching_fields(error_message, context)
 
     if match:
-        print(match.groupdict(), 'MATCHED')
         tk = match.group('typeref')
 
         name = tk.replace('!', '').replace('[', '').replace(']', '')
