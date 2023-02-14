@@ -69,7 +69,7 @@ TYPEREF_REGEXES = {
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is required(, but it was not provided| but not provided)?\.""",
         r"""Expected type (?P<typeref>""" + MAIN_REGEX + r"""), found .+\.""",
     ],
-    'SKIP': [
+    'ARG_SKIP': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""]['"] on field ['"]""" + MAIN_REGEX + r"""['"]. Did you mean ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\?""",
     ]
@@ -316,12 +316,13 @@ def get_typeref(
             if re.fullmatch(regex, error_message):
                 return None
 
-        for regex in TYPEREF_REGEXES['SKIP']:
+        for regex in TYPEREF_REGEXES['ARG_SKIP']:
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
 
     if match:
+        print(match.groupdict(), 'MATCHED')
         tk = match.group('typeref')
 
         name = tk.replace('!', '').replace('[', '').replace(']', '')
