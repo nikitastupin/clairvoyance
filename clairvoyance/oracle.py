@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
+from clairvoyance.entities.oracle import FuzzingContext
 
 
 # pylint: disable=too-many-branches
@@ -245,7 +246,7 @@ def get_valid_args(error_message: str) -> Set[str]:
 
 def get_typeref(
     error_message: str,
-    context: str,
+    context: FuzzingContext,
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
@@ -265,12 +266,12 @@ def get_typeref(
     ]
 
     match = None
-    if context == 'Field':
+    if context == FuzzingContext.FIELD:
         for regex in field_regexes:
             if re.fullmatch(regex, error_message):
                 match = re.fullmatch(regex, error_message)
                 break
-    elif context == 'InputValue':
+    elif context == FuzzingContext.ARGUMENT:
         for regex in arg_skip_regexes:
             if re.fullmatch(regex, error_message):
                 return None
@@ -287,9 +288,9 @@ def get_typeref(
         kind = ''
         if name in GraphQLPrimitive:
             kind = 'SCALAR'
-        elif context == 'InputValue':
+        elif context == FuzzingContext.FIELD:
             kind = 'INPUT_OBJECT'
-        elif context == 'InputValue':
+        elif context == FuzzingContext.ARGUMENT:
             kind = 'OBJECT'
         else:
             log().debug(f'Unknown kind for `typeref`: \'{error_message}\'')
@@ -313,7 +314,7 @@ def get_typeref(
 
 async def probe_typeref(
     documents: List[str],
-    context: str,
+    context: FuzzingContext,
 ) -> Optional[graphql.TypeRef]:
     """Sending a document to attain errors in order to deduce the type of fields."""
 
@@ -347,7 +348,7 @@ async def probe_typeref(
         if result:
             typeref = result
 
-    if not typeref and context != 'InputValue':
+    if not typeref and context != FuzzingContext.ARGUMENT:
         try:
             raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
         except Exception as e:
@@ -367,7 +368,7 @@ async def probe_field_type(
         input_document.replace('FUZZ', f'{field} {{ lol }}'),
     ]
 
-    return await probe_typeref(documents, 'Field')
+    return await probe_typeref(documents, FuzzingContext.FIELD)
 
 
 async def probe_arg_typeref(
@@ -385,7 +386,7 @@ async def probe_arg_typeref(
         input_document.replace('FUZZ', f'{field}({arg}: false)'),
     ]
 
-    return await probe_typeref(documents, 'InputValue')
+    return await probe_typeref(documents, FuzzingContext.ARGUMENT)
 
 
 async def probe_typename(input_document: str) -> str:
