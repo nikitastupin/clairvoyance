@@ -1,7 +1,17 @@
 import argparse
 import logging
 import os
-from typing import List
+from typing import Any, List
+
+
+def default(arg: Any, default_value: Any) -> Any:
+    return arg if arg is not None else default_value
+
+
+def set_slow_config(args) -> None:
+    args.concurrent_requests = default(args.concurrent_requests, 1)
+    args.max_retries = default(args.max_retries, 50)
+    args.backoff = default(args.backoff, 2)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -78,9 +88,20 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=int,
         help='Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.',
     )
+    parser.add_argument(
+        '-p',
+        '--profile',
+        choices=['slow', 'fast'],
+        default='fast',
+        help='Select a speed profile. fast mod will set lot of workers to provide you quick result but if the server as some rate limit you may wnat to use slow mod.',
+    )
     parser.add_argument('url')
 
-    return parser.parse_args(args)
+    args = parser.parse_args(args)
+    if args.profile == 'slow':
+        set_slow_config(args)
+
+    return args
 
 
 def setup_logger(verbosity: int) -> None:
