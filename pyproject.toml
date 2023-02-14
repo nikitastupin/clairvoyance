@@ -32,6 +32,9 @@ omit = [
     'docs/*',
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [ "ignore:::aiounittest" ]
+
 [tool.poetry.dependencies]
 python = ">=3.7,<=3.11"
 asyncio = "^3.4.3"
