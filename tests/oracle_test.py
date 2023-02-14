@@ -60,6 +60,11 @@ class TestGetValidArgs(unittest.TestCase):
         got = oracle.get_valid_args('Unknown argument "fasten" on field "filmConnection" of type "Vehicle". Did you mean "after" or "last"?')
         self.assertEqual(got, want)
 
+    def test_multiple_suggestions(self) -> None:
+        want_3 = {'after', 'first', 'types'}
+        got_3 = oracle.get_valid_args('Unknown argument "fares" on field "Organization.vulnerabilities". Did you mean "after", "first", or "types"?')
+        self.assertEqual(got_3, want_3)
+
 
 class TestGetTypeRef(unittest.TestCase):
 

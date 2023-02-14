@@ -33,11 +33,11 @@ class Client(IClient):
             self.ex = Exception
         else:
             self.ex = (
-                    aiohttp.client_exceptions.ClientConnectionError,
-                    aiohttp.client_exceptions.ClientPayloadError,
-                    asyncio.TimeoutError,
-                    json.decoder.JSONDecodeError,
-                )
+                aiohttp.client_exceptions.ClientConnectionError,
+                aiohttp.client_exceptions.ClientPayloadError,
+                asyncio.TimeoutError,
+                json.decoder.JSONDecodeError,
+            )
 
         client_ctx.set(self)
 
@@ -76,7 +76,7 @@ class Client(IClient):
 
             if self.backoff:
                 async with self._backoff_semaphore:
-                    delay = 0.5 * self.backoff ** retries
+                    delay = 0.5 * self.backoff**retries
                     log().debug(f'Waiting for backoff {delay} seconds.')
                     await asyncio.sleep(delay)
 
