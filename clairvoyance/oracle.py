@@ -210,7 +210,7 @@ def get_valid_args(error_message: str) -> Set[str]:
 
     skip_regexes = [
         'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] of type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] of type [\'"][_A-Za-z\[\]!][a-zA-Z\[\]!]*[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?[\'"]\?',
+        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] of type [\'"][_A-Za-z][a-zA-Z0-9\.\[\]!]*[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?[\'"]\?',
         'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required(, but it was not provided| but not provided)?\.',
         'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]\.',
     ]
@@ -220,6 +220,9 @@ def get_valid_args(error_message: str) -> Set[str]:
     ]
     double_suggestion_regexes = [
         'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]( of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"])?. Did you mean [\'"](?P<first>[_0-9a-zA-Z\.\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\.\[\]!]*)[\'"]\?'
+    ]
+    multiple_suggestion_regex = [
+        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
     ]
 
     for regex in skip_regexes:
@@ -237,6 +240,17 @@ def get_valid_args(error_message: str) -> Set[str]:
         if match:
             valid_args.add(match.group('first'))
             valid_args.add(match.group('second'))
+
+    for regex in multiple_suggestion_regex:
+        if re.fullmatch(regex, error_message):
+            match = re.fullmatch(regex, error_message)
+            if match:
+                for m in match.group('multi').split(', '):
+                    if m:
+                        valid_args.add(m.strip('"').strip('\''))
+
+                if match.group('last'):
+                    valid_args.add(match.group('last'))
 
     if not valid_args:
         log().debug(f'Unknown error message for `valid_args`: \'{error_message}\'')
