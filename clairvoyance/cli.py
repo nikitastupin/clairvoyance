@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import sys
 from typing import Dict, List, Optional
 
@@ -119,6 +120,15 @@ def cli(argv: Optional[List[str]] = None) -> None:
     wordlist = []
     if args.wordlist:
         wordlist = [w.strip() for w in args.wordlist.readlines() if w.strip()]
+        # de-dupe the wordlist.
+        wordlist = list(set(wordlist))
+
+    # remove wordlist items that don't conform to graphQL regex github-issue #11
+    if args.validate:
+        wordlist_parsed = [w for w in wordlist if re.match(r'[_A-Za-z][_0-9A-Za-z]*', w)]
+        logging.info(f'Removed {len(wordlist) - len(wordlist_parsed)} items from Wordlist, to conform to name regex. '
+                     f'https://spec.graphql.org/June2018/#sec-Names')
+        wordlist = wordlist_parsed
 
     asyncio.run(
         blind_introspection(

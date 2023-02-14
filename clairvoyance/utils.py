@@ -68,6 +68,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help='This wordlist will be used for all brute force effots (fields, arguments and so on)',
     )
     parser.add_argument(
+        '-wv',
+        '--validate',
+        action='store_true',
+        help='Validate the wordlist items match name Regex',
+    )
+    parser.add_argument(
         '-x',
         '--proxy',
         metavar='<string>',
