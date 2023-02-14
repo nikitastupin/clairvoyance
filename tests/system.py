@@ -58,7 +58,7 @@ class TestClairvoyance(unittest.TestCase):
         return None
 
     def test_validate_wordlist(self):
-        self.assertIn(b'Removed 1 items from Wordlist', self.clairvoyance.stdout)
+        self.assertIn(b'Removed 1 items from Wordlist', self.clairvoyance.stderr)
 
     def test_found_root_type_names(self) -> None:
         self.assertEqual(self.schema['queryType'], {'name': 'Query'})
