@@ -164,13 +164,13 @@ async def probe_valid_args(
 
         # First remove arg if it produced an 'Unknown argument' error
         match = re.search(
-            'Unknown argument [\'"](?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"]',
+            r"""Unknown argument ['"](?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"]""",
             error_message,
         )
         if match:
             valid_args.discard(match.group('invalid_arg'))
 
-        duplicate_arg_regex = 'There can be only one argument named [\"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)[\"]\.?'
+        duplicate_arg_regex = r"""There can be only one argument named ["'](?P<arg>[_0-9a-zA-Z\.\[\]!]*)["']\.?"""
         if re.fullmatch(duplicate_arg_regex, error_message):
             match = re.fullmatch(duplicate_arg_regex, error_message)
             valid_args.discard(match.group('arg'))  # type: ignore
@@ -209,20 +209,20 @@ def get_valid_args(error_message: str) -> Set[str]:
     valid_args = set()
 
     skip_regexes = [
-        'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] of type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] of type [\'"][_A-Za-z][a-zA-Z0-9\.\[\]!]*[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?[\'"]\?',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z\.]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required(, but it was not provided| but not provided)?\.',
-        'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]\.',
+        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][_0-9A-Za-z]*['"].""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] of type ['"][_A-Za-z][a-zA-Z0-9\.\[\]!]*['"] must have a selection of subfields. Did you mean ['"][_A-Za-z][_0-9A-Za-z]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_A-Za-z][_0-9A-Za-z\.]*['"] argument ['"][_A-Za-z][_0-9A-Za-z]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Unknown argument ['"][_A-Za-z][_0-9A-Za-z]*['"] on field ['"][_A-Za-z][_0-9A-Za-z.]*['"]\.""",
     ]
     single_suggestion_regex = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)[\'"]\?',
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'\"]\?'
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\.\[\]!]*)['"]\?""",
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean ['"](?P<arg>[_0-9a-zA-Z\[\]!]*)['"]\?"""
     ]
     double_suggestion_regexes = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]( of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"])?. Did you mean [\'"](?P<first>[_0-9a-zA-Z\.\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\.\[\]!]*)[\'"]\?'
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]( of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"])?. Did you mean ['"](?P<first>[_0-9a-zA-Z\.\[\]!]*)['"] or ['"](?P<second>[_0-9a-zA-Z\.\[\]!]*)['"]\?"""
     ]
     multiple_suggestion_regex = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_.0-9a-zA-Z\[\]!]*['"]. Did you mean (?P<multi>(['"][_A-Za-z][_0-9A-Za-z]*['"], )+)(or ['"](?P<last>[_A-Za-z][_0-9A-Za-z]*)['"])?\?"""
     ]
 
     for regex in skip_regexes:
@@ -265,20 +265,20 @@ def get_typeref(
     """Using predefined regex deduce the type of a field."""
 
     field_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?[\'"]\?',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
-        'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"].',
-        'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"]. Did you mean [\'"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?[\'"]\?',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection\.',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a selection of subfields. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] must not have a selection since type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] has no subfields.""",
+        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"].""",
+        r"""Cannot query field ['"][_0-9a-zA-Z\[\]!]*['"] on type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"]. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must not have a sub selection\.""",
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] must have a sub selection\.""",
     ]
     arg_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required(, but it was not provided| but not provided)?\.',
-        'Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.',
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] argument ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)['"] is required(, but it was not provided| but not provided)?\.""",
+        r"""Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.""",
     ]
     arg_skip_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] must have a selection of subfields\. Did you mean [\'"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?[\'"]\?'
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\.\[\]!]*[\'"]. Did you mean [\'"](?P<typeref>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
+        r"""Field ['"][_0-9a-zA-Z\[\]!]*['"] of type ['"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*['"] must have a selection of subfields\. Did you mean ['"][_0-9a-zA-Z\.\[\]!]*( \{ \.\.\. \})?['"]\?""",
+        r"""Unknown argument ['"][_0-9a-zA-Z\[\]!]*['"] on field ['"][_0-9a-zA-Z\.\[\]!]*['"]. Did you mean ['"](?P<typeref>[_0-9a-zA-Z\[\]!]*)['"]\?""",
     ]
 
     match = None
