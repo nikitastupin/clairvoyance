@@ -31,6 +31,9 @@ FIELD_REGEXES = {
     ],
 }
 
+# Compiling all regexes for performance
+FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
+
 
 # pylint: disable=too-many-branches
 def get_valid_fields(error_message: str) -> Set[str]:
@@ -112,7 +115,7 @@ async def probe_valid_fields(
             # ! LEGACY CODE please keep
             # First remove field if it produced an 'Cannot query field' error
             match = re.search(
-                'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
+                r"""Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]""",
                 error_message,
             )
             if match:
