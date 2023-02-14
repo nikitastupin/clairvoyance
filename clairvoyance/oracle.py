@@ -103,31 +103,26 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     for regex in FIELD_REGEXES['SKIP']:
         if re.fullmatch(regex, error_message):
-            print('HEEEEEEY1')
             return valid_fields
 
     for regex in FIELD_REGEXES['VALID_FIELD']:
         if (match := re.fullmatch(regex, error_message)):
-            print('HEEEEEEY2')
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
-            print('HEEEEEEY3')
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
-            print('HEEEEEEY4')
             valid_fields.add(match.group('one'))
             valid_fields.add(match.group('two'))
             return valid_fields
 
     for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
         if (match := re.fullmatch(regex, error_message)):
-            print('HEEEEEEY5')
 
             for m in match.group('multi').split(', '):
                 if m:
