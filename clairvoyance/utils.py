@@ -71,6 +71,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         type=int,
         help='How many retries should be made when a request fails',
     )
+    parser.add_argument(
+        '-b',
+        '--backoff',
+        metavar='<int>',
+        type=int,
+        help='Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.',
+    )
     parser.add_argument('url')
 
     return parser.parse_args(args)

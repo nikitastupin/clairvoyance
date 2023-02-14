@@ -17,6 +17,8 @@ class Client(IClient):
         headers: Optional[Dict[str, str]] = None,
         concurrent_requests: Optional[int] = None,
         proxy: Optional[str] = None,
+        backoff: Optional[int] = None,
+        broad_exception: Optional[bool] = None,
     ) -> None:
         self._url = url
         self._session = None
@@ -25,6 +27,17 @@ class Client(IClient):
         self._max_retries = max_retries or 3
         self._semaphore = asyncio.Semaphore(concurrent_requests or 50)
         self.proxy = proxy
+        self.backoff = backoff
+        self._backoff_semaphore = asyncio.Lock()
+        if broad_exception:
+            self.ex = Exception
+        else:
+            self.ex = (
+                    aiohttp.client_exceptions.ClientConnectionError,
+                    aiohttp.client_exceptions.ClientPayloadError,
+                    asyncio.TimeoutError,
+                    json.decoder.JSONDecodeError,
+                )
 
         client_ctx.set(self)
 
@@ -58,13 +71,14 @@ class Client(IClient):
 
                 return await response.json(content_type=None)
 
-            except (
-                aiohttp.client_exceptions.ClientConnectionError,
-                aiohttp.client_exceptions.ClientPayloadError,
-                asyncio.TimeoutError,
-                json.decoder.JSONDecodeError,
-            ) as e:
+            except self.ex as e:
                 log().warning(f'Error posting to {self._url}: {e}')
+
+            if self.backoff:
+                async with self._backoff_semaphore:
+                    delay = 0.5 * self.backoff ** retries
+                    log().debug(f'Waiting for backoff {delay} seconds.')
+                    await asyncio.sleep(delay)
 
         return await self.post(document, retries + 1)
 
