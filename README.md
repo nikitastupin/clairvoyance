@@ -10,7 +10,36 @@ Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://g
 
 ## Usage
 
-You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.
+```bash
+clairvoyance -h
+usage: clairvoyance [-h] [-v] [-i <file>] [-o <file>] [-d <string>] [-H <header>] [-c <int>] [-w <file>] [-x <string>] [-m <int>] [-b <int>] [-p {slow,fast}] url
+
+positional arguments:
+  url
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose
+  -i <file>, --input-schema <file>
+                        Input file containing JSON schema which will be supplemented with obtained information
+  -o <file>, --output <file>
+                        Output file containing JSON schema (default to stdout)
+  -d <string>, --document <string>
+                        Start with this document (default query { FUZZ })
+  -H <header>, --header <header>
+  -c <int>, --concurrent-requests <int>
+                        Number of concurrent requests to send to the server
+  -w <file>, --wordlist <file>
+                        This wordlist will be used for all brute force effots (fields, arguments and so on)
+  -x <string>, --proxy <string>
+                        Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy
+  -m <int>, --max-retries <int>
+                        How many retries should be made when a request fails
+  -b <int>, --backoff <int>
+                        Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.
+  -p {slow,fast}, --profile {slow,fast}
+                        Select a speed profile. fast mod will set lot of workers to provide you quick result but if the server as some rate limit you may wnat to use slow mod.
+```
 
 ### From PyPI
 
@@ -80,3 +109,7 @@ In case of question or issue with clairvoyance please refer to [wiki](https://gi
 ## Contributing
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change. For more information about tests, internal project structure and so on refer to [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page.
+
+## Documentation
+
+- You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.

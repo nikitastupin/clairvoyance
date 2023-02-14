@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ClairvoyanceNext"
-version = "2.2"
+version = "2.3.1"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
@@ -31,6 +31,9 @@ omit = [
     'examples/*',
     'docs/*',
 ]
+
+[tool.pytest.ini_options]
+filterwarnings = [ "ignore:::aiounittest" ]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<=3.11"
