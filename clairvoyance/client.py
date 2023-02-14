@@ -18,7 +18,6 @@ class Client(IClient):
         concurrent_requests: Optional[int] = None,
         proxy: Optional[str] = None,
         backoff: Optional[int] = None,
-        broad_exception: Optional[bool] = None,
     ) -> None:
         self._url = url
         self._session = None
@@ -29,15 +28,6 @@ class Client(IClient):
         self.proxy = proxy
         self.backoff = backoff
         self._backoff_semaphore = asyncio.Lock()
-        if broad_exception:
-            self.ex = Exception
-        else:
-            self.ex = (
-                    aiohttp.client_exceptions.ClientConnectionError,
-                    aiohttp.client_exceptions.ClientPayloadError,
-                    asyncio.TimeoutError,
-                    json.decoder.JSONDecodeError,
-                )
 
         client_ctx.set(self)
 
@@ -71,7 +61,12 @@ class Client(IClient):
 
                 return await response.json(content_type=None)
 
-            except self.ex as e:
+            except (
+                    aiohttp.client_exceptions.ClientConnectionError,
+                    aiohttp.client_exceptions.ClientPayloadError,
+                    asyncio.TimeoutError,
+                    json.decoder.JSONDecodeError,
+                ) as e:
                 log().warning(f'Error posting to {self._url}: {e}')
 
             if self.backoff:
