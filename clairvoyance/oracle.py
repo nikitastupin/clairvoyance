@@ -289,9 +289,9 @@ def get_typeref(
         if name in GraphQLPrimitive:
             kind = 'SCALAR'
         elif context == FuzzingContext.FIELD:
-            kind = 'INPUT_OBJECT'
-        elif context == FuzzingContext.ARGUMENT:
             kind = 'OBJECT'
+        elif context == FuzzingContext.ARGUMENT:
+            kind = 'INPUT_OBJECT'
         else:
             log().debug(f'Unknown kind for `typeref`: \'{error_message}\'')
             return None
