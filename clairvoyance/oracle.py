@@ -259,7 +259,7 @@ def get_typeref(
         'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
     ]
     arg_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required.+',
+        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required(, but it was not provided)?\.',
         'Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.',
     ]
     arg_skip_regexes = [
