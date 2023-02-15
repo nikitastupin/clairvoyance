@@ -12,10 +12,17 @@ from clairvoyance.entities.oracle import FuzzingContext
 
 # yapf: disable
 
-
 MAIN_REGEX = r"""[_0-9A-Za-z\.\[\]!]+"""
 REQUIRED_BUT_NOT_PROVIDED = r"""required(, but it was not provided| but not provided)?\."""
 
+GENERAL_SKIP = [
+    r"""String cannot represent a non string value: .+""",
+    r"""Float cannot represent a non numeric value: .+""",
+    r"""ID cannot represent a non-string and non-integer value: .+""",
+    r"""Enum ['"]""" + MAIN_REGEX + r"""['"] cannot represent non-enum value: .+"""
+    r"""Int cannot represent non-integer value: .+""",
+    r"""Not authorized""",
+]
 
 FIELD_REGEXES = {
     'SKIP': [
@@ -43,12 +50,10 @@ FIELD_REGEXES = {
 
 ARG_REGEXES = {
     'SKIP': [
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
-        r"""String cannot represent a non string value: .+""",
-        r"""Enum ['"]""" + MAIN_REGEX + r"""['"] cannot represent non-enum value: .+\."""
     ],
     'SINGLE_SUGGESTION': [
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?""",
@@ -93,6 +98,7 @@ FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
 ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in ARG_REGEXES.items()}
 TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in TYPEREF_REGEXES.items()}
 WRONG_FIELD_REFEXES = [re.compile(r) for r in WRONG_FIELD_REFEXES]
+GENERAL_SKIP = [re.compile(r) for r in GENERAL_SKIP]
 
 
 # pylint: disable=too-many-branches
@@ -101,7 +107,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     valid_fields: Set[str] = set()
 
-    for regex in FIELD_REGEXES['SKIP']:
+    for regex in FIELD_REGEXES['SKIP'] + GENERAL_SKIP:
         if re.fullmatch(regex, error_message):
             return valid_fields
 
@@ -269,7 +275,7 @@ def get_valid_args(error_message: str) -> Set[str]:
 
     valid_args = set()
 
-    for regex in ARG_REGEXES['SKIP']:
+    for regex in ARG_REGEXES['SKIP'] + GENERAL_SKIP:
         if re.fullmatch(regex, error_message):
             return set()
 
@@ -315,7 +321,7 @@ def get_typeref(
 
         if context == FuzzingContext.FIELD:
             # in the case of a field
-            for regex in TYPEREF_REGEXES['ARG']:
+            for regex in TYPEREF_REGEXES['ARG'] + GENERAL_SKIP:
                 if re.fullmatch(regex, error_message):
                     return None
 
@@ -326,7 +332,7 @@ def get_typeref(
         elif context == FuzzingContext.ARGUMENT:
             # in the case of an argument
             # we drop the following messages
-            for regex in TYPEREF_REGEXES['FIELD']:
+            for regex in TYPEREF_REGEXES['FIELD'] + GENERAL_SKIP:
                 if re.fullmatch(regex, error_message):
                     return None
             # if not dropped, we try to extract the type
