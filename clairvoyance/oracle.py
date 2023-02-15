@@ -340,7 +340,7 @@ def get_typeref(
                 if (match := re.fullmatch(regex, error_message)):
                     return match
 
-        log().debug(f'Unknown error message for `typeref` with context `{FuzzingContext.value}`: \'{error_message}\'')
+        log().debug(f'Unknown error message for `typeref` with context `{context.value}`: \'{error_message}\'')
         return None
 
     match = __extract_matching_fields(error_message, context)
