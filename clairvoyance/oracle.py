@@ -85,7 +85,7 @@ TYPEREF_REGEXES = {
 
 WRONG_FIELD_EXAMPLE = 'IAmWrongField'
 
-WRONG_FIELD_REFEXES = [
+WRONG_TYPENAME = [
     r"""Cannot query field ['"]""" + WRONG_FIELD_EXAMPLE + r"""['"] on type ['"](?P<typename>""" + MAIN_REGEX + r""")['"].""",
     r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] has no subfields.""",
     r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] must not have a sub selection.""",
@@ -97,7 +97,7 @@ WRONG_FIELD_REFEXES = [
 FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
 ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in ARG_REGEXES.items()}
 TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in TYPEREF_REGEXES.items()}
-WRONG_FIELD_REFEXES = [re.compile(r) for r in WRONG_FIELD_REFEXES]
+WRONG_TYPENAME = [re.compile(r) for r in WRONG_TYPENAME]
 GENERAL_SKIP = [re.compile(r) for r in GENERAL_SKIP]
 
 
@@ -464,7 +464,7 @@ async def probe_typename(input_document: str) -> str:
     errors = response['errors']
 
     match = None
-    for regex in WRONG_FIELD_REFEXES:
+    for regex in WRONG_TYPENAME:
         for error in errors:
             match = re.fullmatch(regex, error['message'])
             if match:
