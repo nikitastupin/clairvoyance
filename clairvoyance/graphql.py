@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 from typing import Any, Dict, List, Optional, Set
 
@@ -7,6 +8,7 @@ from clairvoyance.entities.primitives import GraphQLKind
 
 
 class Schema:
+
     """Host of the introspection data."""
 
     def __init__(
@@ -98,16 +100,30 @@ class Schema:
         ]
         roots = [r for r in roots if r]
 
+        visited = set()
+        initial_name = name
         while name not in roots:
+            found = False
             for t in self.types.values():
                 for f in t.fields:
+                    key = f'{t.name}.{f.name}'
+                    if (key in visited):
+                        continue
                     if f.type.name == name:
                         path_from_root.insert(0, f.name)
+                        visited.add(key)
                         name = t.name
+                        found = True
+            if not found:
+                log().debug(f'get_path_from_root: Ran an iteration with no matches found')
+                raise Exception(f'Could not find path from root to \'{initial_name}\' \nCurrent path: {path_from_root}')
+        """The algorigthm above explores the schema in a DFS manner.
+        It uses a set to keep track of visited nodes, and a list to keep track of the path.
+        Keeping track of the visited nodes is necessary to avoid infinite loops (ie. recursions in the schema).
+        If a full iteration over the types is made without finding a match, it means that the schema is not connected, and the path cannot be found.
+        """
 
-        # Prepend queryType or mutationType
         path_from_root.insert(0, name)
-
         return path_from_root
 
     def get_type_without_fields(
@@ -135,11 +151,11 @@ class Schema:
         while len(path) > 1:
             doc = f'{path.pop()} {{ {doc} }}'
 
-        if path[0] == self._schema['queryType']['name']:
+        if self._schema['queryType'] and path[0] == self._schema['queryType']['name']:
             doc = f'query {{ {doc} }}'
-        elif path[0] == self._schema['mutationType']['name']:
+        elif self._schema['mutationType'] and path[0] == self._schema['mutationType']['name']:
             doc = f'mutation {{ {doc} }}'
-        elif path[0] == self._schema['subscriptionType']['name']:
+        elif self._schema['subscriptionType'] and path[0] == self._schema['subscriptionType']['name']:
             doc = f'subscription {{ {doc} }}'
         else:
             raise Exception('Unknown operation type')
@@ -148,6 +164,7 @@ class Schema:
 
 
 class TypeRef:
+
     def __init__(
         self,
         name: str,
@@ -193,6 +210,7 @@ class TypeRef:
 
 
 class InputValue:
+
     def __init__(
         self,
         name: str,
@@ -287,6 +305,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
 
 
 class Field:
+
     def __init__(
         self,
         name: str,
@@ -323,6 +342,7 @@ class Field:
 
 
 class Type:
+
     def __init__(
         self,
         name: str = '',
