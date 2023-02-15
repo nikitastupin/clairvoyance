@@ -356,6 +356,7 @@ def get_typeref(
             kind = 'OBJECT'
         elif context == FuzzingContext.ARGUMENT:
             kind = 'INPUT_OBJECT'
+            name = name.rstrip('Input') + 'Input'  # Make sure `Input` is always once at the end
         else:
             log().debug(f'Unknown kind for `typeref`: \'{error_message}\'')
             return None
