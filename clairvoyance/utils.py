@@ -28,7 +28,6 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         '-i',
         '--input-schema',
         metavar='<file>',
-        type=argparse.FileType('r'),
         help='Input file containing JSON schema which will be supplemented with obtained information',
     )
     parser.add_argument(

@@ -126,8 +126,10 @@ def cli(argv: Optional[List[str]] = None) -> None:
     # remove wordlist items that don't conform to graphQL regex github-issue #11
     if args.validate:
         wordlist_parsed = [w for w in wordlist if re.match(r'[_A-Za-z][_0-9A-Za-z]*', w)]
-        logging.info(f'Removed {len(wordlist) - len(wordlist_parsed)} items from Wordlist, to conform to name regex. '
-                     f'https://spec.graphql.org/June2018/#sec-Names')
+        logging.info(
+            f'Removed {len(wordlist) - len(wordlist_parsed)} items from Wordlist, to conform to name regex. '
+            f'https://spec.graphql.org/June2018/#sec-Names'
+        )
         wordlist = wordlist_parsed
 
     asyncio.run(
