@@ -100,6 +100,11 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default='fast',
         help='Select a speed profile. fast mod will set lot of workers to provide you quick result but if the server as some rate limit you may wnat to use slow mod.',
     )
+    parser.add_argument(
+        '--no-ssl',
+        action='store_true',
+        help='Disable SSL verification',
+    )
     parser.add_argument('url')
 
     args = parser.parse_args(args)

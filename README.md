@@ -12,7 +12,10 @@ Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://g
 
 ```bash
 clairvoyance -h
-usage: clairvoyance [-h] [-v] [-i <file>] [-o <file>] [-d <string>] [-H <header>] [-c <int>] [-w <file>] [-x <string>] [-m <int>] [-b <int>] [-p {slow,fast}] url
+usage: clairvoyance [-h] [-v] [-i <file>] [-o <file>] [-d <string>]
+                    [-H <header>] [-c <int>] [-w <file>] [-wv] [-x <string>]
+                    [-m <int>] [-b <int>] [-p {slow,fast}] [--no-ssl]
+                    url
 
 positional arguments:
   url
@@ -21,7 +24,8 @@ options:
   -h, --help            show this help message and exit
   -v, --verbose
   -i <file>, --input-schema <file>
-                        Input file containing JSON schema which will be supplemented with obtained information
+                        Input file containing JSON schema which will be
+                        supplemented with obtained information
   -o <file>, --output <file>
                         Output file containing JSON schema (default to stdout)
   -d <string>, --document <string>
@@ -30,15 +34,23 @@ options:
   -c <int>, --concurrent-requests <int>
                         Number of concurrent requests to send to the server
   -w <file>, --wordlist <file>
-                        This wordlist will be used for all brute force effots (fields, arguments and so on)
+                        This wordlist will be used for all brute force effots
+                        (fields, arguments and so on)
+  -wv, --validate       Validate the wordlist items match name Regex
   -x <string>, --proxy <string>
-                        Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy
+                        Define a proxy to use for all requests. For more info,
+                        read https://docs.aiohttp.org/en/stable/client_advance
+                        d.html?highlight=proxy
   -m <int>, --max-retries <int>
                         How many retries should be made when a request fails
   -b <int>, --backoff <int>
-                        Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.
+                        Exponential backoff factor. Delay will be calculated
+                        as: `0.5 * backoff**retries` seconds.
   -p {slow,fast}, --profile {slow,fast}
-                        Select a speed profile. fast mod will set lot of workers to provide you quick result but if the server as some rate limit you may wnat to use slow mod.
+                        Select a speed profile. fast mod will set lot of
+                        workers to provide you quick result but if the server
+                        as some rate limit you may wnat to use slow mod.
+  --no-ssl              Disable SSL verification
 ```
 
 ### From PyPI

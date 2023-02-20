@@ -22,6 +22,7 @@ def setup_context(
     proxy: Optional[str] = None,
     max_retries: Optional[int] = None,
     backoff: Optional[int] = None,
+    disable_ssl_verify: Optional[bool] = None,
 ) -> None:
     """Initialize objects and freeze them into the context."""
 
@@ -33,6 +34,7 @@ def setup_context(
         proxy=proxy,
         max_retries=max_retries,
         backoff=backoff,
+        disable_ssl_verify=disable_ssl_verify,
     )
     logger_ctx.set(logger)
 
@@ -55,6 +57,7 @@ async def blind_introspection(
     proxy: Optional[str] = None,
     max_retries: Optional[int] = None,
     backoff: Optional[int] = None,
+    disable_ssl_verify: Optional[bool] = None,
 ) -> str:
     wordlist = wordlist or load_default_wordlist()
     assert wordlist, 'No wordlist provided'
@@ -67,6 +70,7 @@ async def blind_introspection(
         proxy=proxy,
         max_retries=max_retries,
         backoff=backoff,
+        disable_ssl_verify=disable_ssl_verify,
     )
 
     logger.info(f'Starting blind introspection on {url}...')
@@ -145,5 +149,6 @@ def cli(argv: Optional[List[str]] = None) -> None:
             proxy=args.proxy,
             max_retries=args.max_retries,
             backoff=args.backoff,
+            disable_ssl_verify=args.no_ssl,
         )
     )
