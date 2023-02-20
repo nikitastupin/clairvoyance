@@ -9,6 +9,7 @@ from clairvoyance.entities.interfaces import IClient
 
 
 class Client(IClient):
+
     def __init__(
         self,
         url: str,
@@ -17,6 +18,7 @@ class Client(IClient):
         concurrent_requests: Optional[int] = None,
         proxy: Optional[str] = None,
         backoff: Optional[int] = None,
+        disable_ssl_verify: Optional[bool] = None,
     ) -> None:
         self._url = url
         self._session = None
@@ -27,6 +29,7 @@ class Client(IClient):
         self.proxy = proxy
         self.backoff = backoff
         self._backoff_semaphore = asyncio.Lock()
+        self.disable_ssl_verify = disable_ssl_verify or False
 
         client_ctx.set(self)
 
@@ -42,7 +45,8 @@ class Client(IClient):
 
         async with self._semaphore:
             if not self._session:
-                self._session = aiohttp.ClientSession(headers=self._headers)
+                connector = aiohttp.TCPConnector(verify_ssl=(not self.disable_ssl_verify))
+                self._session = aiohttp.ClientSession(headers=self._headers, connector=connector)
 
             # Translate an existing document into a GraphQL request.
             gql_document = {'query': document} if document else None
