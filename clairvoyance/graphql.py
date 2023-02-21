@@ -7,7 +7,6 @@ from clairvoyance.entities.primitives import GraphQLKind
 
 
 class Schema:
-
     """Host of the introspection data."""
 
     def __init__(
@@ -106,7 +105,7 @@ class Schema:
             for t in self.types.values():
                 for f in t.fields:
                     key = f'{t.name}.{f.name}'
-                    if (key in visited):
+                    if key in visited:
                         continue
                     if f.type.name == name:
                         path_from_root.insert(0, f.name)
@@ -114,7 +113,7 @@ class Schema:
                         name = t.name
                         found = True
             if not found:
-                log().debug(f'get_path_from_root: Ran an iteration with no matches found')
+                log().debug('get_path_from_root: Ran an iteration with no matches found')
                 raise Exception(f'Could not find path from root to \'{initial_name}\' \nCurrent path: {path_from_root}')
         """The algorigthm above explores the schema in a DFS manner.
         It uses a set to keep track of visited nodes, and a list to keep track of the path.
@@ -163,7 +162,6 @@ class Schema:
 
 
 class TypeRef:
-
     def __init__(
         self,
         name: str,
@@ -209,7 +207,6 @@ class TypeRef:
 
 
 class InputValue:
-
     def __init__(
         self,
         name: str,
@@ -304,7 +301,6 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
 
 
 class Field:
-
     def __init__(
         self,
         name: str,
@@ -341,7 +337,6 @@ class Field:
 
 
 class Type:
-
     def __init__(
         self,
         name: str = '',

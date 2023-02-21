@@ -2,12 +2,14 @@
 
 import asyncio
 import re
+import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
+from clairvoyance.entities.errors import FieldSuggestionDisabledError
 from clairvoyance.entities.oracle import FuzzingContext
 
 # yapf: disable
@@ -459,7 +461,8 @@ async def probe_typename(input_document: str) -> str:
 
     response = await client().post(document=document)
     if 'errors' not in response:
-        raise Exception(f'Unable to get typename from {document}')
+        log().debug(f'Unable to get typename from {document}')
+        sys.exit(1)
 
     errors = response['errors']
 
@@ -473,7 +476,7 @@ async def probe_typename(input_document: str) -> str:
             break
 
     if not match:
-        raise Exception(f'Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.')
+        log().debug(f'Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.')
 
     return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
 
