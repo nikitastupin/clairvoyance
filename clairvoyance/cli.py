@@ -82,7 +82,10 @@ async def blind_introspection(
 
     input_document = input_document or 'query { FUZZ }'
     ignored = set(e.value for e in GraphQLPrimitive)
+    iterations = 1
     while True:
+        logger.info(f'Iteration {iterations}')
+        iterations += 1
         schema = await oracle.clairvoyance(
             wordlist,
             input_document=input_document,
