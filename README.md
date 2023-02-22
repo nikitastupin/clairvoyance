@@ -1,101 +1,48 @@
-# clairvoyance
+# Clairvoyance
+
+Obtain GraphQL API Schema even if the introspection is disabled.
+
+[![PyPI](https://img.shields.io/pypi/v/clairvoyance)](https://pypi.org/project/clairvoyance/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/clairvoyance)](https://pypi.org/project/clairvoyance/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/clairvoyance)](https://pypi.org/project/clairvoyance/)
+[![GitHub](https://img.shields.io/github/license/nikitastupin/clairvoyance)](https://github.com/nikitastupin/clairvoyance/blob/main/LICENSE)
+
+## Introduction
 
 Some GraphQL APIs have disabled introspection. For example, [Apollo Server disables introspection automatically if the `NODE_ENV` environment variable is set to `production`](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema).
 
 Clairvoyance allows us to get GraphQL API schema when introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
 
-## Acknowledgments
+## Contributors
 
-Thanks to [Swan](https://github.com/c3b5aw) from [Escape-Technologies](https://github.com/Escape-Technologies) for 2.0 version.
+Thanks to the [contributers](#contributors) for their work.
 
-## Usage
+- [nikitastupin](https://github.com/nikitastupin)
+- [Escape](https://escape.tech) team :
+  - [iCarossio](https://github.com/iCarossio)
+  - [Swan](https://github.com/c3b5aw)
+  - [QuentinN42](https://github.com/QuentinN42)
+  - [Nohehf](https://github.com/Nohehf)
+- [i-tsaturov](https://github.com/i-tsaturov)
+- [EONRaider](https://github.com/EONRaider)
+- [noraj](https://github.com/noraj)
+- [belane](https://github.com/belane)
 
-```bash
-clairvoyance -h
-usage: clairvoyance [-h] [-v] [-i <file>] [-o <file>] [-d <string>]
-                    [-H <header>] [-c <int>] [-w <file>] [-wv] [-x <string>]
-                    [-m <int>] [-b <int>] [-p {slow,fast}] [--no-ssl]
-                    url
-
-positional arguments:
-  url
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose
-  -i <file>, --input-schema <file>
-                        Input file containing JSON schema which will be
-                        supplemented with obtained information
-  -o <file>, --output <file>
-                        Output file containing JSON schema (default to stdout)
-  -d <string>, --document <string>
-                        Start with this document (default query { FUZZ })
-  -H <header>, --header <header>
-  -c <int>, --concurrent-requests <int>
-                        Number of concurrent requests to send to the server
-  -w <file>, --wordlist <file>
-                        This wordlist will be used for all brute force effots
-                        (fields, arguments and so on)
-  -wv, --validate       Validate the wordlist items match name Regex
-  -x <string>, --proxy <string>
-                        Define a proxy to use for all requests. For more info,
-                        read https://docs.aiohttp.org/en/stable/client_advance
-                        d.html?highlight=proxy
-  -m <int>, --max-retries <int>
-                        How many retries should be made when a request fails
-  -b <int>, --backoff <int>
-                        Exponential backoff factor. Delay will be calculated
-                        as: `0.5 * backoff**retries` seconds.
-  -p {slow,fast}, --profile {slow,fast}
-                        Select a speed profile. fast mod will set lot of
-                        workers to provide you quick result but if the server
-                        as some rate limit you may wnat to use slow mod.
-  --no-ssl              Disable SSL verification
-```
-
-### From PyPI
+## Getting started
 
 ```bash
 pip install clairvoyance
+clairvoyance https://rickandmortyapi.com/graphql -o schema.json
+# should take about 2 minute
 ```
 
-### From Python interpreter
-
-```bash
-git clone https://github.com/nikitastupin/clairvoyance.git
-cd clairvoyance
-pip install poetry
-poetry config virtualenvs.in-project true
-poetry install --no-dev
-source .venv/bin/activate
-```
-
-```bash
-python3 -m clairvoyance --help
-```
-
-```bash
-python3 -m clairvoyance -o /path/to/schema.json https://swapi-graphql.netlify.app/.netlify/functions/index
-```
-
-### From Docker Image
+## Docker Image
 
 ```bash
 docker run --rm nikitastupin/clairvoyance --help
 ```
 
-```bash
-# Assuming the wordlist.txt file is found in $PWD
-docker run --rm -v $(pwd):/tmp/ nikitastupin/clairvoyance -vv -o /tmp/schema.json -w /tmp/wordlist.txt https://swapi-graphql.netlify.app/.netlify/functions/index
-```
-
-### From BlackArch Linux
-
-> NOTE: this distribution is supported by a third-party (i.e. not by the mainainters of clairvoyance)
-
-```bash
-pacman -S clairvoyance
-```
+## Advanced Usage
 
 ### Which wordlist should I use?
 
