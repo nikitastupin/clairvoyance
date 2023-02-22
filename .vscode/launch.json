@@ -5,19 +5,33 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Clairvoyance on tests/apollo-server",
+            "name": "localhost",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "module": "clairvoyance",
             "args": [
-                "-o", "/tmp/t.json",
-                "-w", "tests/data/wordlist-for-apollo-server.txt",
-                "http://localhost:4000", "--verbose"
+                "-o",
+                "/tmp/t.json",
+                "-w",
+                "tests/data/wordlist-for-apollo-server.txt",
+                "http://localhost:4000",
+                "--verbose"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "rick and morty",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "clairvoyance",
+            "args": [
+                "https://rickandmortyapi.com/graphql"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
         }
-
     ]
 }
