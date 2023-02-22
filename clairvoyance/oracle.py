@@ -6,12 +6,11 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from rich.progress import Progress, track
-
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
 from clairvoyance.entities.oracle import FuzzingContext
+from clairvoyance.utils import track
 
 # yapf: disable
 
@@ -202,7 +201,7 @@ async def probe_valid_fields(
 
     # Process results
     valid_fields = set()
-    for task in track(asyncio.as_completed(tasks), description='Sending fields', total=len(tasks)):
+    for task in track(asyncio.as_completed(tasks), description=f'Sending {len(tasks)} fields', total=len(tasks)):
         result = await task
         valid_fields.update(result)
 
@@ -578,7 +577,7 @@ async def clairvoyance(
             typename,
         )))
 
-    for task in track(asyncio.as_completed(tasks), description='Processing responses', total=len(tasks)):
+    for task in track(asyncio.as_completed(tasks), description=f'Processing {len(tasks)} responses', total=len(tasks)):
         field, args = await task
         for arg in args:
             schema.add_type(arg.type.name, 'INPUT_OBJECT')

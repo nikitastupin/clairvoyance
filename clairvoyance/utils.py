@@ -1,7 +1,14 @@
 import argparse
 import logging
 import os
-from typing import Any, List
+from typing import Any, Iterator, List
+
+from rich.progress import track as rich_track
+
+
+def track(it: Iterator, description: str, **kwargs) -> Iterator:
+    description = f'{description: <32}'
+    return rich_track(it, description, **kwargs)
 
 
 def default(arg: Any, default_value: Any) -> Any:
