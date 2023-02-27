@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ClairvoyanceNext"
-version = "2.4.1"
+version = "2.5.0"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
