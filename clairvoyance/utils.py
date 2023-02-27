@@ -1,7 +1,31 @@
 import argparse
 import logging
 import os
-from typing import Any, List
+from typing import Any, Iterator, List
+
+from rich.progress import track as rich_track
+
+
+class Tracker:
+    __enabled = False
+
+    @classmethod
+    def enable(cls):
+        cls.__enabled = True
+
+    @classmethod
+    def disable(cls):
+        cls.__enabled = False
+
+    @classmethod
+    def track(cls, it: Iterator, description: str, **kwargs) -> Iterator:
+        if not cls.__enabled:
+            return it
+        description = f'{description: <32}'
+        return rich_track(it, description, **kwargs)
+
+
+track = Tracker.track
 
 
 def default(arg: Any, default_value: Any) -> Any:
@@ -80,6 +104,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help='Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy',
     )
     parser.add_argument(
+        '-k',
+        '--no-ssl',
+        action='store_true',
+        help='Disable SSL verification',
+    )
+    parser.add_argument(
         '-m',
         '--max-retries',
         metavar='<int>',
@@ -98,18 +128,22 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         '--profile',
         choices=['slow', 'fast'],
         default='fast',
-        help='Select a speed profile. fast mod will set lot of workers to provide you quick result but if the server as some rate limit you may wnat to use slow mod.',
+        help='Select a speed profile. fast mod will set lot of workers to provide you quick result'
+        + ' but if the server as some rate limit you may wnat to use slow mod.',
     )
     parser.add_argument(
-        '--no-ssl',
+        '--progress',
         action='store_true',
-        help='Disable SSL verification',
+        help='Enable progress bar',
     )
     parser.add_argument('url')
 
     args = parser.parse_args(args)
     if args.profile == 'slow':
         set_slow_config(args)
+
+    if args.progress:
+        Tracker.enable()
 
     return args
 

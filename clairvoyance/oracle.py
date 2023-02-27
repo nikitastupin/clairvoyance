@@ -9,8 +9,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
-from clairvoyance.entities.errors import FieldSuggestionDisabledError
 from clairvoyance.entities.oracle import FuzzingContext
+from clairvoyance.utils import track
 
 # yapf: disable
 
@@ -201,8 +201,8 @@ async def probe_valid_fields(
 
     # Process results
     valid_fields = set()
-    results = await asyncio.gather(*tasks)
-    for result in results:
+    for task in track(asyncio.as_completed(tasks), description=f'Sending {len(tasks)} fields', total=len(tasks)):
+        result = await task
         valid_fields.update(result)
 
     return valid_fields
@@ -493,7 +493,7 @@ async def fetch_root_typenames() -> Dict[str, Optional[str]]:
         'subscriptionType': None,
     }
 
-    for name, document in documents.items():
+    for name, document in track(documents.items(), description='Fetching root typenames'):
         response = await client().post(document=document)
 
         data = response.get('data', {})
@@ -577,8 +577,8 @@ async def clairvoyance(
             typename,
         )))
 
-    results = await asyncio.gather(*tasks)
-    for (field, args) in results:
+    for task in track(asyncio.as_completed(tasks), description=f'Processing {len(tasks)} responses', total=len(tasks)):
+        field, args = await task
         for arg in args:
             schema.add_type(arg.type.name, 'INPUT_OBJECT')
         schema.types[typename].fields.append(field)

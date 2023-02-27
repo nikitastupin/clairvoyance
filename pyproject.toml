@@ -39,6 +39,7 @@ filterwarnings = [ "ignore:::aiounittest" ]
 python = ">=3.8,<=3.11"
 asyncio = "^3.4.3"
 aiohttp = {extras = ["speedups"], version = "^3.8.1"}
+rich = "^13.3.1"
 
 [tool.poetry.dev-dependencies]
 autoflake = "^1.4"
