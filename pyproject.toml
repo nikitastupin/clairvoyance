@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ClairvoyanceNext"
-version = "2.5.0"
+version = "2.5.1"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
@@ -36,7 +36,7 @@ omit = [
 filterwarnings = [ "ignore:::aiounittest" ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<=3.11"
+python = ">=3.8,<4.0"
 asyncio = "^3.4.3"
 aiohttp = {extras = ["speedups"], version = "^3.8.1"}
 rich = "^13.3.1"
