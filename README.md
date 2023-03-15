@@ -15,7 +15,7 @@ Clairvoyance allows us to get GraphQL API schema when introspection is disabled.
 
 ## Contributors
 
-Thanks to the [contributers](#contributors) for their work.
+Thanks to the [contributors](#contributors) for their work.
 
 - [nikitastupin](https://github.com/nikitastupin)
 - [Escape](https://escape.tech) team :
