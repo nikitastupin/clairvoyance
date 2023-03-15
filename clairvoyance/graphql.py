@@ -83,7 +83,12 @@ class Schema:
         self,
         name: str,
     ) -> List[str]:
-        """Getting path starting from root."""
+        """Getting path starting from root.
+
+        The algorigthm explores the schema in a DFS manner. It uses a set to keep track of visited nodes, and a list to keep track of the path. Keeping track of
+        the visited nodes is necessary to avoid infinite loops (ie. recursions in the schema). If a full iteration over the types is made without finding a
+        match, it means that the schema is not connected, and the path cannot be found.
+        """
 
         log().debug(f'Entered get_path_from_root({name})')
         path_from_root: List[str] = []
@@ -115,13 +120,10 @@ class Schema:
             if not found:
                 log().debug('get_path_from_root: Ran an iteration with no matches found')
                 raise Exception(f'Could not find path from root to \'{initial_name}\' \nCurrent path: {path_from_root}')
-        """The algorigthm above explores the schema in a DFS manner.
-        It uses a set to keep track of visited nodes, and a list to keep track of the path.
-        Keeping track of the visited nodes is necessary to avoid infinite loops (ie. recursions in the schema).
-        If a full iteration over the types is made without finding a match, it means that the schema is not connected, and the path cannot be found.
-        """
 
+        # Prepend queryType or mutationType
         path_from_root.insert(0, name)
+
         return path_from_root
 
     def get_type_without_fields(
