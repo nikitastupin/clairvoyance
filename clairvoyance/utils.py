@@ -1,7 +1,7 @@
 import argparse
 import logging
-import os
-from typing import Any, Iterator, List
+from os import getenv
+from typing import Any, Iterable, List
 
 from rich.progress import track as rich_track
 
@@ -10,15 +10,15 @@ class Tracker:
     __enabled = False
 
     @classmethod
-    def enable(cls):
+    def enable(cls) -> None:
         cls.__enabled = True
 
     @classmethod
-    def disable(cls):
+    def disable(cls) -> None:
         cls.__enabled = False
 
     @classmethod
-    def track(cls, it: Iterator, description: str, **kwargs) -> Iterator:
+    def track(cls, it: Iterable, description: str, **kwargs) -> Iterable:  # type: ignore[no-untyped-def]
         if not cls.__enabled:
             return it
         description = f'{description: <32}'
@@ -32,7 +32,7 @@ def default(arg: Any, default_value: Any) -> Any:
     return arg if arg is not None else default_value
 
 
-def set_slow_config(args) -> None:
+def set_slow_config(args: argparse.Namespace) -> None:
     args.concurrent_requests = default(args.concurrent_requests, 1)
     args.max_retries = default(args.max_retries, 50)
     args.backoff = default(args.backoff, 2)
@@ -138,21 +138,21 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     )
     parser.add_argument('url')
 
-    args = parser.parse_args(args)
-    if args.profile == 'slow':
-        set_slow_config(args)
+    parsed_args = parser.parse_args(args)
+    if parsed_args.profile == 'slow':
+        set_slow_config(parsed_args)
 
-    if args.progress:
+    if parsed_args.progress:
         Tracker.enable()
 
-    return args
+    return parsed_args
 
 
 def setup_logger(verbosity: int) -> None:
-    fmt = os.getenv('LOG_FMT') or '%(asctime)s \t%(levelname)s\t| %(message)s'
-    datefmt = os.getenv('LOG_DATEFMT') or '%Y-%m-%d %H:%M:%S'
+    fmt = getenv('LOG_FMT') or '%(asctime)s \t%(levelname)s\t| %(message)s'
+    datefmt = getenv('LOG_DATEFMT') or '%Y-%m-%d %H:%M:%S'
 
-    default_level = os.getenv('LOG_LEVEL') or 'INFO'
+    default_level = getenv('LOG_LEVEL') or 'INFO'
     level = 'DEBUG' if verbosity >= 1 else default_level.upper()
 
     logging.basicConfig(

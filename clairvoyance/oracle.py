@@ -17,16 +17,7 @@ from clairvoyance.utils import track
 MAIN_REGEX = r"""[_0-9A-Za-z\.\[\]!]+"""
 REQUIRED_BUT_NOT_PROVIDED = r"""required(, but it was not provided| but not provided)?\."""
 
-GENERAL_SKIP = [
-    r"""String cannot represent a non string value: .+""",
-    r"""Float cannot represent a non numeric value: .+""",
-    r"""ID cannot represent a non-string and non-integer value: .+""",
-    r"""Enum ['"]""" + MAIN_REGEX + r"""['"] cannot represent non-enum value: .+"""
-    r"""Int cannot represent non-integer value: .+""",
-    r"""Not authorized""",
-]
-
-FIELD_REGEXES = {
+_FIELD_REGEXES = {
     'SKIP': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
@@ -50,7 +41,7 @@ FIELD_REGEXES = {
     ],
 }
 
-ARG_REGEXES = {
+_ARG_REGEXES = {
     'SKIP': [
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\.""",
@@ -69,7 +60,7 @@ ARG_REGEXES = {
     ],
 }
 
-TYPEREF_REGEXES = {
+_TYPEREF_REGEXES = {
     'FIELD': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields\.""",
@@ -87,20 +78,29 @@ TYPEREF_REGEXES = {
 
 WRONG_FIELD_EXAMPLE = 'IAmWrongField'
 
-WRONG_TYPENAME = [
+_WRONG_TYPENAME = [
     r"""Cannot query field ['"]""" + WRONG_FIELD_EXAMPLE + r"""['"] on type ['"](?P<typename>""" + MAIN_REGEX + r""")['"].""",
     r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] has no subfields.""",
     r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] must not have a sub selection.""",
 ]
 
+_GENERAL_SKIP = [
+    r"""String cannot represent a non string value: .+""",
+    r"""Float cannot represent a non numeric value: .+""",
+    r"""ID cannot represent a non-string and non-integer value: .+""",
+    r"""Enum ['"]""" + MAIN_REGEX + r"""['"] cannot represent non-enum value: .+"""
+    r"""Int cannot represent non-integer value: .+""",
+    r"""Not authorized""",
+]
+
 # yapf: enable
 
 # Compiling all regexes for performance
-FIED_REGEXES = {k: [re.compile(r) for r in v] for k, v in FIELD_REGEXES.items()}
-ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in ARG_REGEXES.items()}
-TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in TYPEREF_REGEXES.items()}
-WRONG_TYPENAME = [re.compile(r) for r in WRONG_TYPENAME]
-GENERAL_SKIP = [re.compile(r) for r in GENERAL_SKIP]
+FIELD_REGEXES = {k: [re.compile(r) for r in v] for k, v in _FIELD_REGEXES.items()}
+ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in _ARG_REGEXES.items()}
+TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in _TYPEREF_REGEXES.items()}
+WRONG_TYPENAME = [re.compile(r) for r in _WRONG_TYPENAME]
+GENERAL_SKIP = [re.compile(r) for r in _GENERAL_SKIP]
 
 
 # pylint: disable=too-many-branches
@@ -110,30 +110,30 @@ def get_valid_fields(error_message: str) -> Set[str]:
     valid_fields: Set[str] = set()
 
     for regex in FIELD_REGEXES['SKIP'] + GENERAL_SKIP:
-        if re.fullmatch(regex, error_message):
+        if regex.fullmatch(error_message):
             return valid_fields
 
     for regex in FIELD_REGEXES['VALID_FIELD']:
-        match = re.fullmatch(regex, error_message)
+        match = regex.fullmatch(error_message)
         if match:
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
-        match = re.fullmatch(regex, error_message)
+        match = regex.fullmatch(error_message)
         if match:
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
-        match = re.fullmatch(regex, error_message)
+        match = regex.fullmatch(error_message)
         if match:
             valid_fields.add(match.group('one'))
             valid_fields.add(match.group('two'))
             return valid_fields
 
     for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
-        match = re.fullmatch(regex, error_message)
+        match = regex.fullmatch(error_message)
         if match:
 
             for m in match.group('multi').split(', '):
