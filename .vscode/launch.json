@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "localhost",
+            "name": "Clairvoyance on tests/apollo-server",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -22,7 +22,22 @@
             "justMyCode": true
         },
         {
-            "name": "rick and morty",
+            "name": "Clairvoyance on localhost:4000",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "clairvoyance",
+            "args": [
+                "-o",
+                "target/t.json",
+                "http://localhost:4000",
+                "--verbose"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Clairvoyance on rick and morty GQL application",
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
