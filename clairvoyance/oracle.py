@@ -114,23 +114,27 @@ def get_valid_fields(error_message: str) -> Set[str]:
             return valid_fields
 
     for regex in FIELD_REGEXES['VALID_FIELD']:
-        if (match := re.fullmatch(regex, error_message)):
+        match = re.fullmatch(regex, error_message)
+        if match:
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
-        if (match := re.fullmatch(regex, error_message)):
+        match = re.fullmatch(regex, error_message)
+        if match:
             valid_fields.add(match.group('field'))
             return valid_fields
 
     for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
-        if (match := re.fullmatch(regex, error_message)):
+        match = re.fullmatch(regex, error_message)
+        if match:
             valid_fields.add(match.group('one'))
             valid_fields.add(match.group('two'))
             return valid_fields
 
     for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
-        if (match := re.fullmatch(regex, error_message)):
+        match = re.fullmatch(regex, error_message)
+        if match:
 
             for m in match.group('multi').split(', '):
                 if m:
@@ -328,7 +332,8 @@ def get_typeref(
                     return None
 
             for regex in TYPEREF_REGEXES['FIELD']:
-                if (match := re.fullmatch(regex, error_message)):
+                match = re.fullmatch(regex, error_message)
+                if match:
                     return match
 
         elif context == FuzzingContext.ARGUMENT:
@@ -339,7 +344,8 @@ def get_typeref(
                     return None
             # if not dropped, we try to extract the type
             for regex in TYPEREF_REGEXES['ARG']:
-                if (match := re.fullmatch(regex, error_message)):
+                match = re.fullmatch(regex, error_message)
+                if match:
                     return match
 
         log().debug(f'Unknown error message for `typeref` with context `{context.value}`: \'{error_message}\'')
