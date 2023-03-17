@@ -9,7 +9,7 @@ authors = [
 maintainers = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
     "Antoine Carossio <antoine@escape.tech>",
-    "Swan <swan@escape.tech",
+    "Swan <swan@escape.tech>",
     "QuentinN42 <quentin@lieumont.fr>"
 ]
 license = "MIT"
