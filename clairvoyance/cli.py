@@ -1,8 +1,9 @@
 import asyncio
 import json
 import logging
+import re
 import sys
-import os
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from clairvoyance import graphql, oracle
@@ -18,6 +19,10 @@ def setup_context(
     logger: logging.Logger,
     headers: Optional[Dict[str, str]] = None,
     concurrent_requests: Optional[int] = None,
+    proxy: Optional[str] = None,
+    max_retries: Optional[int] = None,
+    backoff: Optional[int] = None,
+    disable_ssl_verify: Optional[bool] = None,
 ) -> None:
     """Initialize objects and freeze them into the context."""
 
@@ -26,12 +31,16 @@ def setup_context(
         url,
         headers=headers,
         concurrent_requests=concurrent_requests,
+        proxy=proxy,
+        max_retries=max_retries,
+        backoff=backoff,
+        disable_ssl_verify=disable_ssl_verify,
     )
     logger_ctx.set(logger)
 
 
 def load_default_wordlist() -> List[str]:
-    wl = os.path.join(os.path.dirname(__file__), 'wordlist.txt')
+    wl = Path(__file__).parent / 'wordlist.txt'
     with open(wl, 'r', encoding='utf-8') as f:
         return [w.strip() for w in f.readlines() if w.strip()]
 
@@ -45,6 +54,10 @@ async def blind_introspection(
     input_document: Optional[str] = None,
     input_schema_path: Optional[str] = None,
     output_path: Optional[str] = None,
+    proxy: Optional[str] = None,
+    max_retries: Optional[int] = None,
+    backoff: Optional[int] = None,
+    disable_ssl_verify: Optional[bool] = None,
 ) -> str:
     wordlist = wordlist or load_default_wordlist()
     assert wordlist, 'No wordlist provided'
@@ -54,6 +67,10 @@ async def blind_introspection(
         logger=logger,
         headers=headers,
         concurrent_requests=concurrent_requests,
+        proxy=proxy,
+        max_retries=max_retries,
+        backoff=backoff,
+        disable_ssl_verify=disable_ssl_verify,
     )
 
     logger.info(f'Starting blind introspection on {url}...')
@@ -65,7 +82,10 @@ async def blind_introspection(
 
     input_document = input_document or 'query { FUZZ }'
     ignored = set(e.value for e in GraphQLPrimitive)
+    iterations = 1
     while True:
+        logger.info(f'Iteration {iterations}')
+        iterations += 1
         schema = await oracle.clairvoyance(
             wordlist,
             input_document=input_document,
@@ -107,6 +127,17 @@ def cli(argv: Optional[List[str]] = None) -> None:
     wordlist = []
     if args.wordlist:
         wordlist = [w.strip() for w in args.wordlist.readlines() if w.strip()]
+        # de-dupe the wordlist.
+        wordlist = list(set(wordlist))
+
+    # remove wordlist items that don't conform to graphQL regex github-issue #11
+    if args.validate:
+        wordlist_parsed = [w for w in wordlist if re.match(r'[_A-Za-z][_0-9A-Za-z]*', w)]
+        logging.info(
+            f'Removed {len(wordlist) - len(wordlist_parsed)} items from Wordlist, to conform to name regex. '
+            f'https://spec.graphql.org/June2018/#sec-Names'
+        )
+        wordlist = wordlist_parsed
 
     asyncio.run(
         blind_introspection(
@@ -118,5 +149,9 @@ def cli(argv: Optional[List[str]] = None) -> None:
             input_schema_path=args.input_schema,
             output_path=args.output,
             wordlist=wordlist,
+            proxy=args.proxy,
+            max_retries=args.max_retries,
+            backoff=args.backoff,
+            disable_ssl_verify=args.no_ssl,
         )
     )

@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "clairvoyance"
-version = "2.0.6"
+name = "Clairvoyance"
+version = "2.5.1"
 description = "Obtain GraphQL API Schema even if the introspection is not enabled"
 authors = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
@@ -8,6 +8,9 @@ authors = [
 ]
 maintainers = [
     "Nikita Stupin <nikitastupin@protonmail.com>",
+    "Antoine Carossio <antoine@escape.tech>",
+    "Swan <swan@escape.tech>",
+    "QuentinN42 <quentin@lieumont.fr>"
 ]
 license = "MIT"
 packages = [
@@ -30,10 +33,14 @@ omit = [
     'docs/*',
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [ "ignore:::aiounittest" ]
+
 [tool.poetry.dependencies]
-python = ">=3.7,<=3.11"
+python = ">=3.8,<4.0"
 asyncio = "^3.4.3"
 aiohttp = {extras = ["speedups"], version = "^3.8.1"}
+rich = "^13.3.1"
 
 [tool.poetry.dev-dependencies]
 autoflake = "^1.4"

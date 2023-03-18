@@ -3,11 +3,10 @@ import json
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-
     def do_POST(self) -> None:  # pylint: disable=invalid-name
         body = json.dumps({
             'errors': [{
-                'message': 'Cannot query field "imwrongfield" on type "Mutation".',
+                'message': 'Cannot query field "IAmWrongField" on type "Mutation".',
                 'locations': [{
                     'line': 1,
                     'column': 12

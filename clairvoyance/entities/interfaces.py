@@ -8,7 +8,6 @@ import aiohttp
 
 
 class IConfig(ABC):
-
     _bucket_size: int
 
     @property

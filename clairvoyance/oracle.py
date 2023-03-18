@@ -2,12 +2,105 @@
 
 import asyncio
 import re
+import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, config, log
+from clairvoyance.entities.oracle import FuzzingContext
+from clairvoyance.utils import track
+
+# yapf: disable
+
+MAIN_REGEX = r"""[_0-9A-Za-z\.\[\]!]+"""
+REQUIRED_BUT_NOT_PROVIDED = r"""required(, but it was not provided| but not provided)?\."""
+
+_FIELD_REGEXES = {
+    'SKIP': [
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"]\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"] or ['"]""" + MAIN_REGEX + r"""['"]\?""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on (['"]""" + MAIN_REGEX + r"""['"], )+(or ['"]""" + MAIN_REGEX + r"""['"])?\?"""
+    ],
+    'VALID_FIELD': [
+        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\."""
+    ],
+    'SINGLE_SUGGESTION': [
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<field>""" + MAIN_REGEX + r""")['"]\?"""
+    ],
+    'DOUBLE_SUGGESTION': [
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<one>""" + MAIN_REGEX + r""")['"] or ['"](?P<two>""" + MAIN_REGEX + r""")['"]\?"""
+    ],
+    'MULTI_SUGGESTION': [
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+    ],
+}
+
+_ARG_REGEXES = {
+    'SKIP': [
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\.""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
+    ],
+    'SINGLE_SUGGESTION': [
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<arg>""" + MAIN_REGEX + r""")['"]\?"""
+    ],
+    'DOUBLE_SUGGESTION': [
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]( of type ['"]""" + MAIN_REGEX + r"""['"])?\. Did you mean ['"](?P<first>""" + MAIN_REGEX + r""")['"] or ['"](?P<second>""" + MAIN_REGEX + r""")['"]\?"""
+    ],
+    'MULTI_SUGGESTION': [
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+    ],
+}
+
+_TYPEREF_REGEXES = {
+    'FIELD': [
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] has no subfields\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\.""",
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"]\. Did you mean [^\?]+\?""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must not have a sub selection\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a sub selection\.""",
+
+    ],
+    'ARG': [
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
+        r"""Expected type (?P<typeref>""" + MAIN_REGEX + r"""), found .+\.""",
+    ],
+}
+
+WRONG_FIELD_EXAMPLE = 'IAmWrongField'
+
+_WRONG_TYPENAME = [
+    r"""Cannot query field ['"]""" + WRONG_FIELD_EXAMPLE + r"""['"] on type ['"](?P<typename>""" + MAIN_REGEX + r""")['"].""",
+    r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] has no subfields.""",
+    r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"](?P<typename>""" + MAIN_REGEX + r""")['"] must not have a sub selection.""",
+]
+
+_GENERAL_SKIP = [
+    r"""String cannot represent a non string value: .+""",
+    r"""Float cannot represent a non numeric value: .+""",
+    r"""ID cannot represent a non-string and non-integer value: .+""",
+    r"""Enum ['"]""" + MAIN_REGEX + r"""['"] cannot represent non-enum value: .+"""
+    r"""Int cannot represent non-integer value: .+""",
+    r"""Not authorized""",
+]
+
+# yapf: enable
+
+# Compiling all regexes for performance
+FIELD_REGEXES = {k: [re.compile(r) for r in v] for k, v in _FIELD_REGEXES.items()}
+ARG_REGEXES = {k: [re.compile(r) for r in v] for k, v in _ARG_REGEXES.items()}
+TYPEREF_REGEXES = {k: [re.compile(r) for r in v] for k, v in _TYPEREF_REGEXES.items()}
+WRONG_TYPENAME = [re.compile(r) for r in _WRONG_TYPENAME]
+GENERAL_SKIP = [re.compile(r) for r in _GENERAL_SKIP]
 
 
 # pylint: disable=too-many-branches
@@ -16,61 +109,42 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     valid_fields: Set[str] = set()
 
-    multiple_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean (?P<multi>([\'"][_A-Za-z][_0-9A-Za-z]*[\'"], )+)(or [\'"](?P<last>[_A-Za-z][_0-9A-Za-z]*)[\'"])?\?'
-    or_suggestion_regex = 'Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<one>[_A-Za-z][_0-9A-Za-z]*)[\'"] or [\'"](?P<two>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    single_suggestion_regex = 'Cannot query field [\'"]([_A-Za-z][_0-9A-Za-z]*)[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"]. Did you mean [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"]\?'
-    invalid_field_regex = ('Cannot query field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].')
-    # TODO: this regex here more than one time, make it shared?
-    valid_field_regex = [
-        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
-        'Field [\'"](?P<field>[_A-Za-z][_0-9A-Za-z]*)[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
-    ]
-
-    no_field_regexs = [
-        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] must not have a selection since type [\'"][0-9a-zA-Z\[\]!]+[\'"] has no subfields.',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required, but it was not provided.',
-    ]
-
-    for regex in no_field_regexs:
-        if re.fullmatch(regex, error_message):
+    for regex in FIELD_REGEXES['SKIP'] + GENERAL_SKIP:
+        if regex.fullmatch(error_message):
             return valid_fields
 
-    if re.fullmatch(multiple_suggestion_regex, error_message):
-        match = re.fullmatch(multiple_suggestion_regex, error_message)
+    for regex in FIELD_REGEXES['VALID_FIELD']:
+        match = regex.fullmatch(error_message)
         if match:
-            for m in match.group('multi').split(', '):
-                if m:
-                    valid_fields.add(m.strip('"').strip('\''))
+            valid_fields.add(match.group('field'))
+            return valid_fields
 
-            if match.group('last'):
-                valid_fields.add(match.group('last'))
+    for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
+        match = regex.fullmatch(error_message)
+        if match:
+            valid_fields.add(match.group('field'))
+            return valid_fields
 
-    elif re.fullmatch(or_suggestion_regex, error_message):
-        match = re.fullmatch(or_suggestion_regex, error_message)
+    for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
+        match = regex.fullmatch(error_message)
         if match:
             valid_fields.add(match.group('one'))
             valid_fields.add(match.group('two'))
+            return valid_fields
 
-    elif re.fullmatch(single_suggestion_regex, error_message):
-        match = re.fullmatch(single_suggestion_regex, error_message)
+    for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
+        match = regex.fullmatch(error_message)
         if match:
-            valid_fields.add(match.group('field'))
 
-    elif re.fullmatch(invalid_field_regex, error_message):
-        pass
+            for m in match.group('multi').split(', '):
+                if m:
+                    valid_fields.add(m.strip('"').strip('\''))
+            if match.group('last'):
+                valid_fields.add(match.group('last'))
 
-    elif re.fullmatch(valid_field_regex[0], error_message):
-        match = re.fullmatch(valid_field_regex[0], error_message)
-        if match:
-            valid_fields.add(match.group('field'))
+            return valid_fields
 
-    elif re.fullmatch(valid_field_regex[1], error_message):
-        match = re.fullmatch(valid_field_regex[1], error_message)
-        if match:
-            valid_fields.add(match.group('field'))
-
-    else:
-        log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
+    log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
 
     return valid_fields
 
@@ -113,7 +187,7 @@ async def probe_valid_fields(
             # ! LEGACY CODE please keep
             # First remove field if it produced an 'Cannot query field' error
             match = re.search(
-                'Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]',
+                r"""Cannot query field [\'"](?P<invalid_field>[_A-Za-z][_0-9A-Za-z]*)[\'"]""",
                 error_message,
             )
             if match:
@@ -131,8 +205,8 @@ async def probe_valid_fields(
 
     # Process results
     valid_fields = set()
-    results = await asyncio.gather(*tasks)
-    for result in results:
+    for task in track(asyncio.as_completed(tasks), description=f'Sending {len(tasks)} fields', total=len(tasks)):
+        result = await task
         valid_fields.update(result)
 
     return valid_fields
@@ -150,8 +224,11 @@ async def probe_valid_args(
     document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
 
     response = await client().post(document=document)
-    errors = response['errors']
 
+    if 'errors' not in response:
+        return valid_args
+
+    errors = response['errors']
     for error in errors:
         error_message = error['message']
 
@@ -160,11 +237,17 @@ async def probe_valid_args(
 
         # First remove arg if it produced an 'Unknown argument' error
         match = re.search(
-            'Unknown argument [\'"](?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]',
+            r"""Unknown argument ['"](?P<invalid_arg>[_A-Za-z][_0-9A-Za-z]*)['"] on field ['"][_A-Za-z][_0-9A-Za-z\.]*['"]""",
             error_message,
         )
         if match:
             valid_args.discard(match.group('invalid_arg'))
+
+        duplicate_arg_regex = r"""There can be only one argument named ["'](?P<arg>[_0-9a-zA-Z\.\[\]!]*)["']\.?"""
+        if re.fullmatch(duplicate_arg_regex, error_message):
+            match = re.fullmatch(duplicate_arg_regex, error_message)
+            valid_args.discard(match.group('arg'))  # type: ignore
+            continue
 
         # Second obtain args suggestions from error message
         valid_args |= get_valid_args(error_message)
@@ -198,35 +281,32 @@ def get_valid_args(error_message: str) -> Set[str]:
 
     valid_args = set()
 
-    skip_regexes = [
-        'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z][_0-9A-Za-z]*[\'"].',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][a-zA-Z\[\]!]*[\'"] must have a selection of subfields. Did you mean [\'"][_A-Za-z][_0-9A-Za-z]* \{ ... \}[\'"]\?',
-        'Field [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] is required, but it was not provided.',
-        'Unknown argument [\'"][_A-Za-z][_0-9A-Za-z]*[\'"] on field [\'"][_A-Za-z][_0-9A-Za-z.]*[\'"]\.',
-    ]
-    single_suggestion_regex = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'"]\?',
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_.0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'\"](?P<arg>[_0-9a-zA-Z\[\]!]*)[\'\"]\?'
-    ]
-    double_suggestion_regexes = [
-        'Unknown argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] on field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"]. Did you mean [\'"](?P<first>[_0-9a-zA-Z\[\]!]*)[\'"] or [\'"](?P<second>[_0-9a-zA-Z\[\]!]*)[\'"]\?'
-    ]
-
-    for regex in skip_regexes:
+    for regex in ARG_REGEXES['SKIP'] + GENERAL_SKIP:
         if re.fullmatch(regex, error_message):
             return set()
 
-    for regex in single_suggestion_regex:
+    for regex in ARG_REGEXES['SINGLE_SUGGESTION']:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
             if match:
                 valid_args.add(match.group('arg'))
 
-    for regex in double_suggestion_regexes:
+    for regex in ARG_REGEXES['DOUBLE_SUGGESTION']:
         match = re.fullmatch(regex, error_message)
         if match:
             valid_args.add(match.group('first'))
             valid_args.add(match.group('second'))
+
+    for regex in ARG_REGEXES['MULTI_SUGGESTION']:
+        if re.fullmatch(regex, error_message):
+            match = re.fullmatch(regex, error_message)
+            if match:
+                for m in match.group('multi').split(', '):
+                    if m:
+                        valid_args.add(m.strip('"').strip('\''))
+
+                if match.group('last'):
+                    valid_args.add(match.group('last'))
 
     if not valid_args:
         log().debug(f'Unknown error message for `valid_args`: \'{error_message}\'')
@@ -236,52 +316,58 @@ def get_valid_args(error_message: str) -> Set[str]:
 
 def get_typeref(
     error_message: str,
-    context: str,
+    context: FuzzingContext,
 ) -> Optional[graphql.TypeRef]:
     """Using predefined regex deduce the type of a field."""
 
-    field_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a selection of subfields. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ ... \}[\'"]\?',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
-        'Cannot query field [\'"][_0-9a-zA-Z\[\]!]*[\'"] on type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"].',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection\.',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must have a sub selection\.'
-    ]
-    arg_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] argument [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] is required.+',
-        'Expected type (?P<typeref>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*), found .+\.',
-    ]
-    arg_skip_regexes = [
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"][_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*[\'"] must have a selection of subfields\. Did you mean [\'"][_0-9a-zA-Z\[\]!]* \{ \.\.\. \}[\'"]\?'
-    ]
+    def __extract_matching_fields(
+        error_message: str,
+        context: FuzzingContext,
+    ) -> Optional[re.Match]:
 
-    match = None
-    if context == 'Field':
-        for regex in field_regexes:
-            if re.fullmatch(regex, error_message):
-                match = re.fullmatch(regex, error_message)
-                break
-    elif context == 'InputValue':
-        for regex in arg_skip_regexes:
-            if re.fullmatch(regex, error_message):
-                return None
+        if context == FuzzingContext.FIELD:
+            # in the case of a field
+            for regex in TYPEREF_REGEXES['ARG'] + GENERAL_SKIP:
+                if re.fullmatch(regex, error_message):
+                    return None
 
-        for regex in arg_regexes:
-            if re.fullmatch(regex, error_message):
+            for regex in TYPEREF_REGEXES['FIELD']:
                 match = re.fullmatch(regex, error_message)
-                break
+                if match:
+                    return match
+
+        elif context == FuzzingContext.ARGUMENT:
+            # in the case of an argument
+            # we drop the following messages
+            for regex in TYPEREF_REGEXES['FIELD'] + GENERAL_SKIP:
+                if re.fullmatch(regex, error_message):
+                    return None
+            # if not dropped, we try to extract the type
+            for regex in TYPEREF_REGEXES['ARG']:
+                match = re.fullmatch(regex, error_message)
+                if match:
+                    return match
+
+        log().debug(f'Unknown error message for `typeref` with context `{context.value}`: \'{error_message}\'')
+        return None
+
+    match = __extract_matching_fields(error_message, context)
 
     if match:
         tk = match.group('typeref')
 
         name = tk.replace('!', '').replace('[', '').replace(']', '')
         kind = ''
-        if name.endswith('Input'):
-            kind = 'INPUT_OBJECT'
-        elif name in GraphQLPrimitive:
+        if name in GraphQLPrimitive:
             kind = 'SCALAR'
-        else:
+        elif context == FuzzingContext.FIELD:
             kind = 'OBJECT'
+        elif context == FuzzingContext.ARGUMENT:
+            kind = 'INPUT_OBJECT'
+            name = name.rstrip('Input') + 'Input'  # Make sure `Input` is always once at the end
+        else:
+            log().debug(f'Unknown kind for `typeref`: \'{error_message}\'')
+            return None
 
         is_list = bool('[' in tk and ']' in tk)
         non_null_item = bool(is_list and '!]' in tk)
@@ -295,13 +381,12 @@ def get_typeref(
             non_null=non_null,
         )
 
-    log().debug(f'Unknown error message for `typeref`: \'{error_message}\'')
     return None
 
 
 async def probe_typeref(
     documents: List[str],
-    context: str,
+    context: FuzzingContext,
 ) -> Optional[graphql.TypeRef]:
     """Sending a document to attain errors in order to deduce the type of fields."""
 
@@ -335,7 +420,7 @@ async def probe_typeref(
         if result:
             typeref = result
 
-    if not typeref and context != 'InputValue':
+    if not typeref and context != FuzzingContext.ARGUMENT:
         try:
             raise Exception(f'Unable to get TypeRef for {documents} in context {context}')
         except Exception as e:
@@ -355,7 +440,7 @@ async def probe_field_type(
         input_document.replace('FUZZ', f'{field} {{ lol }}'),
     ]
 
-    return await probe_typeref(documents, 'Field')
+    return await probe_typeref(documents, FuzzingContext.FIELD)
 
 
 async def probe_arg_typeref(
@@ -373,24 +458,22 @@ async def probe_arg_typeref(
         input_document.replace('FUZZ', f'{field}({arg}: false)'),
     ]
 
-    return await probe_typeref(documents, 'InputValue')
+    return await probe_typeref(documents, FuzzingContext.ARGUMENT)
 
 
 async def probe_typename(input_document: str) -> str:
-    wrong_field = 'imwrongfield'
-    document = input_document.replace('FUZZ', wrong_field)
+
+    document = input_document.replace('FUZZ', WRONG_FIELD_EXAMPLE)
 
     response = await client().post(document=document)
+    if 'errors' not in response:
+        log().debug(f'Unable to get typename from {document}')
+        sys.exit(1)
+
     errors = response['errors']
 
-    wrong_field_regexes = [
-        f'Cannot query field [\'"]{wrong_field}[\'"] on type [\'"](?P<typename>[_0-9a-zA-Z\[\]!]*)[\'"].',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] must not have a selection since type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] has no subfields.',
-        'Field [\'"][_0-9a-zA-Z\[\]!]*[\'"] of type [\'"](?P<typename>[_A-Za-z\[\]!][_0-9a-zA-Z\[\]!]*)[\'"] must not have a sub selection.'
-    ]
-
     match = None
-    for regex in wrong_field_regexes:
+    for regex in WRONG_TYPENAME:
         for error in errors:
             match = re.fullmatch(regex, error['message'])
             if match:
@@ -399,7 +482,7 @@ async def probe_typename(input_document: str) -> str:
             break
 
     if not match:
-        raise Exception(f'Expected "{errors}" to match any of "{wrong_field_regexes}".')
+        log().debug(f'Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.')
 
     return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
 
@@ -416,7 +499,7 @@ async def fetch_root_typenames() -> Dict[str, Optional[str]]:
         'subscriptionType': None,
     }
 
-    for name, document in documents.items():
+    for name, document in track(documents.items(), description='Fetching root typenames'):
         response = await client().post(document=document)
 
         data = response.get('data', {})
@@ -500,8 +583,8 @@ async def clairvoyance(
             typename,
         )))
 
-    results = await asyncio.gather(*tasks)
-    for (field, args) in results:
+    for task in track(asyncio.as_completed(tasks), description=f'Processing {len(tasks)} responses', total=len(tasks)):
+        field, args = await task
         for arg in args:
             schema.add_type(arg.type.name, 'INPUT_OBJECT')
         schema.types[typename].fields.append(field)

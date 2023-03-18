@@ -9,10 +9,10 @@ import aiounittest
 from clairvoyance import graphql, oracle
 from clairvoyance.client import Client
 from clairvoyance.entities.context import client
+from clairvoyance.entities.oracle import FuzzingContext
 
 
 class TestGetValidFields(unittest.TestCase):
-
     # pylint: disable=line-too-long
     def test_multiple_suggestions(self) -> None:
         want = {
@@ -48,7 +48,6 @@ class TestGetValidFields(unittest.TestCase):
 
 
 class TestGetValidArgs(unittest.TestCase):
-
     def test_single_suggestion(self) -> None:
         want = {'input'}
         got = oracle.get_valid_args('Unknown argument "inpu" on field "setNameForHome" of type "Mutation". Did you mean "input"?')
@@ -59,9 +58,13 @@ class TestGetValidArgs(unittest.TestCase):
         got = oracle.get_valid_args('Unknown argument "fasten" on field "filmConnection" of type "Vehicle". Did you mean "after" or "last"?')
         self.assertEqual(got, want)
 
+    def test_multiple_suggestions(self) -> None:
+        want_3 = {'after', 'first', 'types'}
+        got_3 = oracle.get_valid_args('Unknown argument "fares" on field "Organization.vulnerabilities". Did you mean "after", "first", or "types"?')
+        self.assertEqual(got_3, want_3)
+
 
 class TestGetTypeRef(unittest.TestCase):
-
     def test_non_nullable_object(self) -> None:
         want = graphql.TypeRef(
             name='SetArmedStateForHomeInput',
@@ -72,7 +75,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertEqual(got, want)
 
@@ -86,7 +89,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Expected type SetArmedStateForHomeInput!, found 7.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertEqual(got, want)
 
@@ -101,7 +104,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" of type "SetArmedStateForHomePayload" must have a selection of subfields. Did you mean "setArmedStateForHome { ... }"?',
-            'Field',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -115,7 +118,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "isMfaEnabled" must not have a selection since type "Boolean!" has no subfields.',
-            'Field',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -128,8 +131,22 @@ class TestGetTypeRef(unittest.TestCase):
             non_null=False,
         )
         got = oracle.get_typeref(
-            'Cannot query field "imwrongfield" on type "HomeSettings".',
-            'Field',
+            'Cannot query field "IAmWrongField" on type "HomeSettings".',
+            FuzzingContext.FIELD,
+        )
+        self.assertEqual(got, want)
+
+    def test_field_regex_4(self) -> None:
+        want = graphql.TypeRef(
+            name='InitDomainActionPayload',
+            kind='OBJECT',
+            is_list=False,
+            non_null_item=False,
+            non_null=False,
+        )
+        got = oracle.get_typeref(
+            'Cannot query field "message" on type "InitDomainActionPayload". Did you mean to use an inline fragment on "UserError" or "BaseUserError"?',
+            FuzzingContext.FIELD,
         )
         self.assertEqual(got, want)
 
@@ -138,7 +155,7 @@ class TestGetTypeRef(unittest.TestCase):
         with self.assertLogs() as cm:
             got = oracle.get_typeref(
                 'Field "species" of type "Species" must have a selection of subfields. Did you mean "species { ... }"?',
-                'InputValue',
+                FuzzingContext.ARGUMENT,
             )
             # https://stackoverflow.com/a/61381576
             logging.warning('Dummy warning')
@@ -155,7 +172,7 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "node" argument "id" of type "ID!" is required but not provided.',
-            'InputValue',
+            FuzzingContext.ARGUMENT,
         )
         self.assertIsNotNone(got)
 
@@ -176,7 +193,7 @@ class TestGetTypeRef(unittest.TestCase):
             non_null_item=False,
             non_null=False,
         )
-        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', 'Field')
+        got = oracle.get_typeref('Field "systemHealth" of type "String" must not have a sub selection.', FuzzingContext.FIELD)
 
         self.assertIsNotNone(got)
         if not got:
@@ -190,7 +207,6 @@ class TestGetTypeRef(unittest.TestCase):
 
 
 class TestTypeRef(unittest.TestCase):
-
     def test_to_json(self) -> None:
         name = 'TestObject'
         kind = 'OBJECT'
@@ -223,7 +239,6 @@ class TestTypeRef(unittest.TestCase):
 
 
 class TestGraphql(unittest.TestCase):
-
     def test_field_or_arg_type_from_json(self) -> None:
         name = 'TestObject'
         kind = 'OBJECT'
@@ -255,7 +270,6 @@ class TestGraphql(unittest.TestCase):
 
 
 class TestProbeTypename(aiounittest.AsyncTestCase):
-
     _unstable: subprocess.Popen[bytes]
 
     @classmethod

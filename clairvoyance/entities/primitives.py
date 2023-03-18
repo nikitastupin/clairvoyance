@@ -7,7 +7,6 @@ from clairvoyance.entities.meta import MetaEnum
 
 @unique
 class GraphQLPrimitive(str, Enum, metaclass=MetaEnum):
-
     """The default GraphQL Scalar primitives.
 
     ref: https://spec.graphql.org/draft/#sec-Input-Values
@@ -22,7 +21,6 @@ class GraphQLPrimitive(str, Enum, metaclass=MetaEnum):
 
 @unique
 class GraphQLKind(str, Enum, metaclass=MetaEnum):
-
     """The default GraphQL kinds.
 
     ref: https://spec.graphql.org/draft/#sec-Types

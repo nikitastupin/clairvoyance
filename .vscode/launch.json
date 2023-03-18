@@ -11,13 +11,42 @@
             "cwd": "${workspaceFolder}",
             "module": "clairvoyance",
             "args": [
-                "-o", "/tmp/t.json",
-                "-w", "tests/data/wordlist-for-apollo-server.txt",
-                "http://localhost:4000", "--verbose"
+                "-o",
+                "/tmp/t.json",
+                "-w",
+                "tests/data/wordlist-for-apollo-server.txt",
+                "http://localhost:4000",
+                "--verbose"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Clairvoyance on localhost:4000",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "clairvoyance",
+            "args": [
+                "-o",
+                "target/t.json",
+                "http://localhost:4000",
+                "--verbose"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Clairvoyance on rick and morty GQL application",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "module": "clairvoyance",
+            "args": [
+                "https://rickandmortyapi.com/graphql"
             ],
             "console": "integratedTerminal",
             "justMyCode": true
         }
-
     ]
 }

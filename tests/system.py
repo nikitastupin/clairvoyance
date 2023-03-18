@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 
 
 class TestClairvoyance(unittest.TestCase):
-
     port: str
     clairvoyance: subprocess.CompletedProcess
     schema: Any
@@ -28,6 +27,7 @@ class TestClairvoyance(unittest.TestCase):
                 'clairvoyance',
                 '-o',
                 output_file,
+                '-wv',
                 '-w',
                 'tests/data/wordlist-for-apollo-server.txt',
                 f'http://localhost:{cls.port}',
@@ -55,6 +55,9 @@ class TestClairvoyance(unittest.TestCase):
                 return t
 
         return None
+
+    def test_validate_wordlist(self):
+        self.assertIn(b'Removed 1 items from Wordlist', self.clairvoyance.stderr)
 
     def test_found_root_type_names(self) -> None:
         self.assertEqual(self.schema['queryType'], {'name': 'Query'})

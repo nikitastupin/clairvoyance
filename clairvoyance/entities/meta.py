@@ -3,7 +3,6 @@ from typing import Any, Type
 
 
 class MetaEnum(EnumMeta):
-
     """Meta class for Enum."""
 
     # pylint: disable=no-value-for-parameter
