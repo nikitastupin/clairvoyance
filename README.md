@@ -1,6 +1,6 @@
 # Clairvoyance
 
-Obtain GraphQL API Schema even if the introspection is disabled.
+Obtain GraphQL API schema even if the introspection is disabled.
 
 [![PyPI](https://img.shields.io/pypi/v/clairvoyance)](https://pypi.org/project/clairvoyance/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/clairvoyance)](https://pypi.org/project/clairvoyance/)
@@ -11,7 +11,7 @@ Obtain GraphQL API Schema even if the introspection is disabled.
 
 Some GraphQL APIs have disabled introspection. For example, [Apollo Server disables introspection automatically if the `NODE_ENV` environment variable is set to `production`](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema).
 
-Clairvoyance helps to obtain GraphQL API Schema even if the introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
+Clairvoyance helps to obtain GraphQL API schema even if the introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
 
 ## Contributors
 
