@@ -11,14 +11,14 @@ Obtain GraphQL API Schema even if the introspection is disabled.
 
 Some GraphQL APIs have disabled introspection. For example, [Apollo Server disables introspection automatically if the `NODE_ENV` environment variable is set to `production`](https://www.apollographql.com/docs/tutorial/schema/#explore-your-schema).
 
-Clairvoyance allows us to get GraphQL API schema when introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
+Clairvoyance helps to obtain GraphQL API Schema even if the introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
 
 ## Contributors
 
-Thanks to the [contributors](#contributors) for their work.
+Thanks to the contributors for their work.
 
 - [nikitastupin](https://github.com/nikitastupin)
-- [Escape](https://escape.tech) team :
+- [Escape](https://escape.tech) team
   - [iCarossio](https://github.com/iCarossio)
   - [Swan](https://github.com/c3b5aw)
   - [QuentinN42](https://github.com/QuentinN42)
@@ -28,15 +28,17 @@ Thanks to the [contributors](#contributors) for their work.
 - [noraj](https://github.com/noraj)
 - [belane](https://github.com/belane)
 
-## Getting started
+## Getting Started
+
+### pip
 
 ```bash
 pip install clairvoyance
 clairvoyance https://rickandmortyapi.com/graphql -o schema.json
-# should take about 2 minute
+# should take about 2 minutes
 ```
 
-## Docker Image
+### docker
 
 ```bash
 docker run --rm nikitastupin/clairvoyance --help
@@ -51,7 +53,7 @@ There are at least two approaches:
 - Use general English words (e.g. [google-10000-english](https://github.com/first20hours/google-10000-english)).
 - Create target specific wordlist by extracting all valid GraphQL names from application HTTP traffic, from mobile application static files, etc. Regex for GraphQL name is [`[_A-Za-z][_0-9A-Za-z]*`](http://spec.graphql.org/June2018/#sec-Names).
 
-### Environment Variables
+### Environment variables
 
 ```bash
 LOG_FMT=`%(asctime)s \t%(levelname)s\t| %(message)s` # A string format for logging.
@@ -71,4 +73,4 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 ## Documentation
 
-- You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.
+You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.
