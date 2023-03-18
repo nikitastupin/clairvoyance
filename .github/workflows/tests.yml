@@ -1,4 +1,4 @@
-name: Tests
+name: tests
 
 on:
   push:
@@ -15,6 +15,9 @@ on:
       - '.gitignore'
     branches:
       - main
+
+permissions:
+  contents: read
 
 env:
   MODULE_NAME: clairvoyance
