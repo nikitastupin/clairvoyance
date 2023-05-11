@@ -129,7 +129,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         choices=['slow', 'fast'],
         default='fast',
         help='Select a speed profile. fast mod will set lot of workers to provide you quick result'
-        + ' but if the server as some rate limit you may wnat to use slow mod.',
+        + ' but if the server as some rate limit you may want to use slow mod.',
     )
     parser.add_argument(
         '--progress',
