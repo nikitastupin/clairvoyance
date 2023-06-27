@@ -44,14 +44,6 @@ clairvoyance https://rickandmortyapi.com/graphql -o schema.json
 docker run --rm nikitastupin/clairvoyance --help
 ```
 
-### pacman
-
-> NOTE: this distribution is supported by a third-party (i.e. not by the mainainters of clairvoyance)
-
-```bash
-pacman -S clairvoyance
-```
-
 ## Advanced Usage
 
 ### Which wordlist should I use?
