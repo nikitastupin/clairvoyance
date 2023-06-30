@@ -5,9 +5,16 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v3
       - uses: softprops/action-gh-release@v1
@@ -16,18 +23,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-python@v4
+
       - name: Install dependencies
-        run: |
-          pip install poetry
+        run: pip install poetry
+
       - name: Setup poetry
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-dev
+
       - name: Build package
         run: |
           source .venv/bin/activate
           poetry build
+
       - name: Upload package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
@@ -41,8 +52,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -57,7 +68,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/clairvoyance:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/clairvoyance:latest
           platforms: linux/amd64,linux/arm64
           
       - name: Image digest
