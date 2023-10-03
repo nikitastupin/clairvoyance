@@ -422,8 +422,10 @@ async def probe_typeref(
 
     if not typeref and context != FuzzingContext.ARGUMENT:
         try:
-            raise Exception(f"""Unable to get TypeRef for {documents} in context {context}.
-                            It is very likely that Field Suggestion is not fully enabled on this endpoint.""")
+            raise Exception(
+                f"""Unable to get TypeRef for {documents} in context {context}.
+                            It is very likely that Field Suggestion is not fully enabled on this endpoint."""
+            )
         except Exception as e:
             raise Exception(e) from e
 
@@ -468,8 +470,10 @@ async def probe_typename(input_document: str) -> str:
 
     response = await client().post(document=document)
     if 'errors' not in response:
-        log().warning(f"""Unable to get typename from {document}.
-                      Field Suggestion might not be enabled on this endpoint. Using default "Query""")
+        log().warning(
+            f"""Unable to get typename from {document}.
+                      Field Suggestion might not be enabled on this endpoint. Using default "Query"""
+        )
         return 'Query'
 
     errors = response['errors']
@@ -484,8 +488,10 @@ async def probe_typename(input_document: str) -> str:
             break
 
     if not match:
-        log().debug(f"""Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.
-                    Field Suggestion might not be enabled on this endpoint. Using default "Query""")
+        log().debug(
+            f"""Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.
+                    Field Suggestion might not be enabled on this endpoint. Using default "Query"""
+        )
         return 'Query'
 
     return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
@@ -586,8 +592,8 @@ async def clairvoyance(
     for field_name in valid_fields:
         tasks.append(asyncio.create_task(explore_field(
             field_name,
+            input_document,
             argument_wordlist,
-            field_wordlist,
             typename,
         )))
 

@@ -65,7 +65,7 @@ async def blind_introspection(
 
     argument_wordlist = wordlist or load_argument_wordlist()
     assert argument_wordlist, 'No argument wordlist provided'
-    
+
     setup_context(
         url,
         logger=logger,
