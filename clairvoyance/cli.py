@@ -12,6 +12,7 @@ from clairvoyance.config import Config
 from clairvoyance.entities import GraphQLPrimitive
 from clairvoyance.entities.context import client, logger_ctx
 from clairvoyance.utils import parse_args, setup_logger
+from clairvoyance.wordlist import load_argument_wordlist, load_field_wordlist
 
 
 def setup_context(
@@ -59,9 +60,12 @@ async def blind_introspection(
     backoff: Optional[int] = None,
     disable_ssl_verify: Optional[bool] = None,
 ) -> str:
-    wordlist = wordlist or load_default_wordlist()
-    assert wordlist, 'No wordlist provided'
+    field_wordlist = wordlist or load_field_wordlist()
+    assert field_wordlist, 'No field wordlist provided'
 
+    argument_wordlist = wordlist or load_argument_wordlist()
+    assert argument_wordlist, 'No argument wordlist provided'
+    
     setup_context(
         url,
         logger=logger,
@@ -87,7 +91,8 @@ async def blind_introspection(
         logger.info(f'Iteration {iterations}')
         iterations += 1
         schema = await oracle.clairvoyance(
-            wordlist,
+            field_wordlist=field_wordlist,
+            argument_wordlist=argument_wordlist,
             input_document=input_document,
             input_schema=input_schema,
         )

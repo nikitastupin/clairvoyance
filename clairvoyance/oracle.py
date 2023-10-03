@@ -150,13 +150,13 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
 
 async def probe_valid_fields(
-    wordlist: List[str],
+    field_wordlist: List[str],
     input_document: str,
 ) -> Set[str]:
-    """Sending a wordlist to check for valid fields.
+    """Sending a field_wordlist to check for valid fields.
 
     Args:
-        wordlist: The words that would leads to discovery.
+        field_wordlist: The words that would leads to discovery.
         config: The config for the graphql client.
         input_document: The base document.
 
@@ -165,7 +165,7 @@ async def probe_valid_fields(
     """
 
     async def __probation(i: int) -> Set[str]:
-        bucket = wordlist[i:i + config().bucket_size]
+        bucket = field_wordlist[i:i + config().bucket_size]
         valid_fields = set(bucket)
         document = input_document.replace('FUZZ', ' '.join(bucket))
 
@@ -200,7 +200,7 @@ async def probe_valid_fields(
 
     # Create task list
     tasks: List[asyncio.Task] = []
-    for i in range(0, len(wordlist), config().bucket_size):
+    for i in range(0, len(field_wordlist), config().bucket_size):
         tasks.append(asyncio.create_task(__probation(i)))
 
     # Process results
@@ -214,14 +214,14 @@ async def probe_valid_fields(
 
 async def probe_valid_args(
     field: str,
-    wordlist: List[str],
+    argument_wordlist: List[str],
     input_document: str,
 ) -> Set[str]:
-    """Sends the wordlist as arguments and deduces its type from the error msgs received."""
+    """Sends the argument_wordlist as arguments and deduces its type from the error msgs received."""
 
-    valid_args = set(wordlist)
+    valid_args = set(argument_wordlist)
 
-    document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
+    document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in argument_wordlist])})')
 
     response = await client().post(document=document)
 
@@ -257,14 +257,14 @@ async def probe_valid_args(
 
 async def probe_args(
     field: str,
-    wordlist: List[str],
+    argument_wordlist: List[str],
     input_document: str,
 ) -> Set[str]:
     """Wrapper function for deducing the arg types."""
 
     tasks: List[asyncio.Task] = []
-    for i in range(0, len(wordlist), config().bucket_size):
-        bucket = wordlist[i:i + config().bucket_size]
+    for i in range(0, len(argument_wordlist), config().bucket_size):
+        bucket = argument_wordlist[i:i + config().bucket_size]
         tasks.append(asyncio.create_task(probe_valid_args(field, bucket, input_document)))
 
     valid_args: Set[str] = set()
@@ -517,7 +517,7 @@ async def fetch_root_typenames() -> Dict[str, Optional[str]]:
 async def explore_field(
     field_name: str,
     input_document: str,
-    wordlist: List[str],
+    argument_wordlist: List[str],
     typename: str,
 ) -> Tuple[graphql.Field, List[graphql.InputValue]]:
     """Perform exploration on a field."""
@@ -534,7 +534,7 @@ async def explore_field(
     else:
         arg_names = await probe_args(
             field.name,
-            wordlist,
+            argument_wordlist,
             input_document,
         )
 
@@ -555,7 +555,8 @@ async def explore_field(
 
 
 async def clairvoyance(
-    wordlist: List[str],
+    field_wordlist: List[str],
+    argument_wordlist: List[str],
     input_document: str,
     input_schema: Dict[str, Any] = None,
 ) -> str:
@@ -576,7 +577,7 @@ async def clairvoyance(
     log().debug(f'__typename = {typename}')
 
     valid_fields = await probe_valid_fields(
-        wordlist,
+        field_wordlist,
         input_document,
     )
     log().debug(f'{typename}.fields = {valid_fields}')
@@ -585,8 +586,8 @@ async def clairvoyance(
     for field_name in valid_fields:
         tasks.append(asyncio.create_task(explore_field(
             field_name,
-            input_document,
-            wordlist,
+            argument_wordlist,
+            field_wordlist,
             typename,
         )))
 
