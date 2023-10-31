@@ -55,6 +55,7 @@ class Client(IClient):
                     self._url,
                     json=gql_document,
                     proxy=self.proxy,
+                    verify_ssl=False
                 )
 
                 if response.status >= 500:
