@@ -2,7 +2,6 @@
 
 import asyncio
 import re
-import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
 
