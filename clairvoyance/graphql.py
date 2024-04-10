@@ -94,7 +94,7 @@ class Schema:
         path_from_root: List[str] = []
 
         if name not in self.types:
-            raise Exception(f'Type \'{name}\' not in schema!')
+            raise ValueError(f'Type \'{name}\' not in schema!')
 
         roots = [
             self._schema['queryType']['name'] if self._schema['queryType'] else '',
@@ -119,7 +119,7 @@ class Schema:
                         found = True
             if not found:
                 log().debug('get_path_from_root: Ran an iteration with no matches found')
-                raise Exception(f'Could not find path from root to \'{initial_name}\' \nCurrent path: {path_from_root}')
+                raise ValueError(f'Could not find path from root to \'{initial_name}\' \nCurrent path: {path_from_root}')
 
         # Prepend queryType or mutationType
         path_from_root.insert(0, name)
@@ -158,7 +158,7 @@ class Schema:
         elif self._schema['subscriptionType'] and path[0] == self._schema['subscriptionType']['name']:
             doc = f'subscription {{ {doc} }}'
         else:
-            raise Exception('Unknown operation type')
+            raise ValueError('Unknown operation type')
 
         return doc
 
@@ -173,7 +173,7 @@ class TypeRef:
         non_null: bool = False,
     ) -> None:
         if not is_list and non_null_item:
-            raise Exception('elements can\'t be NON_NULL if TypeRef is not LIST')
+            raise ValueError('Elements can\'t be NON_NULL if TypeRef is not LIST')
 
         self.name = name
         self.kind = kind
@@ -266,7 +266,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
                 is_list=True,
             )
         else:
-            raise Exception(f'Unexpected type.kind: {_json["kind"]}')
+            raise ValueError(f'Unexpected type.kind: {_json["kind"]}')
     elif not _json['ofType']['ofType']['ofType']:
         actual_type = _json['ofType']['ofType']
 
@@ -286,7 +286,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
                 non_null_item=True,
             )
         else:
-            raise Exception(f'Unexpected type.kind: {_json["kind"]}')
+            raise ValueError(f'Unexpected type.kind: {_json["kind"]}')
     elif not _json['ofType']['ofType']['ofType']['ofType']:
         actual_type = _json['ofType']['ofType']['ofType']
         typ = TypeRef(
@@ -297,7 +297,7 @@ def field_or_arg_type_from_json(_json: Dict[str, Any]) -> 'TypeRef':
             non_null=True,
         )
     else:
-        raise Exception('Invalid field or arg (too many \'ofType\')')
+        raise ValueError('Invalid field or arg (too many \'ofType\')')
 
     return typ
 
@@ -310,7 +310,7 @@ class Field:
         args: List[InputValue] = None,
     ):
         if not typeref:
-            raise Exception(f'Can\'t create {name} Field from {typeref} TypeRef.')
+            raise ValueError(f'Can\'t create {name} Field from {typeref} TypeRef.')
 
         self.name = name
         self.type = typeref
