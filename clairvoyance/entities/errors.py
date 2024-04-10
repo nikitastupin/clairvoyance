@@ -1,0 +1,2 @@
+class EndpointError(Exception):
+    pass

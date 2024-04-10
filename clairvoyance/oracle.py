@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
+from clairvoyance.entities.errors import EndpointError
 from clairvoyance.entities.context import client, config, log
 from clairvoyance.entities.oracle import FuzzingContext
 from clairvoyance.utils import track
@@ -421,11 +422,9 @@ async def probe_typeref(
             typeref = result
 
     if not typeref and context != FuzzingContext.ARGUMENT:
-        try:
-            raise Exception(f"""Unable to get TypeRef for {documents} in context {context}.
-                            It is very likely that Field Suggestion is not fully enabled on this endpoint.""")
-        except Exception as e:
-            raise Exception(e) from e
+        error_message = f'Unable to get TypeRef for {documents} in context {context}. '
+        error_message += 'It is very likely that Field Suggestion is not fully enabled on this endpoint.'
+        raise EndpointError(error_message)
 
     return typeref
 
