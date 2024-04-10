@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Clairvoyance on tests/apollo-server",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "module": "clairvoyance",
@@ -23,7 +23,7 @@
         },
         {
             "name": "Clairvoyance on localhost:4000",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "module": "clairvoyance",
@@ -38,7 +38,7 @@
         },
         {
             "name": "Clairvoyance on rick and morty GQL application",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "module": "clairvoyance",
