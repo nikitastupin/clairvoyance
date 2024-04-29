@@ -16,59 +16,59 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 env:
+  PYTHON_VERSION: "3.10"
+  NODE_VERSION: "20"
   MODULE_NAME: clairvoyance
   MIN_TEST_COV: 0
   SERVER: http://localhost:4000
 
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
+    - name: Install and configure poetry
+      run: |
+        pipx install poetry
+        poetry config virtualenvs.in-project true
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        pip install poetry
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'poetry'
     - name: Setup poetry
-      run: |
-        poetry config virtualenvs.in-project true
-        poetry install
+      run: poetry install
     - name: Run tests
       run: |
         source .venv/bin/activate
         pytest --cov=$MODULE_NAME --cov-report=xml --cov-fail-under=$MIN_TEST_COV tests
 
   system-tests:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
+    - name: Install and configure poetry
+      run: |
+        pipx install poetry
+        poetry config virtualenvs.in-project true
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        pip install poetry
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'poetry'
     - name: Setup poetry
-      run: |
-        poetry config virtualenvs.in-project true
-        poetry install
+      run: poetry install
     - uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: tests/apollo-server/
     - name: Install deps and run server
       run: |
-        cd tests/apollo-server
-        npm install
+        cd tests/apollo-server/
+        npm ci
         node src/index.js &
     - name: Wait for server
       run: |
@@ -96,16 +96,16 @@ jobs:
     if: false
     steps:
     - uses: actions/checkout@v4
+    - name: Install and configure poetry
+      run: |
+        pipx install poetry
+        poetry config virtualenvs.in-project true
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        pip install poetry
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'poetry'
     - name: Setup poetry
-      run: |
-        poetry config virtualenvs.in-project true
-        poetry install
+      run: poetry install
     - name: Run lint
       if: always()
       run: |
