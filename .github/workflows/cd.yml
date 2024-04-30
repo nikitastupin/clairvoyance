@@ -21,6 +21,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Version release on Github
         uses: softprops/action-gh-release@v2
         with:
@@ -29,15 +30,17 @@ jobs:
   pypi-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
 
-      - name: Install dependencies
-        run: pip install poetry
+      - name: Install poetry
+        run: pipx install poetry
 
       - name: Setup poetry
         run: |
@@ -49,7 +52,7 @@ jobs:
           source .venv/bin/activate
           poetry build
 
-      - name: Upload package
+      - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
@@ -77,7 +80,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/clairvoyance
 
-      - name: Build and push
+      - name: Build container and push it to Docker Hub
         id: docker_build
         uses: docker/build-push-action@v3
         with:
