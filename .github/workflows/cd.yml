@@ -3,7 +3,10 @@ name: cd
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  PYTHON_VERSION: "3.10"
 
 permissions:
   contents: read
@@ -16,18 +19,28 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: softprops/action-gh-release@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Version release on Github
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: "true"
 
   pypi-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "poetry"
 
-      - name: Install dependencies
-        run: pip install poetry
+      - name: Install poetry
+        run: pipx install poetry
 
       - name: Setup poetry
         run: |
@@ -39,7 +52,7 @@ jobs:
           source .venv/bin/activate
           poetry build
 
-      - name: Upload package
+      - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
@@ -47,7 +60,7 @@ jobs:
   docker-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -57,7 +70,7 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -66,8 +79,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/clairvoyance
-      
-      - name: Build and push
+
+      - name: Build container and push it to Docker Hub
         id: docker_build
         uses: docker/build-push-action@v3
         with:
@@ -77,6 +90,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
-          
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
