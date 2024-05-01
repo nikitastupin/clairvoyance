@@ -1,6 +1,4 @@
 [MASTER]
-# init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc())); import pylint_venv; pylint_venv.inithook('./.venv')"
-load-plugins=pylint_absolute_imports, pylint_quotes
 ignore=.venv,setup.py
 
 [DESIGN]
@@ -25,11 +23,6 @@ max-public-methods=30
 max-locals=20
 # Make docstring compulsory for all functions
 no-docstring-rgx=$^ 
-
-# MODULE-PARAM: pylint-quotes
-string-quote=single
-triple-quote=double
-docstring-quote=double
 
 [ELIF]
 
