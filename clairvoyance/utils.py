@@ -21,7 +21,7 @@ class Tracker:
     def track(cls, it: Iterable, description: str, **kwargs) -> Iterable:  # type: ignore[no-untyped-def]
         if not cls.__enabled:
             return it
-        description = f'{description: <32}'
+        description = f"{description: <32}"
         return rich_track(it, description, **kwargs)
 
 
@@ -39,107 +39,107 @@ def set_slow_config(args: argparse.Namespace) -> None:
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
-    default_values = {'document': 'query { FUZZ }'}
+    default_values = {"document": "query { FUZZ }"}
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-v',
-        '--verbose',
+        "-v",
+        "--verbose",
         default=0,
-        action='count',
+        action="count",
     )
     parser.add_argument(
-        '-i',
-        '--input-schema',
-        metavar='<file>',
-        help='Input file containing JSON schema which will be supplemented with obtained information',
+        "-i",
+        "--input-schema",
+        metavar="<file>",
+        help="Input file containing JSON schema which will be supplemented with obtained information",
     )
     parser.add_argument(
-        '-o',
-        '--output',
-        metavar='<file>',
-        help='Output file containing JSON schema (default to stdout)',
+        "-o",
+        "--output",
+        metavar="<file>",
+        help="Output file containing JSON schema (default to stdout)",
     )
     parser.add_argument(
-        '-d',
-        '--document',
-        metavar='<string>',
-        default=default_values['document'],
+        "-d",
+        "--document",
+        metavar="<string>",
+        default=default_values["document"],
         help=f'Start with this document (default {default_values["document"]})',
     )
     parser.add_argument(
-        '-H',
-        '--header',
-        metavar='<header>',
-        dest='headers',
-        action='append',
+        "-H",
+        "--header",
+        metavar="<header>",
+        dest="headers",
+        action="append",
         default=[],
     )
     parser.add_argument(
-        '-c',
-        '--concurrent-requests',
-        metavar='<int>',
+        "-c",
+        "--concurrent-requests",
+        metavar="<int>",
         type=int,
         default=None,
-        help='Number of concurrent requests to send to the server',
+        help="Number of concurrent requests to send to the server",
     )
     parser.add_argument(
-        '-w',
-        '--wordlist',
-        metavar='<file>',
-        type=argparse.FileType('r'),
-        help='This wordlist will be used for all brute force effots (fields, arguments and so on)',
+        "-w",
+        "--wordlist",
+        metavar="<file>",
+        type=argparse.FileType("r"),
+        help="This wordlist will be used for all brute force effots (fields, arguments and so on)",
     )
     parser.add_argument(
-        '-wv',
-        '--validate',
-        action='store_true',
-        help='Validate the wordlist items match name Regex',
+        "-wv",
+        "--validate",
+        action="store_true",
+        help="Validate the wordlist items match name Regex",
     )
     parser.add_argument(
-        '-x',
-        '--proxy',
-        metavar='<string>',
+        "-x",
+        "--proxy",
+        metavar="<string>",
         type=str,
-        help='Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy',
+        help="Define a proxy to use for all requests. For more info, read https://docs.aiohttp.org/en/stable/client_advanced.html?highlight=proxy",
     )
     parser.add_argument(
-        '-k',
-        '--no-ssl',
-        action='store_true',
-        help='Disable SSL verification',
+        "-k",
+        "--no-ssl",
+        action="store_true",
+        help="Disable SSL verification",
     )
     parser.add_argument(
-        '-m',
-        '--max-retries',
-        metavar='<int>',
+        "-m",
+        "--max-retries",
+        metavar="<int>",
         type=int,
-        help='How many retries should be made when a request fails',
+        help="How many retries should be made when a request fails",
     )
     parser.add_argument(
-        '-b',
-        '--backoff',
-        metavar='<int>',
+        "-b",
+        "--backoff",
+        metavar="<int>",
         type=int,
-        help='Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.',
+        help="Exponential backoff factor. Delay will be calculated as: `0.5 * backoff**retries` seconds.",
     )
     parser.add_argument(
-        '-p',
-        '--profile',
-        choices=['slow', 'fast'],
-        default='fast',
-        help='Select a speed profile. fast mod will set lot of workers to provide you quick result'
-        + ' but if the server as some rate limit you may want to use slow mod.',
+        "-p",
+        "--profile",
+        choices=["slow", "fast"],
+        default="fast",
+        help="Select a speed profile. fast mod will set lot of workers to provide you quick result"
+        + " but if the server as some rate limit you may want to use slow mod.",
     )
     parser.add_argument(
-        '--progress',
-        action='store_true',
-        help='Enable progress bar',
+        "--progress",
+        action="store_true",
+        help="Enable progress bar",
     )
-    parser.add_argument('url')
+    parser.add_argument("url")
 
     parsed_args = parser.parse_args(args)
-    if parsed_args.profile == 'slow':
+    if parsed_args.profile == "slow":
         set_slow_config(parsed_args)
 
     if parsed_args.progress:
@@ -149,11 +149,11 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 
 def setup_logger(verbosity: int) -> None:
-    fmt = getenv('LOG_FMT') or '%(asctime)s \t%(levelname)s\t| %(message)s'
-    datefmt = getenv('LOG_DATEFMT') or '%Y-%m-%d %H:%M:%S'
+    fmt = getenv("LOG_FMT") or "%(asctime)s \t%(levelname)s\t| %(message)s"
+    datefmt = getenv("LOG_DATEFMT") or "%Y-%m-%d %H:%M:%S"
 
-    default_level = getenv('LOG_LEVEL') or 'INFO'
-    level = 'DEBUG' if verbosity >= 1 else default_level.upper()
+    default_level = getenv("LOG_LEVEL") or "INFO"
+    level = "DEBUG" if verbosity >= 1 else default_level.upper()
 
     logging.basicConfig(
         level=level,
@@ -161,4 +161,4 @@ def setup_logger(verbosity: int) -> None:
         datefmt=datefmt,
     )
 
-    logging.getLogger('asyncio').setLevel(logging.ERROR)
+    logging.getLogger("asyncio").setLevel(logging.ERROR)

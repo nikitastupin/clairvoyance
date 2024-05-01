@@ -12,11 +12,11 @@ class GraphQLPrimitive(str, Enum, metaclass=MetaEnum):
     ref: https://spec.graphql.org/draft/#sec-Input-Values
     """
 
-    ID = 'ID'
-    INT = 'Int'
-    STRING = 'String'
-    BOOLEAN = 'Boolean'
-    FLOAT = 'Float'
+    ID = "ID"
+    INT = "Int"
+    STRING = "String"
+    BOOLEAN = "Boolean"
+    FLOAT = "Float"
 
 
 @unique
@@ -26,11 +26,11 @@ class GraphQLKind(str, Enum, metaclass=MetaEnum):
     ref: https://spec.graphql.org/draft/#sec-Types
     """
 
-    SCALAR = 'SCALAR'
-    OBJECT = 'OBJECT'
-    INTERFACE = 'INTERFACE'
-    UNION = 'UNION'
-    ENUM = 'ENUM'
-    INPUT_OBJECT = 'INPUT_OBJECT'
-    LIST = 'LIST'
-    NON_NULL = 'NON_NULL'
+    SCALAR = "SCALAR"
+    OBJECT = "OBJECT"
+    INTERFACE = "INTERFACE"
+    UNION = "UNION"
+    ENUM = "ENUM"
+    INPUT_OBJECT = "INPUT_OBJECT"
+    LIST = "LIST"
+    NON_NULL = "NON_NULL"

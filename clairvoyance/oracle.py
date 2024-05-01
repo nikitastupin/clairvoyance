@@ -109,42 +109,42 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
     valid_fields: Set[str] = set()
 
-    for regex in FIELD_REGEXES['SKIP'] + GENERAL_SKIP:
+    for regex in FIELD_REGEXES["SKIP"] + GENERAL_SKIP:
         if regex.fullmatch(error_message):
             return valid_fields
 
-    for regex in FIELD_REGEXES['VALID_FIELD']:
+    for regex in FIELD_REGEXES["VALID_FIELD"]:
         match = regex.fullmatch(error_message)
         if match:
-            valid_fields.add(match.group('field'))
+            valid_fields.add(match.group("field"))
             return valid_fields
 
-    for regex in FIELD_REGEXES['SINGLE_SUGGESTION']:
+    for regex in FIELD_REGEXES["SINGLE_SUGGESTION"]:
         match = regex.fullmatch(error_message)
         if match:
-            valid_fields.add(match.group('field'))
+            valid_fields.add(match.group("field"))
             return valid_fields
 
-    for regex in FIELD_REGEXES['DOUBLE_SUGGESTION']:
+    for regex in FIELD_REGEXES["DOUBLE_SUGGESTION"]:
         match = regex.fullmatch(error_message)
         if match:
-            valid_fields.add(match.group('one'))
-            valid_fields.add(match.group('two'))
+            valid_fields.add(match.group("one"))
+            valid_fields.add(match.group("two"))
             return valid_fields
 
-    for regex in FIELD_REGEXES['MULTI_SUGGESTION']:
+    for regex in FIELD_REGEXES["MULTI_SUGGESTION"]:
         match = regex.fullmatch(error_message)
         if match:
 
-            for m in match.group('multi').split(', '):
+            for m in match.group("multi").split(", "):
                 if m:
-                    valid_fields.add(m.strip('"').strip('\''))
-            if match.group('last'):
-                valid_fields.add(match.group('last'))
+                    valid_fields.add(m.strip('"').strip("'"))
+            if match.group("last"):
+                valid_fields.add(match.group("last"))
 
             return valid_fields
 
-    log().debug(f'Unknown error message for `valid_field`: \'{error_message}\'')
+    log().debug(f"Unknown error message for `valid_field`: '{error_message}'")
 
     return valid_fields
 
@@ -165,23 +165,27 @@ async def probe_valid_fields(
     """
 
     async def __probation(i: int) -> Set[str]:
-        bucket = wordlist[i:i + config().bucket_size]
+        bucket = wordlist[i : i + config().bucket_size]
         valid_fields = set(bucket)
-        document = input_document.replace('FUZZ', ' '.join(bucket))
+        document = input_document.replace("FUZZ", " ".join(bucket))
 
         start_time = time.time()
         response = await client().post(document)
         total_time = time.time() - start_time
 
-        errors = response['errors']
+        errors = response["errors"]
 
-        log().debug(f'Sent {len(bucket)} fields, received {len(errors)} errors in {round(total_time, 2)} seconds')
+        log().debug(
+            f"Sent {len(bucket)} fields, received {len(errors)} errors in {round(total_time, 2)} seconds"
+        )
 
         for error in errors:
-            error_message = error['message']
+            error_message = error["message"]
 
-            if ('must not have a selection since type' in error_message and \
-                'has no subfields' in error_message):
+            if (
+                "must not have a selection since type" in error_message
+                and "has no subfields" in error_message
+            ):
                 return set()
 
             # ! LEGACY CODE please keep
@@ -191,7 +195,7 @@ async def probe_valid_fields(
                 error_message,
             )
             if match:
-                valid_fields.discard(match.group('invalid_field'))
+                valid_fields.discard(match.group("invalid_field"))
 
             # Second obtain field suggestions from error message
             valid_fields |= get_valid_fields(error_message)
@@ -205,7 +209,11 @@ async def probe_valid_fields(
 
     # Process results
     valid_fields = set()
-    for task in track(asyncio.as_completed(tasks), description=f'Sending {len(tasks)} fields', total=len(tasks)):
+    for task in track(
+        asyncio.as_completed(tasks),
+        description=f"Sending {len(tasks)} fields",
+        total=len(tasks),
+    ):
         result = await task
         valid_fields.update(result)
 
@@ -221,18 +229,23 @@ async def probe_valid_args(
 
     valid_args = set(wordlist)
 
-    document = input_document.replace('FUZZ', f'{field}({", ".join([w + ": 7" for w in wordlist])})')
+    document = input_document.replace(
+        "FUZZ", f'{field}({", ".join([w + ": 7" for w in wordlist])})'
+    )
 
     response = await client().post(document=document)
 
-    if 'errors' not in response:
+    if "errors" not in response:
         return valid_args
 
-    errors = response['errors']
+    errors = response["errors"]
     for error in errors:
-        error_message = error['message']
+        error_message = error["message"]
 
-        if ('must not have a selection since type' in error_message and 'has no subfields' in error_message):
+        if (
+            "must not have a selection since type" in error_message
+            and "has no subfields" in error_message
+        ):
             return set()
 
         # First remove arg if it produced an 'Unknown argument' error
@@ -241,12 +254,12 @@ async def probe_valid_args(
             error_message,
         )
         if match:
-            valid_args.discard(match.group('invalid_arg'))
+            valid_args.discard(match.group("invalid_arg"))
 
         duplicate_arg_regex = r"""There can be only one argument named ["'](?P<arg>[_0-9a-zA-Z\.\[\]!]*)["']\.?"""
         if re.fullmatch(duplicate_arg_regex, error_message):
             match = re.fullmatch(duplicate_arg_regex, error_message)
-            valid_args.discard(match.group('arg'))  # type: ignore
+            valid_args.discard(match.group("arg"))  # type: ignore
             continue
 
         # Second obtain args suggestions from error message
@@ -264,8 +277,10 @@ async def probe_args(
 
     tasks: List[asyncio.Task] = []
     for i in range(0, len(wordlist), config().bucket_size):
-        bucket = wordlist[i:i + config().bucket_size]
-        tasks.append(asyncio.create_task(probe_valid_args(field, bucket, input_document)))
+        bucket = wordlist[i : i + config().bucket_size]
+        tasks.append(
+            asyncio.create_task(probe_valid_args(field, bucket, input_document))
+        )
 
     valid_args: Set[str] = set()
 
@@ -281,35 +296,35 @@ def get_valid_args(error_message: str) -> Set[str]:
 
     valid_args = set()
 
-    for regex in ARG_REGEXES['SKIP'] + GENERAL_SKIP:
+    for regex in ARG_REGEXES["SKIP"] + GENERAL_SKIP:
         if re.fullmatch(regex, error_message):
             return set()
 
-    for regex in ARG_REGEXES['SINGLE_SUGGESTION']:
+    for regex in ARG_REGEXES["SINGLE_SUGGESTION"]:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
             if match:
-                valid_args.add(match.group('arg'))
+                valid_args.add(match.group("arg"))
 
-    for regex in ARG_REGEXES['DOUBLE_SUGGESTION']:
+    for regex in ARG_REGEXES["DOUBLE_SUGGESTION"]:
         match = re.fullmatch(regex, error_message)
         if match:
-            valid_args.add(match.group('first'))
-            valid_args.add(match.group('second'))
+            valid_args.add(match.group("first"))
+            valid_args.add(match.group("second"))
 
-    for regex in ARG_REGEXES['MULTI_SUGGESTION']:
+    for regex in ARG_REGEXES["MULTI_SUGGESTION"]:
         if re.fullmatch(regex, error_message):
             match = re.fullmatch(regex, error_message)
             if match:
-                for m in match.group('multi').split(', '):
+                for m in match.group("multi").split(", "):
                     if m:
-                        valid_args.add(m.strip('"').strip('\''))
+                        valid_args.add(m.strip('"').strip("'"))
 
-                if match.group('last'):
-                    valid_args.add(match.group('last'))
+                if match.group("last"):
+                    valid_args.add(match.group("last"))
 
     if not valid_args:
-        log().debug(f'Unknown error message for `valid_args`: \'{error_message}\'')
+        log().debug(f"Unknown error message for `valid_args`: '{error_message}'")
 
     return valid_args
 
@@ -327,11 +342,11 @@ def get_typeref(
 
         if context == FuzzingContext.FIELD:
             # in the case of a field
-            for regex in TYPEREF_REGEXES['ARG'] + GENERAL_SKIP:
+            for regex in TYPEREF_REGEXES["ARG"] + GENERAL_SKIP:
                 if re.fullmatch(regex, error_message):
                     return None
 
-            for regex in TYPEREF_REGEXES['FIELD']:
+            for regex in TYPEREF_REGEXES["FIELD"]:
                 match = re.fullmatch(regex, error_message)
                 if match:
                     return match
@@ -339,39 +354,43 @@ def get_typeref(
         elif context == FuzzingContext.ARGUMENT:
             # in the case of an argument
             # we drop the following messages
-            for regex in TYPEREF_REGEXES['FIELD'] + GENERAL_SKIP:
+            for regex in TYPEREF_REGEXES["FIELD"] + GENERAL_SKIP:
                 if re.fullmatch(regex, error_message):
                     return None
             # if not dropped, we try to extract the type
-            for regex in TYPEREF_REGEXES['ARG']:
+            for regex in TYPEREF_REGEXES["ARG"]:
                 match = re.fullmatch(regex, error_message)
                 if match:
                     return match
 
-        log().debug(f'Unknown error message for `typeref` with context `{context.value}`: \'{error_message}\'')
+        log().debug(
+            f"Unknown error message for `typeref` with context `{context.value}`: '{error_message}'"
+        )
         return None
 
     match = __extract_matching_fields(error_message, context)
 
     if match:
-        tk = match.group('typeref')
+        tk = match.group("typeref")
 
-        name = tk.replace('!', '').replace('[', '').replace(']', '')
-        kind = ''
+        name = tk.replace("!", "").replace("[", "").replace("]", "")
+        kind = ""
         if name in GraphQLPrimitive:
-            kind = 'SCALAR'
+            kind = "SCALAR"
         elif context == FuzzingContext.FIELD:
-            kind = 'OBJECT'
+            kind = "OBJECT"
         elif context == FuzzingContext.ARGUMENT:
-            kind = 'INPUT_OBJECT'
-            name = name.rstrip('Input') + 'Input'  # Make sure `Input` is always once at the end
+            kind = "INPUT_OBJECT"
+            name = (
+                name.rstrip("Input") + "Input"
+            )  # Make sure `Input` is always once at the end
         else:
-            log().debug(f'Unknown kind for `typeref`: \'{error_message}\'')
+            log().debug(f"Unknown kind for `typeref`: '{error_message}'")
             return None
 
-        is_list = bool('[' in tk and ']' in tk)
-        non_null_item = bool(is_list and '!]' in tk)
-        non_null = tk.endswith('!')
+        is_list = bool("[" in tk and "]" in tk)
+        non_null_item = bool(is_list and "!]" in tk)
+        non_null = tk.endswith("!")
 
         return graphql.TypeRef(
             name=name,
@@ -394,13 +413,13 @@ async def probe_typeref(
         """Send a document to attempt discovering a typeref."""
 
         response = await client().post(document)
-        for error in response.get('errors', []):
+        for error in response.get("errors", []):
             if isinstance(error, str):
                 continue
 
-            if not isinstance(error['message'], dict):
+            if not isinstance(error["message"], dict):
                 typeref = get_typeref(
-                    error['message'],
+                    error["message"],
                     context,
                 )
 
@@ -421,8 +440,8 @@ async def probe_typeref(
             typeref = result
 
     if not typeref and context != FuzzingContext.ARGUMENT:
-        error_message = f'Unable to get TypeRef for {documents} in context {context}. '
-        error_message += 'It is very likely that Field Suggestion is not fully enabled on this endpoint.'
+        error_message = f"Unable to get TypeRef for {documents} in context {context}. "
+        error_message += "It is very likely that Field Suggestion is not fully enabled on this endpoint."
         raise EndpointError(error_message)
 
     return typeref
@@ -435,8 +454,8 @@ async def probe_field_type(
     """Wrapper function for sending the queries to deduce the field type."""
 
     documents = [
-        input_document.replace('FUZZ', f'{field}'),
-        input_document.replace('FUZZ', f'{field} {{ lol }}'),
+        input_document.replace("FUZZ", f"{field}"),
+        input_document.replace("FUZZ", f"{field} {{ lol }}"),
     ]
 
     return await probe_typeref(documents, FuzzingContext.FIELD)
@@ -450,11 +469,11 @@ async def probe_arg_typeref(
     """Wrapper function to deduce the type of an arg."""
 
     documents = [
-        input_document.replace('FUZZ', f'{field}({arg}: 42)'),
-        input_document.replace('FUZZ', f'{field}({arg}: {{}})'),
-        input_document.replace('FUZZ', f'{field}({arg[:-1]}: 42)'),
-        input_document.replace('FUZZ', f'{field}({arg}: \"42\")'),
-        input_document.replace('FUZZ', f'{field}({arg}: false)'),
+        input_document.replace("FUZZ", f"{field}({arg}: 42)"),
+        input_document.replace("FUZZ", f"{field}({arg}: {{}})"),
+        input_document.replace("FUZZ", f"{field}({arg[:-1]}: 42)"),
+        input_document.replace("FUZZ", f'{field}({arg}: "42")'),
+        input_document.replace("FUZZ", f"{field}({arg}: false)"),
     ]
 
     return await probe_typeref(documents, FuzzingContext.ARGUMENT)
@@ -462,53 +481,59 @@ async def probe_arg_typeref(
 
 async def probe_typename(input_document: str) -> str:
 
-    document = input_document.replace('FUZZ', WRONG_FIELD_EXAMPLE)
+    document = input_document.replace("FUZZ", WRONG_FIELD_EXAMPLE)
 
     response = await client().post(document=document)
-    if 'errors' not in response:
-        log().warning(f"""Unable to get typename from {document}.
-                      Field Suggestion might not be enabled on this endpoint. Using default "Query""")
-        return 'Query'
+    if "errors" not in response:
+        log().warning(
+            f"""Unable to get typename from {document}.
+                      Field Suggestion might not be enabled on this endpoint. Using default "Query"""
+        )
+        return "Query"
 
-    errors = response['errors']
+    errors = response["errors"]
 
     match = None
     for regex in WRONG_TYPENAME:
         for error in errors:
-            match = re.fullmatch(regex, error['message'])
+            match = re.fullmatch(regex, error["message"])
             if match:
                 break
         if match:
             break
 
     if not match:
-        log().debug(f"""Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.
-                    Field Suggestion might not be enabled on this endpoint. Using default "Query""")
-        return 'Query'
+        log().debug(
+            f"""Unkwon error in `probe_typename`: "{errors}" does not match any known regexes.
+                    Field Suggestion might not be enabled on this endpoint. Using default "Query"""
+        )
+        return "Query"
 
-    return (match.group('typename').replace('[', '').replace(']', '').replace('!', ''))
+    return match.group("typename").replace("[", "").replace("]", "").replace("!", "")
 
 
 async def fetch_root_typenames() -> Dict[str, Optional[str]]:
     documents: Dict[str, str] = {
-        'queryType': 'query { __typename }',
-        'mutationType': 'mutation { __typename }',
-        'subscriptionType': 'subscription { __typename }',
+        "queryType": "query { __typename }",
+        "mutationType": "mutation { __typename }",
+        "subscriptionType": "subscription { __typename }",
     }
     typenames: Dict[str, Optional[str]] = {
-        'queryType': None,
-        'mutationType': None,
-        'subscriptionType': None,
+        "queryType": None,
+        "mutationType": None,
+        "subscriptionType": None,
     }
 
-    for name, document in track(documents.items(), description='Fetching root typenames'):
+    for name, document in track(
+        documents.items(), description="Fetching root typenames"
+    ):
         response = await client().post(document=document)
 
-        data = response.get('data', {})
+        data = response.get("data", {})
         if data:
-            typenames[name] = data['__typename']
+            typenames[name] = data["__typename"]
 
-    log().debug(f'Root typenames are: {typenames}')
+    log().debug(f"Root typenames are: {typenames}")
     return typenames
 
 
@@ -536,12 +561,14 @@ async def explore_field(
             input_document,
         )
 
-        log().debug(f'{typename}.{field_name}.args = {arg_names}')
+        log().debug(f"{typename}.{field_name}.args = {arg_names}")
         for arg_name in arg_names:
             arg_typeref = await probe_arg_typeref(field.name, arg_name, input_document)
 
             if not arg_typeref:
-                log().debug(f'Skip argument {arg_name} because TypeRef equals {arg_typeref}')
+                log().debug(
+                    f"Skip argument {arg_name} because TypeRef equals {arg_typeref}"
+                )
                 continue
 
             arg = graphql.InputValue(arg_name, arg_typeref)
@@ -558,41 +585,49 @@ async def clairvoyance(
     input_schema: Dict[str, Any] = None,
 ) -> str:
 
-    log().debug(f'input_document = {input_document}')
+    log().debug(f"input_document = {input_document}")
 
     if not input_schema:
         root_typenames = await fetch_root_typenames()
         schema = graphql.Schema(
-            query_type=root_typenames['queryType'],
-            mutation_type=root_typenames['mutationType'],
-            subscription_type=root_typenames['subscriptionType'],
+            query_type=root_typenames["queryType"],
+            mutation_type=root_typenames["mutationType"],
+            subscription_type=root_typenames["subscriptionType"],
         )
     else:
         schema = graphql.Schema(schema=input_schema)
 
     typename = await probe_typename(input_document)
-    log().debug(f'__typename = {typename}')
+    log().debug(f"__typename = {typename}")
 
     valid_fields = await probe_valid_fields(
         wordlist,
         input_document,
     )
-    log().debug(f'{typename}.fields = {valid_fields}')
+    log().debug(f"{typename}.fields = {valid_fields}")
 
     tasks: List[asyncio.Task] = []
     for field_name in valid_fields:
-        tasks.append(asyncio.create_task(explore_field(
-            field_name,
-            input_document,
-            wordlist,
-            typename,
-        )))
+        tasks.append(
+            asyncio.create_task(
+                explore_field(
+                    field_name,
+                    input_document,
+                    wordlist,
+                    typename,
+                )
+            )
+        )
 
-    for task in track(asyncio.as_completed(tasks), description=f'Processing {len(tasks)} responses', total=len(tasks)):
+    for task in track(
+        asyncio.as_completed(tasks),
+        description=f"Processing {len(tasks)} responses",
+        total=len(tasks),
+    ):
         field, args = await task
         for arg in args:
-            schema.add_type(arg.type.name, 'INPUT_OBJECT')
+            schema.add_type(arg.type.name, "INPUT_OBJECT")
         schema.types[typename].fields.append(field)
-        schema.add_type(field.type.name, 'OBJECT')
+        schema.add_type(field.type.name, "OBJECT")
 
     return repr(schema)

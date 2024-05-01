@@ -44,11 +44,15 @@ class Client(IClient):
 
         async with self._semaphore:
             if not self._session:
-                connector = aiohttp.TCPConnector(verify_ssl=(not self.disable_ssl_verify))
-                self._session = aiohttp.ClientSession(headers=self._headers, connector=connector)
+                connector = aiohttp.TCPConnector(
+                    verify_ssl=(not self.disable_ssl_verify)
+                )
+                self._session = aiohttp.ClientSession(
+                    headers=self._headers, connector=connector
+                )
 
             # Translate an existing document into a GraphQL request.
-            gql_document = {'query': document} if document else None
+            gql_document = {"query": document} if document else None
 
             try:
                 response = await self._session.post(
@@ -58,7 +62,7 @@ class Client(IClient):
                 )
 
                 if response.status >= 500:
-                    log().warning(f'Received status code {response.status}')
+                    log().warning(f"Received status code {response.status}")
                     return await self.post(document, retries + 1)
 
                 return await response.json(content_type=None)
@@ -69,12 +73,12 @@ class Client(IClient):
                 asyncio.TimeoutError,
                 json.decoder.JSONDecodeError,
             ) as e:
-                log().warning(f'Error posting to {self._url}: {e}')
+                log().warning(f"Error posting to {self._url}: {e}")
 
             if self.backoff:
                 async with self._backoff_semaphore:
                     delay = 0.5 * self.backoff**retries
-                    log().debug(f'Waiting for backoff {delay} seconds.')
+                    log().debug(f"Waiting for backoff {delay} seconds.")
                     await asyncio.sleep(delay)
 
         return await self.post(document, retries + 1)
