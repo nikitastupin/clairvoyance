@@ -13,21 +13,6 @@ Some GraphQL APIs have disabled introspection. For example, [Apollo Server disab
 
 Clairvoyance helps to obtain GraphQL API schema even if the introspection is disabled. It produces schema in JSON format suitable for other tools like [GraphQL Voyager](https://github.com/APIs-guru/graphql-voyager), [InQL](https://github.com/doyensec/inql) or [graphql-path-enum](https://gitlab.com/dee-see/graphql-path-enum).
 
-## Contributors
-
-Thanks to the contributors for their work.
-
-- [nikitastupin](https://github.com/nikitastupin)
-- [Escape](https://escape.tech) team
-  - [iCarossio](https://github.com/iCarossio)
-  - [Swan](https://github.com/c3b5aw)
-  - [QuentinN42](https://github.com/QuentinN42)
-  - [Nohehf](https://github.com/Nohehf)
-- [i-tsaturov](https://github.com/i-tsaturov)
-- [EONRaider](https://github.com/EONRaider)
-- [noraj](https://github.com/noraj)
-- [belane](https://github.com/belane)
-
 ## Getting Started
 
 ### pip
@@ -75,3 +60,18 @@ Check our [contributing guide](.github/CONTRIBUTING.md).
 ## Documentation
 
 You may find more details on how the tool works in the second half of the [GraphQL APIs from bug hunter's perspective by Nikita Stupin](https://youtu.be/nPB8o0cSnvM) talk.
+
+## Contributors
+
+Thanks to the contributors for their work.
+
+- [nikitastupin](https://github.com/nikitastupin)
+- [Escape](https://escape.tech) team
+  - [iCarossio](https://github.com/iCarossio)
+  - [Swan](https://github.com/c3b5aw)
+  - [QuentinN42](https://github.com/QuentinN42)
+  - [Nohehf](https://github.com/Nohehf)
+- [i-tsaturov](https://github.com/i-tsaturov)
+- [EONRaider](https://github.com/EONRaider)
+- [noraj](https://github.com/noraj)
+- [belane](https://github.com/belane)
