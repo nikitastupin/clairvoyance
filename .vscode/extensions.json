@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "ms-python.debugpy",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "ms-python.isort"
+    ]
+}
