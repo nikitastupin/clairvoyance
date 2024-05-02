@@ -70,7 +70,7 @@ In case of questions or issues with Clairvoyance please refer to [wiki](https://
 
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change. For more information about tests, internal project structure and so on refer to [Development](https://github.com/nikitastupin/clairvoyance/wiki/Development) wiki page.
+Check our [contributing guide](.github/CONTRIBUTING.md).
 
 ## Documentation
 
