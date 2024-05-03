@@ -15,9 +15,9 @@ If you have encountered an bug or want to propose your idea, you can open a new 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
 ### Developer Environment Setup
-We recommend to use [VSCodium](https://vscodium.com/#install)/VSCode IDE with recommended extensions (automatically suggested).
 
 To resolve dependencies, execute the following commands in your terminal:
+
 ```shell
 python -m pip install pipx
 pipx ensurepath
@@ -25,6 +25,8 @@ pipx install poetry
 poetry config virtualenvs.in-project true
 poetry install
 ```
+
+We use [VSCodium](https://vscodium.com/#install)/VSCode IDE with [some extensions](../.vscode/extensions.json). Having said that, you might use other tools as long as the outcome follows the guidelines of this project.
 
 ### Git Branches
 Always use dedicated git branches for fixes or features instead of working directly on the master branch.
