@@ -22,6 +22,7 @@ To resolve dependencies, execute the following commands in your terminal:
 python -m pip install pipx
 pipx ensurepath
 pipx install poetry
+poetry config virtualenvs.in-project true
 poetry install
 ```
 
