@@ -40,8 +40,8 @@ def setup_context(
 
 
 def load_default_wordlist() -> List[str]:
-    wl = Path(__file__).parent / 'wordlist.txt'
-    with open(wl, 'r', encoding='utf-8') as f:
+    wl = Path(__file__).parent / "wordlist.txt"
+    with open(wl, "r", encoding="utf-8") as f:
         return [w.strip() for w in f.readlines() if w.strip()]
 
 
@@ -60,7 +60,7 @@ async def blind_introspection(
     disable_ssl_verify: Optional[bool] = None,
 ) -> str:
     wordlist = wordlist or load_default_wordlist()
-    assert wordlist, 'No wordlist provided'
+    assert wordlist, "No wordlist provided"
 
     setup_context(
         url,
@@ -73,18 +73,18 @@ async def blind_introspection(
         disable_ssl_verify=disable_ssl_verify,
     )
 
-    logger.info(f'Starting blind introspection on {url}...')
+    logger.info(f"Starting blind introspection on {url}...")
 
     input_schema = None
     if input_schema_path:
-        with open(input_schema_path, 'r', encoding='utf-8') as f:
+        with open(input_schema_path, "r", encoding="utf-8") as f:
             input_schema = json.load(f)
 
-    input_document = input_document or 'query { FUZZ }'
+    input_document = input_document or "query { FUZZ }"
     ignored = set(e.value for e in GraphQLPrimitive)
     iterations = 1
     while True:
-        logger.info(f'Iteration {iterations}')
+        logger.info(f"Iteration {iterations}")
         iterations += 1
         schema = await oracle.clairvoyance(
             wordlist,
@@ -93,7 +93,7 @@ async def blind_introspection(
         )
 
         if output_path:
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(schema)
 
         input_schema = json.loads(schema)
@@ -107,7 +107,7 @@ async def blind_introspection(
         else:
             break
 
-    logger.info('Blind introspection complete.')
+    logger.info("Blind introspection complete.")
     await client().close()
     return schema
 
@@ -121,7 +121,7 @@ def cli(argv: Optional[List[str]] = None) -> None:
 
     headers = {}
     for h in args.headers:
-        key, value = h.split(': ', 1)
+        key, value = h.split(": ", 1)
         headers[key] = value
 
     wordlist = []
@@ -132,17 +132,19 @@ def cli(argv: Optional[List[str]] = None) -> None:
 
     # remove wordlist items that don't conform to graphQL regex github-issue #11
     if args.validate:
-        wordlist_parsed = [w for w in wordlist if re.match(r'[_A-Za-z][_0-9A-Za-z]*', w)]
+        wordlist_parsed = [
+            w for w in wordlist if re.match(r"[_A-Za-z][_0-9A-Za-z]*", w)
+        ]
         logging.info(
-            f'Removed {len(wordlist) - len(wordlist_parsed)} items from wordlist, to conform to name regex. '
-            f'https://spec.graphql.org/June2018/#sec-Names'
+            f"Removed {len(wordlist) - len(wordlist_parsed)} items from wordlist, to conform to name regex. "
+            f"https://spec.graphql.org/June2018/#sec-Names"
         )
         wordlist = wordlist_parsed
 
     asyncio.run(
         blind_introspection(
             args.url,
-            logger=logging.getLogger('clairvoyance'),
+            logger=logging.getLogger("clairvoyance"),
             concurrent_requests=args.concurrent_requests,
             headers=headers,
             input_document=args.document,
