@@ -45,7 +45,7 @@ jobs:
       - name: Setup poetry
         run: |
           poetry config virtualenvs.in-project true
-          poetry install --no-dev
+          poetry install --without dev
 
       - name: Build package
         run: |

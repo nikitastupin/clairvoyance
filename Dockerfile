@@ -18,10 +18,10 @@ RUN apk add build-base zlib-dev libffi-dev
 RUN pip install poetry
 
 COPY ./poetry.lock ./pyproject.toml ./README.md ./
-RUN poetry install --no-dev --no-root
+RUN poetry install --without dev --no-root
 
 COPY ./$APP_NAME ./$APP_NAME
-RUN poetry install --no-dev
+RUN poetry install --without dev
 
 # RELEASE
 FROM python-base as release
