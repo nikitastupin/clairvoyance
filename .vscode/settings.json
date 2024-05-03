@@ -3,7 +3,7 @@
   "python.linting.pylintEnabled": false,
   "python.linting.enabled": false,
   "python.linting.pylintPath": "./.venv/bin/pylint",
-  "python.formatting.provider": "yapf",
+  "python.formatting.provider": "black",
   "editor.formatOnSave": true,
   "python.defaultInterpreterPath": "./.venv/bin/python",
   "mypy.runUsingActiveInterpreter": true,
@@ -38,6 +38,6 @@
     ".venv/**"
   ],
   "files.exclude": {
-    "**/__pycache__": true,
+    "**/__pycache__": true
   }
 }
