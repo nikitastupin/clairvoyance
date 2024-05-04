@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from clairvoyance import graphql
 from clairvoyance.entities import GraphQLPrimitive
-from clairvoyance.entities.errors import EndpointError
 from clairvoyance.entities.context import client, config, log
+from clairvoyance.entities.errors import EndpointError
 from clairvoyance.entities.oracle import FuzzingContext
 from clairvoyance.utils import track
 
