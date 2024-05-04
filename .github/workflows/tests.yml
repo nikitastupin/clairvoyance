@@ -32,17 +32,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install and configure poetry
-        run: |
-          pipx install poetry
-          poetry config virtualenvs.in-project true
-      - name: Setup Python
-        uses: actions/setup-python@v5
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }} and resolve Poetry dependencies
+        uses: Privat33r-dev/pymonster@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-      - name: Setup poetry
-        run: poetry install
+
       - name: Run tests
         run: |
           source .venv/bin/activate
@@ -53,27 +48,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install and configure poetry
-        run: |
-          pipx install poetry
-          poetry config virtualenvs.in-project true
-      - name: Setup Python
-        uses: actions/setup-python@v5
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }} and resolve Poetry dependencies
+        uses: Privat33r-dev/pymonster@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-      - name: Setup poetry
-        run: poetry install
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "pnpm"
           cache-dependency-path: tests/apollo-server/
+
       - name: Install deps and run server
         run: |
           cd tests/apollo-server/
-          npm ci
+          pnpm install
           node src/index.js &
+
       - name: Wait for server
         run: |
           for i in {0..10}; do
@@ -88,6 +84,7 @@ jobs:
               exit 1
             fi
           done
+
       - name: Test with pytest
         run: |
           source .venv/bin/activate
@@ -96,28 +93,23 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
-    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install and configure poetry
-        run: |
-          pipx install poetry
-          poetry config virtualenvs.in-project true
-      - name: Setup Python
-        uses: actions/setup-python@v5
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }} and resolve Poetry dependencies
+        uses: Privat33r-dev/pymonster@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-      - name: Setup poetry
-        run: poetry install
+
       - name: Run lint
-        if: always()
+        # A few checks are skipped for now because the code can't pass them
+        # TODO: reactivate them
         run: |
           source .venv/bin/activate
-          isort -m 9 --line-length 160 $MODULE_NAME tests --check-only
-          pylint $MODULE_NAME tests
+          isort -m 9 --line-length 160 $MODULE_NAME tests --gitignore --check-only
+          # pylint $MODULE_NAME tests
           docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
           black --check $MODULE_NAME tests
           mypy -V
-          mypy $MODULE_NAME tests
+          # mypy $MODULE_NAME tests

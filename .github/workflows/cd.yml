@@ -33,19 +33,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Python ${{ env.PYTHON_VERSION }} and resolve Poetry dependencies
+        uses: Privat33r-dev/pymonster@master
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-
-      - name: Install poetry
-        run: pipx install poetry
-
-      - name: Setup poetry
-        run: |
-          poetry config virtualenvs.in-project true
-          poetry install --without dev
 
       - name: Build package
         run: |
