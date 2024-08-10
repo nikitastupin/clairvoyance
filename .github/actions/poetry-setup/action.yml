@@ -15,7 +15,7 @@ runs:
     - name: Setup Pipx Local Variables
       id: pipx-env-setup
       run: |
-        SEP="${{ !startsWith(runner.os, 'windows') && '/' || '\\' }}"
+        SEP="${{ startsWith(runner.os, 'windows-') && '\\' || '/' }}"
         PIPX_CACHE="${{ github.workspace }}${SEP}pipx_cache"
         echo "pipx-cache-path=${PIPX_CACHE}" >> $GITHUB_OUTPUT
         echo "pipx-version=$(pipx --version)" >> $GITHUB_OUTPUT
