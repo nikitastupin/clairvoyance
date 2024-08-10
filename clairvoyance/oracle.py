@@ -419,9 +419,8 @@ async def probe_typeref(
                     error["message"],
                     context,
                 )
-                log().debug(
-                    f'get_typeref("{error["message"]}", "{context}") -> {typeref}'
-                )
+            log().debug(f'get_typeref("{error["message"]}", "{context}") -> {typeref}')
+            if typeref:
                 return typeref
 
         return None
