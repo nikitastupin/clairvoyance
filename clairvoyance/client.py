@@ -8,7 +8,7 @@ from clairvoyance.entities.context import client_ctx, log
 from clairvoyance.entities.interfaces import IClient
 
 
-class Client(IClient):
+class Client(IClient):  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         url: str,

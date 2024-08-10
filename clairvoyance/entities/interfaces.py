@@ -31,4 +31,5 @@ class IClient(ABC):
     ) -> Dict: ...
 
     @abstractmethod
-    async def close(self) -> None: ...
+    async def close(self) -> None:
+        pass

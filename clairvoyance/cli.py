@@ -45,7 +45,7 @@ def load_default_wordlist() -> List[str]:
         return [w.strip() for w in f.readlines() if w.strip()]
 
 
-async def blind_introspection(
+async def blind_introspection(  # pylint: disable=too-many-arguments
     url: str,
     logger: logging.Logger,
     wordlist: List[str],
