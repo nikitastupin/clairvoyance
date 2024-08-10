@@ -384,9 +384,6 @@ def get_typeref(
             name = (
                 name.rstrip("Input") + "Input"
             )  # Make sure `Input` is always once at the end
-        else:
-            log().debug(f"Unknown kind for `typeref`: '{error_message}'")
-            return None
 
         is_list = bool("[" in tk and "]" in tk)
         non_null_item = bool(is_list and "!]" in tk)
