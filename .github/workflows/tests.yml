@@ -109,4 +109,4 @@ jobs:
           docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
           black --check $MODULE_NAME tests
           mypy -V
-          # mypy $MODULE_NAME tests
+          mypy $MODULE_NAME tests
