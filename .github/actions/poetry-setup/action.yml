@@ -1,0 +1,54 @@
+name: "Resolve dependencies with Poetry"
+description: "Setup Python, install and cache Poetry and resolves dependencies using it."
+
+inputs:
+  python-version:
+    description: "Version of Python to setup"
+    required: true
+  poetry-version:
+    description: "Version of Poetry to install"
+    default: "1.8.2"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Pipx Local Variables
+      id: pipx-env-setup
+      run: |
+        SEP="${{ startsWith(runner.os, 'windows-') && '\\' || '/' }}"
+        PIPX_CACHE="${{ github.workspace }}${SEP}pipx_cache"
+        echo "pipx-cache-path=${PIPX_CACHE}" >> $GITHUB_OUTPUT
+        echo "pipx-version=$(pipx --version)" >> $GITHUB_OUTPUT
+        echo "PIPX_HOME=${PIPX_CACHE}${SEP}home" >> $GITHUB_ENV
+        echo "PIPX_BIN_DIR=${PIPX_CACHE}${SEP}bin" >> $GITHUB_ENV
+        echo "PIPX_MAN_DIR=${PIPX_CACHE}${SEP}man" >> $GITHUB_ENV
+        echo "${PIPX_CACHE}${SEP}bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Load cached Poetry installation
+      id: cached-poetry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ steps.pipx-env-setup.outputs.pipx-cache-path }}
+        key: poetry-v${{ inputs.poetry-version }}-${{ runner.os }}-Python${{ inputs.python-version }}
+
+    - name: Install Poetry ${{ inputs.poetry-version }}
+      if: steps.cached-poetry.outputs.cache-hit != 'true'
+      run: pipx install poetry==${{ inputs.poetry-version }}
+      shell: bash
+
+    - name: Configure Poetry
+      run: poetry config virtualenvs.in-project true
+      shell: bash
+
+    - name: Setup Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: "poetry"
+
+    - name: Install Poetry dependencies
+      # Should be cached by the action above
+      run: poetry install
+      shell: bash
