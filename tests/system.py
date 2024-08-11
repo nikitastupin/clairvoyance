@@ -45,7 +45,7 @@ class TestClairvoyance(unittest.TestCase):
     def query_type(self) -> Any:
         query_type = self.get_type(self.schema["queryType"]["name"])
         if not query_type:
-            raise Exception("Schema don't contain query type")
+            raise RuntimeError("Schema don't contain query type")
 
         return query_type
 
@@ -56,7 +56,7 @@ class TestClairvoyance(unittest.TestCase):
 
         return None
 
-    def test_validate_wordlist(self):
+    def test_validate_wordlist(self) -> None:
         self.assertIn(b"Removed 1 items from wordlist", self.clairvoyance.stderr)
 
     def test_found_root_type_names(self) -> None:

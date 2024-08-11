@@ -11,10 +11,10 @@ class Schema:
 
     def __init__(
         self,
-        query_type: str = None,
-        mutation_type: str = None,
-        subscription_type: str = None,
-        schema: Dict[str, Any] = None,
+        query_type: Optional[str] = None,
+        mutation_type: Optional[str] = None,
+        subscription_type: Optional[str] = None,
+        schema: Optional[Dict[str, Any]] = None,
     ):
         if schema:
             self._schema = {
@@ -142,7 +142,7 @@ class Schema:
 
     def get_type_without_fields(
         self,
-        ignored: Set[str] = None,
+        ignored: Optional[Set[str]] = None,
     ) -> str:
         """Gets the type without a field."""
         ignored = ignored or set()
@@ -331,7 +331,7 @@ class Field:
         self,
         name: str,
         typeref: Optional[TypeRef],
-        args: List[InputValue] = None,
+        args: Optional[List[InputValue]] = None,
     ):
         if not typeref:
             raise ValueError(f"Can't create {name} Field from {typeref} TypeRef.")
@@ -367,7 +367,7 @@ class Type:
         self,
         name: str = "",
         kind: str = "",
-        fields: List[Field] = None,
+        fields: Optional[List[Field]] = None,
     ):
         self.name = name
         self.kind = kind

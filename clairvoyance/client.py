@@ -8,7 +8,7 @@ from clairvoyance.entities.context import client_ctx, log
 from clairvoyance.entities.interfaces import IClient
 
 
-class Client(IClient):
+class Client(IClient):  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         url: str,
@@ -68,8 +68,8 @@ class Client(IClient):
                 return await response.json(content_type=None)
 
             except (
-                aiohttp.client_exceptions.ClientConnectionError,
-                aiohttp.client_exceptions.ClientPayloadError,
+                aiohttp.ClientConnectionError,
+                aiohttp.ClientPayloadError,
                 asyncio.TimeoutError,
                 json.decoder.JSONDecodeError,
             ) as e:

@@ -10,11 +10,11 @@ logger_ctx: ContextVar[logging.Logger] = ContextVar("logger")
 
 # Quick resolve the context variables using macros.
 config: Callable[..., IConfig] = (
-    lambda: config_ctx.get()
-)  # pylint: disable=unnecessary-lambda
+    lambda: config_ctx.get()  # pylint: disable=unnecessary-lambda
+)
 client: Callable[..., IClient] = (
-    lambda: client_ctx.get()
-)  # pylint: disable=unnecessary-lambda
+    lambda: client_ctx.get()  # pylint: disable=unnecessary-lambda
+)
 log: Callable[..., logging.Logger] = (
-    lambda: logger_ctx.get()
-)  # pylint: disable=unnecessary-lambda
+    lambda: logger_ctx.get()  # pylint: disable=unnecessary-lambda
+)

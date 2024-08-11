@@ -105,8 +105,8 @@ jobs:
         run: |
           source .venv/bin/activate
           isort -m 9 --line-length 160 $MODULE_NAME tests --gitignore --check-only
-          # pylint $MODULE_NAME tests
+          pylint $MODULE_NAME tests
           docformatter --wrap-summaries 160 --wrap-descriptions 160 -cr $MODULE_NAME tests
           black --check $MODULE_NAME tests
           mypy -V
-          # mypy $MODULE_NAME tests
+          mypy $MODULE_NAME tests

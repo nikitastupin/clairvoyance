@@ -1,5 +1,6 @@
 import http.server
 import json
+from typing import Optional
 
 
 class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -24,7 +25,7 @@ class UnstableHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def main(port: int = None) -> None:
+def main(port: Optional[int] = None) -> None:
     port = port or 8081
     with http.server.HTTPServer(("", port), UnstableHTTPRequestHandler) as httpd:
         httpd.serve_forever()

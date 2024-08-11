@@ -422,7 +422,6 @@ async def probe_typeref(
                     error["message"],
                     context,
                 )
-
             log().debug(f'get_typeref("{error["message"]}", "{context}") -> {typeref}')
             if typeref:
                 return typeref
@@ -582,7 +581,7 @@ async def explore_field(
 async def clairvoyance(
     wordlist: List[str],
     input_document: str,
-    input_schema: Dict[str, Any] = None,
+    input_schema: Optional[Dict[str, Any]] = None,
 ) -> str:
 
     log().debug(f"input_document = {input_document}")

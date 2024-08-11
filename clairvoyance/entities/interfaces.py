@@ -28,7 +28,9 @@ class IClient(ABC):
         self,
         document: Optional[str],
         retries: int = 0,
-    ) -> Dict: ...
+    ) -> Dict:
+        pass
 
     @abstractmethod
-    async def close(self) -> None: ...
+    async def close(self) -> None:
+        pass

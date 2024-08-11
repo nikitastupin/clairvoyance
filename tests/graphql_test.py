@@ -60,9 +60,9 @@ class TestPost(aiounittest.AsyncTestCase):
     def setUpClass(cls) -> None:
         Client("http://localhost:8000/graphql")
 
-        cls._unstable = subprocess.Popen(
+        cls._unstable = subprocess.Popen(  # pylint: disable=consider-using-with
             ["python3", "tests/server/unstable.py"]
-        )  # pylint: disable=consider-using-with
+        )
         time.sleep(1)
 
     @classmethod
