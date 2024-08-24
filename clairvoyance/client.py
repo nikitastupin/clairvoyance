@@ -44,9 +44,7 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
 
         async with self._semaphore:
             if not self._session:
-                connector = aiohttp.TCPConnector(
-                    verify_ssl=(not self.disable_ssl_verify)
-                )
+                connector = aiohttp.TCPConnector(ssl=not self.disable_ssl_verify)
                 self._session = aiohttp.ClientSession(
                     headers=self._headers, connector=connector
                 )
