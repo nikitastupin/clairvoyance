@@ -20,6 +20,7 @@ REQUIRED_BUT_NOT_PROVIDED = r"""required(, but it was not provided| but not prov
 _FIELD_REGEXES = {
     'SKIP': [
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] must not have a selection since type ['"]""" + MAIN_REGEX + r"""['"] has no subfields\.""",
+        r"""Field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] must not have a sub selection\.""",
         r"""Field ['"]""" + MAIN_REGEX + r"""['"] argument ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"] is """ + REQUIRED_BUT_NOT_PROVIDED,
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"]\?""",
@@ -185,7 +186,7 @@ async def probe_valid_fields(
             if (
                 "must not have a selection since type" in error_message
                 and "has no subfields" in error_message
-            ):
+            ) or "must not have a sub selection" in error_message:
                 return set()
 
             # ! LEGACY CODE please keep
@@ -245,7 +246,7 @@ async def probe_valid_args(
         if (
             "must not have a selection since type" in error_message
             and "has no subfields" in error_message
-        ):
+        ) or "must not have a sub selection" in error_message:
             return set()
 
         # First remove arg if it produced an 'Unknown argument' error
