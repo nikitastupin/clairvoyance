@@ -33,6 +33,12 @@ class TestGetValidFields(unittest.TestCase):
         )
         self.assertEqual(got_2, want_2)
 
+        want_3 = {"pastes", "users", "audits"}
+        got_3 = oracle.get_valid_fields(
+            'Cannot query field "assets" on type "Query". Did you mean "pastes", "users" or "audits"?'
+        )
+        self.assertEqual(got_3, want_3)
+
     def test_single_suggestion(self) -> None:
         want = {"homes"}
         got = oracle.get_valid_fields(
@@ -76,6 +82,12 @@ class TestGetValidArgs(unittest.TestCase):
             'Unknown argument "fares" on field "Organization.vulnerabilities". Did you mean "after", "first", or "types"?'
         )
         self.assertEqual(got_3, want_3)
+
+        want = {"port", "host", "path"}
+        got = oracle.get_valid_args(
+            'Unknown argument "pot" on field "importPaste" of type "Mutations". Did you mean "port", "host" or "path"?'
+        )
+        self.assertEqual(got, want)
 
 
 class TestGetTypeRef(unittest.TestCase):
