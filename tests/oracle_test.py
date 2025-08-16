@@ -105,6 +105,20 @@ class TestGetTypeRef(unittest.TestCase):
         )
         self.assertEqual(got, want)
 
+    def test_input_suffix(self) -> None:
+        want = graphql.TypeRef(
+            name="OrganizationInput",
+            kind="INPUT_OBJECT",
+            is_list=False,
+            non_null_item=False,
+            non_null=True,
+        )
+        got = oracle.get_typeref(
+            'Field "Organization" argument "input" of type "OrganizationInput!" is required, but it was not provided.',
+            FuzzingContext.ARGUMENT,
+        )
+        self.assertEqual(got, want)
+
     def test_inputfield_object_non_nullable(self) -> None:
         want = graphql.TypeRef(
             name="SetArmedStateForHomeInput",
