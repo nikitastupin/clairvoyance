@@ -33,6 +33,12 @@ class TestGetValidFields(unittest.TestCase):
         )
         self.assertEqual(got_2, want_2)
 
+        want_3 = {"pastes", "users", "audits"}
+        got_3 = oracle.get_valid_fields(
+            'Cannot query field "assets" on type "Query". Did you mean "pastes", "users" or "audits"?'
+        )
+        self.assertEqual(got_3, want_3)
+
     def test_single_suggestion(self) -> None:
         want = {"homes"}
         got = oracle.get_valid_fields(
@@ -77,6 +83,12 @@ class TestGetValidArgs(unittest.TestCase):
         )
         self.assertEqual(got_3, want_3)
 
+        want = {"port", "host", "path"}
+        got = oracle.get_valid_args(
+            'Unknown argument "pot" on field "importPaste" of type "Mutations". Did you mean "port", "host" or "path"?'
+        )
+        self.assertEqual(got, want)
+
 
 class TestGetTypeRef(unittest.TestCase):
     def test_non_nullable_object(self) -> None:
@@ -89,6 +101,20 @@ class TestGetTypeRef(unittest.TestCase):
         )
         got = oracle.get_typeref(
             'Field "setArmedStateForHome" argument "input" of type "SetArmedStateForHomeInput!" is required, but it was not provided.',
+            FuzzingContext.ARGUMENT,
+        )
+        self.assertEqual(got, want)
+
+    def test_input_suffix(self) -> None:
+        want = graphql.TypeRef(
+            name="OrganizationInput",
+            kind="INPUT_OBJECT",
+            is_list=False,
+            non_null_item=False,
+            non_null=True,
+        )
+        got = oracle.get_typeref(
+            'Field "Organization" argument "input" of type "OrganizationInput!" is required, but it was not provided.',
             FuzzingContext.ARGUMENT,
         )
         self.assertEqual(got, want)

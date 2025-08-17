@@ -25,7 +25,7 @@ _FIELD_REGEXES = {
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\.""",
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"]\?""",
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on ['"]""" + MAIN_REGEX + r"""['"] or ['"]""" + MAIN_REGEX + r"""['"]\?""",
-        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on (['"]""" + MAIN_REGEX + r"""['"], )+(or ['"]""" + MAIN_REGEX + r"""['"])?\?"""
+        r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"](""" + MAIN_REGEX + r""")['"]\. Did you mean to use an inline fragment on (['"]""" + MAIN_REGEX + r"""['"],? )+(or ['"]""" + MAIN_REGEX + r"""['"])?\?"""
     ],
     'VALID_FIELD': [
         r"""Field ['"](?P<field>""" + MAIN_REGEX + r""")['"] of type ['"](?P<typeref>""" + MAIN_REGEX + r""")['"] must have a selection of subfields\. Did you mean ['"]""" + MAIN_REGEX + r"""( \{ \.\.\. \})?['"]\?""",
@@ -38,7 +38,7 @@ _FIELD_REGEXES = {
         r"""Cannot query field ['"]""" + MAIN_REGEX + r"""['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean ['"](?P<one>""" + MAIN_REGEX + r""")['"] or ['"](?P<two>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+        r"""Cannot query field ['"](""" + MAIN_REGEX + r""")['"] on type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"],? )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
@@ -57,7 +57,8 @@ _ARG_REGEXES = {
         r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]( of type ['"]""" + MAIN_REGEX + r"""['"])?\. Did you mean ['"](?P<first>""" + MAIN_REGEX + r""")['"] or ['"](?P<second>""" + MAIN_REGEX + r""")['"]\?"""
     ],
     'MULTI_SUGGESTION': [
-        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"], )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"],? )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?""",
+        r"""Unknown argument ['"]""" + MAIN_REGEX + r"""['"] on field ['"]""" + MAIN_REGEX + r"""['"] of type ['"]""" + MAIN_REGEX + r"""['"]\. Did you mean (?P<multi>(['"]""" + MAIN_REGEX + r"""['"],? )+)(or ['"](?P<last>""" + MAIN_REGEX + r""")['"])?\?"""
     ],
 }
 
@@ -139,7 +140,7 @@ def get_valid_fields(error_message: str) -> Set[str]:
 
             for m in match.group("multi").split(", "):
                 if m:
-                    valid_fields.add(m.strip('"').strip("'"))
+                    valid_fields.add(m.strip("'\" "))
             if match.group("last"):
                 valid_fields.add(match.group("last"))
 
@@ -319,7 +320,7 @@ def get_valid_args(error_message: str) -> Set[str]:
             if match:
                 for m in match.group("multi").split(", "):
                     if m:
-                        valid_args.add(m.strip('"').strip("'"))
+                        valid_args.add(m.strip("'\" "))
 
                 if match.group("last"):
                     valid_args.add(match.group("last"))
@@ -383,7 +384,7 @@ def get_typeref(
         elif context == FuzzingContext.ARGUMENT:
             kind = "INPUT_OBJECT"
             name = (
-                name.rstrip("Input") + "Input"
+                name.removesuffix("Input") + "Input"
             )  # Make sure `Input` is always once at the end
         else:
             log().debug(f"Unknown kind for `typeref`: '{error_message}'")
