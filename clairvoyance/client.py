@@ -51,27 +51,30 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
 
             # Translate an existing document into a GraphQL request.
             gql_document = {"query": document} if document else None
-
             try:
-                response = await self._session.post(
-                    self._url,
-                    json=gql_document,
-                    proxy=self.proxy,
-                )
+                try:
+                    response = await self._session.post(
+                        self._url,
+                        json=gql_document,
+                        proxy=self.proxy,
+                    )
 
-                if response.status >= 500:
-                    log().warning(f"Received status code {response.status}")
-                    return await self.post(document, retries + 1)
+                    if response.status >= 500:
+                        log().warning(f"Received status code {response.status}")
+                        return await self.post(document, retries + 1)
 
-                return await response.json(content_type=None)
+                    return await response.json(content_type=None)
 
-            except (
-                aiohttp.ClientConnectionError,
-                aiohttp.ClientPayloadError,
-                asyncio.TimeoutError,
-                json.decoder.JSONDecodeError,
-            ) as e:
-                log().warning(f"Error posting to {self._url}: {e}")
+                except (
+                    aiohttp.ClientConnectionError,
+                    aiohttp.ClientPayloadError,
+                    asyncio.TimeoutError,
+                ) as e:
+                    log().warning(f"Connection error while POSTing to {self._url}: {e}")
+            except json.decoder.JSONDecodeError as e:
+                log().warning(f"JSON decode error while decoding response from {self._url}: {e}")
+                log().warning(f"[Hint] Endpoint might require authentication, or, site is behind something like Cloudflare and is rate limiting you. You can pass headers and cookies via -H option.")
+
 
             if self.backoff:
                 async with self._backoff_semaphore:
