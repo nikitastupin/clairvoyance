@@ -51,7 +51,6 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
 
             # Translate an existing document into a GraphQL request.
             gql_document = {"query": document} if document else None
-
             try:
                 response = await self._session.post(
                     self._url,
@@ -63,15 +62,24 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
                     log().warning(f"Received status code {response.status}")
                     return await self.post(document, retries + 1)
 
-                return await response.json(content_type=None)
+                try:
+                    return await response.json(content_type=None)
+                except json.decoder.JSONDecodeError as e:
+                    log().warning(
+                        f"JSON decode error while decoding response from {self._url} (status code: {response.status}): {e}"
+                    )
+                    log().debug(
+                        "[Hint] Endpoint might require authentication, or, site is behind something like Cloudflare and is rate limiting you. "
+                        "You can pass headers and cookies via -H option. Consult "
+                        "https://github.com/nikitastupin/clairvoyance/blob/main/troubleshooting.md for more information."
+                    )
 
             except (
                 aiohttp.ClientConnectionError,
                 aiohttp.ClientPayloadError,
                 asyncio.TimeoutError,
-                json.decoder.JSONDecodeError,
             ) as e:
-                log().warning(f"Error posting to {self._url}: {e}")
+                log().warning(f"Connection error while POSTing to {self._url}: {e}")
 
             if self.backoff:
                 async with self._backoff_semaphore:
