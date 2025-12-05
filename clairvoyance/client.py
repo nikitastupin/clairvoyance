@@ -66,7 +66,11 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
                     return await response.json(content_type=None)
                 except json.decoder.JSONDecodeError as e:
                     log().warning(f"JSON decode error while decoding response from {self._url} (status code: {response.status}): {e}")
-                    log().debug("[Hint] Endpoint might require authentication, or, site is behind something like Cloudflare and is rate limiting you. You can pass headers and cookies via -H option. Consult https://github.com/nikitastupin/clairvoyance/blob/main/troubleshooting.md for more information.")
+                    log().debug(
+    "[Hint] Endpoint might require authentication, or, site is behind something like Cloudflare and is rate limiting you. "
+    "You can pass headers and cookies via -H option. Consult "
+    "https://github.com/nikitastupin/clairvoyance/blob/main/troubleshooting.md for more information."
+)
 
 
             except (
