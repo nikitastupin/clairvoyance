@@ -87,4 +87,3 @@ class Client(IClient):  # pylint: disable=too-many-instance-attributes
     async def close(self) -> None:
         if self._session:
             await self._session.close()
-            
